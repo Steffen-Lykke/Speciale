@@ -1,0 +1,62 @@
+---
+title: "Studynow"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readxl)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+```
+Text text text text
+
+Vi importer data:
+```{r chunk2}
+data("coronavirus")
+```
+
+Vi kan også plotte det data (interaktivt!!!)
+```{r,warning=FALSE,echo=FALSE}
+coronavirus %>%
+  group_by(type,date) %>%
+  summarise(total_cases=sum(cases),.groups = "drop")%>%
+  pivot_wider(names_from = type, values_from=total_cases) %>%
+  arrange(date) %>%
+  mutate(active=confirmed - death - recovered)%>%
+  mutate(active_total=cumsum(active),
+         recovered_total=cumsum(recovered),
+         death_total=cumsum(death))%>%
+  plot_ly(x=~date,
+          y=~active_total,
+          name="Active",
+          fillcolor='#1f77b4',
+          type='scatter',
+          mode='none',
+          stackgroup='one')%>%
+  add_trace(y=~death_total,
+            name='Dead',
+            fillcolor='#E41317')%>%
+  add_trace(y=~recovered_total,
+            name='Recovered',
+            fillcolor='#forestgreen')%>%
+layout(title="Distribution of COVID19 Cases Worldwide",
+       legend=list(x=0.1,y=0.9),
+       yaxis=list(title="Number of Cases"),
+       xaxis=list(title="Source: whatever..."))
+```
+
+## Latex text:
+ $$x^2=2*y $$
