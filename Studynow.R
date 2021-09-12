@@ -96,7 +96,7 @@ sum1=summary(lm1)
 
 ggplot(data=starwars_jabba,aes(height,mass,col=gender)) + geom_point() + theme_tufte()+
   geom_abline(intercept=sum1$coefficients[1,1],slope=sum1$coefficients[2,1])
-<<<<<<< HEAD
+
 ###### Libraries #####
 library(dplyr)
 library(tidyr)
@@ -165,7 +165,7 @@ for_plot = auto_factor_long %>% group_by(Variable,Value)%>%tally()
 ggplot(for_plot,aes(Variable,n,group=Value,fill=Value))+geom_bar(stat="identity",position="dodge")
 
 
-### nmominal / odinal (er der rangereing i dataen)
+### nominal / odinal (er der rangereing i dataen)
 
 auto_ordinal = auto_factor[,8]
 auto_nominal = auto_factor[,-8]
@@ -226,5 +226,4 @@ coronavirus_date%>%filter(country%in%c("Denmark","Russia"))%>%
     geom_line()+theme_bw()+ylab("Confirmed Cases")+scale_x_date(date_breaks="2 months",date_labels = "%b%y")+
     scale_y_continuous(labels=scales::comma)
 
-=======
->>>>>>> b28777655595368d2f6a0d1269ee30921b4a5492
+
