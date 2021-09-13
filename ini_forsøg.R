@@ -16,6 +16,8 @@ library(coronavirus)
 library(lubridate)
 library(plotly)
 library(lobstr)
+
+################ Hent Data ##################
 test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
 CWF <- read_delim("data/CWF_12.4.2021_07-09-2021 084249.csv", 
                     delim = "\t", escape_double = FALSE, 
@@ -33,7 +35,7 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
 dat = dat %>% rename_at(vars(old_names),~new_names)
 dat$time = dmy_hms(dat$time)
 str(dat)
-
+####################### Plotting of Data ##########################
 ggplot(dat,aes(time,c(p_avg0301,p_avg0302)))+geom_line()+theme_bw()+ylab("Pressure [Bar]")+xlab("Time")+scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
 
 dat %>%
