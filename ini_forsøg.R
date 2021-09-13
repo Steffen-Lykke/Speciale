@@ -40,12 +40,12 @@ dat %>%
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%
   plot_ly(x=~time,
           y=~p_avg0301,
-          name="Pressure before",
+          name="Pressure before membrane",
           color='#1f77b4',
           type='scatter',
           mode='lines')%>%
   add_lines(y=~p_avg0302,
-            name='Pressure after',
+            name='Pressure after membrane',
             color='#E41317')%>%
   add_lines(y=~TMP,
             name='TMP',
@@ -53,4 +53,4 @@ dat %>%
   layout(title="Pressure during day",
          legend=list(x=0.7,y=0.2),
          yaxis=list(title="Pressure [bar]"),
-         xaxis=list(title="Source: whatever..."))
+         xaxis=list(title=":)"))
