@@ -15,7 +15,7 @@ library(ggiraphExtra)
 library(coronavirus)
 library(lubridate)
 library(plotly)
-library(lobstr)
+library(latex2exp)
 
 ################ Hent Data ##################
 test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
@@ -36,7 +36,8 @@ dat = dat %>% rename_at(vars(old_names),~new_names)
 dat$time = dmy_hms(dat$time)
 str(dat)
 ####################### Plotting of Data ##########################
-ggplot(dat,aes(time,c(p_avg0301,p_avg0302)))+geom_line()+theme_bw()+ylab("Pressure [Bar]")+xlab("Time")+scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
+ggplot(dat,aes(time,c(p_avg0301,p_avg0302))) + geom_line() + theme_bw() +
+  ylab("Pressure [Bar]") + xlab("Time") + scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
 
 dat %>%
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%
@@ -56,3 +57,22 @@ dat %>%
          legend=list(x=0.7,y=0.2),
          yaxis=list(title="Pressure [bar]"),
          xaxis=list(title=":)"))
+
+dat %>%
+  mutate(rejection=con0301-con0501)%>%
+  plot_ly(x=~time,
+          y=~con0301,
+          name="COnductivity feed",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~con0501,
+            name='Conductivity Permeate',
+            color='#E41317')%>%
+  add_lines(y=~rejection,
+            name='"Rejection"',
+            color='#forestgreen')%>%
+  layout(title="Conductivity",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title=latex2exp::TeX("Conductivity [\\theta]")),
+         xaxis=list(title=))
