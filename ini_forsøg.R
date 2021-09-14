@@ -60,9 +60,10 @@ dat %>%
 
 dat %>%
   mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(ma2=rollapplyr(con0301,30,mean,fill=NA))%>%
   plot_ly(x=~time,
-          y=~con0301,
-          name="COnductivity feed",
+          y=~ma2,
+          name="Conductivity feed",
           color='#1f77b4',
           type='scatter',
           mode='lines')%>%
@@ -73,9 +74,7 @@ dat %>%
             name='"Rejection"',
             color='#forestgreen')%>%
   layout(title="Conductivity",
-         legend=list(x=0.7,y=0.2),
-         yaxis=list(title=latex2exp::TeX("Conductivity [\\theta]")),
-         xaxis=list(title="Hi"))
+         legend=list(x=0.7,y=0.5),
+         yaxis=list(title="\U03BC S/cm"))
 
 
-test
