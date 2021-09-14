@@ -16,6 +16,7 @@ library(coronavirus)
 library(lubridate)
 library(plotly)
 library(latex2exp)
+library(zoo)
 
 ################ Hent Data ##################
 test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
@@ -36,7 +37,7 @@ dat = dat %>% rename_at(vars(old_names),~new_names)
 dat$time = dmy_hms(dat$time)
 str(dat)
 ####################### Plotting of Data ##########################
-ggplot(dat,aes(time,c(p_avg0301,p_avg0302))) + geom_line() + theme_bw() +
+ggplot(dat,aes(time,p_avg0302)) + geom_line() + theme_bw() +
   ylab("Pressure [Bar]") + xlab("Time") + scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
 
 dat %>%
@@ -58,24 +59,34 @@ dat %>%
          yaxis=list(title="Pressure [bar]"),
          xaxis=list(title=":)"))
 
+
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection")
+
 dat %>%
   mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
+  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
   plot_ly(x=~time,
-          y=~con0301,
-          name="COnductivity feed",
-          color='#1f77b4',
+          y=~feed_slid,
+          name="Feed",
+          color="red",
           type='scatter',
-          mode='lines')%>%
-  add_lines(y=~con0501,
-            name='Conductivity Permeate',
-            color='#E41317')%>%
-  add_lines(y=~rejection,
-            name='"Rejection"',
-            color='#forestgreen')%>%
-  layout(title="Conductivity",
-         legend=list(x=0.7,y=0.2),
-         yaxis=list(title=latex2exp::TeX("Conductivity [\\theta]")),
-         xaxis=list(title="Hi"))
+          mode='lines',
+          line=list(color='#1f77b4'))%>%
+    add_trace(y=~con0501,
+            name='Permeate',
+            line=list(color="#E41317"))%>%
+    add_trace(y=~rej_slid,
+            name='Rejection',
+            yaxis="y2",
+            line=list(color="#forestgreen"))%>%
+  # Set figure title, x and y-axes titles
+    layout(title="Conductivity",yaxis2=ay,
+         legend=list(x=0.6,y=0.5),
+         yaxis=list(title="\U03BC S/cm"))
 
 
-test
