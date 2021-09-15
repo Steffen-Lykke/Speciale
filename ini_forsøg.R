@@ -20,10 +20,10 @@ library(zoo)
 
 ################ Hent Data ##################
 test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
-CWF <- read_delim("data/CWF_12.4.2021_07-09-2021 084249.csv", 
+CWF <- read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv", 
                     delim = "\t", escape_double = FALSE, 
                     trim_ws = TRUE, skip = 5)
-str(CWF)
+#str(CWF)
 dat = as.data.frame(CWF)
 old_names=colnames(CWF)
 new_names=c("time","level","con0201","pH0201","con0301","flow0301",
@@ -35,13 +35,14 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "pH0501","con0302","40")
 dat = dat %>% rename_at(vars(old_names),~new_names)
 dat$time = dmy_hms(dat$time)
-str(dat)
+#str(dat)
 ####################### Plotting of Data ##########################
 ggplot(dat,aes(time,p_avg0302)) + geom_line() + theme_bw() +
   ylab("Pressure [Bar]") + xlab("Time") + scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
 
 dat %>%
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%
+  mutate(TMP_slid=rollapply(TMP,1000,mean,align="right",fill=NA))%>%
   plot_ly(x=~time,
           y=~p_avg0301,
           name="Pressure before membrane",
@@ -66,6 +67,12 @@ ay <- list(
   side = "right",
   title = "Rejection")
 
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection")
+
 dat %>%
   mutate(rejection=(1-(con0501/con0301))*100)%>%
   mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
@@ -77,31 +84,16 @@ dat %>%
           type='scatter',
           mode='lines',
           line=list(color='#1f77b4'))%>%
-    add_trace(y=~con0501,
+  add_trace(y=~con0501,
             name='Permeate',
             line=list(color="#E41317"))%>%
-    add_trace(y=~rej_slid,
+  add_trace(y=~rej_slid,
             name='Rejection',
             yaxis="y2",
             line=list(color="#forestgreen"))%>%
   # Set figure title, x and y-axes titles
-    layout(title="Conductivity",yaxis2=ay,
+  layout(title="Conductivity",yaxis2=ay,
          legend=list(x=0.6,y=0.5),
-  mutate(ma2=rollapplyr(con0301,30,mean,fill=NA))%>%
-  plot_ly(x=~time,
-          y=~ma2,
-          name="Conductivity feed",
-          color='#1f77b4',
-          type='scatter',
-          mode='lines')%>%
-  add_lines(y=~con0501,
-            name='Conductivity Permeate',
-            color='#E41317')%>%
-  add_lines(y=~rejection,
-            name='"Rejection"',
-            color='#forestgreen')%>%
-  layout(title="Conductivity",
-         legend=list(x=0.7,y=0.5),
          yaxis=list(title="\U03BC S/cm"))
 
 
