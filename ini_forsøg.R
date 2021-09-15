@@ -87,6 +87,21 @@ dat %>%
   # Set figure title, x and y-axes titles
     layout(title="Conductivity",yaxis2=ay,
          legend=list(x=0.6,y=0.5),
+  mutate(ma2=rollapplyr(con0301,30,mean,fill=NA))%>%
+  plot_ly(x=~time,
+          y=~ma2,
+          name="Conductivity feed",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~con0501,
+            name='Conductivity Permeate',
+            color='#E41317')%>%
+  add_lines(y=~rejection,
+            name='"Rejection"',
+            color='#forestgreen')%>%
+  layout(title="Conductivity",
+         legend=list(x=0.7,y=0.5),
          yaxis=list(title="\U03BC S/cm"))
 
 
