@@ -20,7 +20,7 @@ library(zoo)
 
 ################ Hent Data ##################
 test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
-CWF <- read_delim("data/CWF_12.4.2021_07-09-2021 084249.csv", 
+CWF <- read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv", 
                     delim = "\t", escape_double = FALSE, 
                     trim_ws = TRUE, skip = 5)
 str(CWF)
@@ -96,7 +96,7 @@ dat %>%
           mode='lines')%>%
   add_lines(y=~con0501,
             name='Conductivity Permeate',
-            color='#E41317')%>%
+            color='#E41317'))%>%
   add_lines(y=~rejection,
             name='"Rejection"',
             color='#forestgreen')%>%
