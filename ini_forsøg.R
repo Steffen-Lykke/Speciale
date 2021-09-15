@@ -38,7 +38,8 @@ dat$time = dmy_hms(dat$time)
 #str(dat)
 ####################### Plotting of Data ##########################
 ggplot(dat,aes(time,p_avg0302)) + geom_line() + theme_bw() +
-  ylab("Pressure [Bar]") + xlab("Time") + scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
+  ylab("Pressure [Bar]") + xlab("Time") + 
+  scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
 
 dat %>%
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%
@@ -67,11 +68,6 @@ ay <- list(
   side = "right",
   title = "Rejection")
 
-ay <- list(
-  tickfont = list(color = "red"),
-  overlaying = "y",
-  side = "right",
-  title = "Rejection")
 
 dat %>%
   mutate(rejection=(1-(con0501/con0301))*100)%>%
@@ -83,7 +79,7 @@ dat %>%
           color="red",
           type='scatter',
           mode='lines',
-          line=list(color='#1f77b4'))%>%
+          line=list(color=hex('#1f77b4')))%>%
   add_trace(y=~con0501,
             name='Permeate',
             line=list(color="#E41317"))%>%
