@@ -67,11 +67,6 @@ ay <- list(
   side = "right",
   title = "Rejection")
 
-ay <- list(
-  tickfont = list(color = "red"),
-  overlaying = "y",
-  side = "right",
-  title = "Rejection")
 
 dat %>%
   mutate(rejection=(1-(con0501/con0301))*100)%>%
