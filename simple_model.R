@@ -96,4 +96,5 @@ df.long = df %>%
   
 ggplot(df.long,aes(x=tid/60,y=value*10^3,color=key))+geom_line()+
   scale_color_hue(labels = c("Feed Tank", "Permeate Tank"))+
-  theme_bw()+labs( x = "Concentration [mM?]", y = "Time [min]", color = "")
+  theme_bw()+labs( y = "Na+ Concentration [mM?]", x = "Time [min]", color = "")
+a
