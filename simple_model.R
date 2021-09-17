@@ -63,8 +63,6 @@ df[1,] = c(tid,feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volu
 
 ############ Model #####################
 
-
-
 for (i in 1:n_time_step+1) {
   #Volume flow
   Q_permeate = membrane_area*flux
