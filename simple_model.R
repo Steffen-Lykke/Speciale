@@ -20,7 +20,8 @@ library(zoo)
 
 ############# Operational Parameters ###############
 c_nacl_initial = 3*10^-3 #mol/L
-flux = 5.56*10^-3 #L m^-2 s^-1 - svarer til 20 LMH 
+flux_LMH = 30 #
+flux = flux_LMH/3600 #L m^-2 s^-1 
 
 
 ############### System Parameters #################
@@ -31,9 +32,9 @@ R_cl=0.5 #Rejection Cl-
 
 ## Feed values ##
 feed_tank_volume = 100 #L
-feed_tank_mass = feed_tank_volume*c_nacl_initial #mol
+feed_tank_mass = feed_tank_volume*c_nacl_initial #mol?
 feed_tank_conc = feed_tank_mass/feed_tank_volume
-Q_feed = 0.01933 # L/s svarer til 1160 mL/min
+Q_feed = 0.01933 # L/s --- svarer til 1160 mL/min
 
 permeate_tank_volume = 0 #L
 permeate_tank_mass = 0#mol
@@ -62,8 +63,6 @@ df[1,] = c(tid,feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volu
            permeate_tank_mass,permeate_tank_conc,0,0)
 
 ############ Model #####################
-
-
 
 for (i in 1:n_time_step+1) {
   #Volume flow
