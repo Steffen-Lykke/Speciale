@@ -17,6 +17,7 @@ library(lubridate)
 library(plotly)
 library(latex2exp)
 library(zoo)
+library(ggthemes)
 
 ############# Operational Parameters ###############
 c_nacl_initial = 3*10^-3 #mol/L
@@ -58,12 +59,11 @@ df = data.frame(
   retentate_conc=double(),
   stringsAsFactors = FALSE
     )
-df[n_time_step,]=0
+df[1:n_time_step,]=0
 df[1,] = c(tid,feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,
            permeate_tank_mass,permeate_tank_conc,0,0)
 
 ############ Model #####################
-
 for (i in 1:n_time_step+1) {
   #Volume flow
   Q_permeate = membrane_area*flux
@@ -94,7 +94,7 @@ df.long = df %>%
   gather(key,value, feed_tank_conc,permeate_tank_conc)
   
 ggplot(df.long,aes(x=tid/3600,y=value*10^3,color=key))+geom_line()+
-  scale_color_hue(labels = c("Feed Tank", "Permeate Tank"))+
+  scale_color_brewer(palette="Set1",labels = c("Feed Tank", "Permeate Tank"))+
   theme_bw()+labs( y = "Na+ Concentration [mM?]", x = "Time [h]", color = "")
 
 
