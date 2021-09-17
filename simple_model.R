@@ -30,7 +30,7 @@ R_na = 0.7 #Rejection Na+
 R_cl=0.5 #Rejection Cl-
 
 ## Feed values ##
-feed_tank_volume = 5 #L
+feed_tank_volume = 100 #L
 feed_tank_mass = feed_tank_volume*c_nacl_initial #mol
 feed_tank_conc = feed_tank_mass/feed_tank_volume
 Q_feed = 0.01933 # L/s svarer til 1160 mL/min
@@ -40,7 +40,7 @@ permeate_tank_mass = 0#mol
 permeate_tank_conc = feed_tank_mass/feed_tank_volume
 ############# model parameters #############
 dt=60 #s
-run_time = 4 #hours
+run_time = 40 #hours
 max_time_step = run_time*3600
 n_time_step = max_time_step/dt
 tid = 0
@@ -94,6 +94,6 @@ rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,
 df.long = df %>% 
   gather(key,value, feed_tank_conc,permeate_tank_conc)
   
-ggplot(df.long,aes(x=tid/60,y=value*10^3,color=key))+geom_line()+
+ggplot(df.long,aes(x=tid/3600,y=value*10^3,color=key))+geom_line()+
   scale_color_hue(labels = c("Feed Tank", "Permeate Tank"))+
-  theme_bw()+labs( y = "Na+ Concentration [mM?]", x = "Time [min]", color = "")
+  theme_bw()+labs( y = "Na+ Concentration [mM?]", x = "Time [h]", color = "")
