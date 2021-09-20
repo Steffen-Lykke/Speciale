@@ -44,7 +44,7 @@ ggplot(dat,aes(time,p_avg0302)) + geom_line() + theme_bw() +
 
 dat %>%#dplyr arbejder indenfor 'dat' data framen
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
-  mutate(TMP_slid=rollapply(TMP,1000,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
   plot_ly(x=~time,
           y=~p_avg0301,
           name="Pressure before membrane",
@@ -54,7 +54,7 @@ dat %>%#dplyr arbejder indenfor 'dat' data framen
   add_lines(y=~p_avg0302,
             name='Pressure after membrane',
             color='#E41317')%>%
-  add_lines(y=~TMP,
+  add_lines(y=~TMP_slid,
             name='TMP',
             color='#forestgreen')%>%
   layout(title="Pressure during day",
@@ -91,6 +91,7 @@ dat %>%
   # Set figure title, x and y-axes titles
   layout(title="Conductivity",yaxis2=ay,
          legend=list(x=0.6,y=0.5),
-         yaxis=list(title="\U03BC S/cm")) #Her conductivity over tid + en form for rejection, læg gerne mærke til farverne der nægter at se ud som de er blevet bedt.
+         yaxis=list(title="\U03BC S/cm")) #Her conductivity over tid + en form for rejection, 
+#læg gerne mærke til farverne der nægter at se ud som de er blevet bedt.
 
 
