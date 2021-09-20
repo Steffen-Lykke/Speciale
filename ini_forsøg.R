@@ -54,7 +54,7 @@ dat %>%#dplyr arbejder indenfor 'dat' data framen
   add_lines(y=~p_avg0302,
             name='Pressure after membrane',
             color='#E41317')%>%
-  add_lines(y=~TMP,
+  add_lines(y=~TMP_slid,
             name='TMP',
             color='#forestgreen')%>%
   layout(title="Pressure during day",

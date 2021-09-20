@@ -39,7 +39,7 @@ Q_feed = 0.01933 # L/s --- svarer til 1160 mL/min
 
 permeate_tank_volume = 0 #L
 permeate_tank_mass = 0#mol
-permeate_tank_conc = feed_tank_mass/feed_tank_volume #Burde dette ikke være permeat_tank_mass/permeat_tank_volume
+permeate_tank_conc = permeate_tank_mass/permeate_tank_volume #Burde dette ikke være permeat_tank_mass/permeat_tank_volume
 ############# model parameters #############
 dt=60 #s
 run_time = 40 #hours
