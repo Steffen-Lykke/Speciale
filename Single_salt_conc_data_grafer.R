@@ -18,7 +18,7 @@ library(plotly)
 library(latex2exp)
 library(zoo)
 
-##### Na2OSiO2 data og grafer #########
+##### Na2OSiO2 data  #########
 
 tid <- c(1,2,3,3.5,4)
 
@@ -35,6 +35,8 @@ SiO2_ph_conc <- c(8.29,8.27,8.29,8.33,8.37)
 SiO2_ph_permeate <- c(7.77,7.87,7.93,7.96,7.9)
 SiO2_ph_inlet = (SiO2_ph_feed+SiO2_ph_conc)/2
 
+
+### bi carbonate 
 
 SiO2 <- data.frame(tid,SiO2_conc_feed,SiO2_conc_conc, SiO2_conc_permeate,SiO2_ph_feed,SiO2_ph_conc, SiO2_ph_permeate)
 
@@ -130,4 +132,7 @@ ggplot(data=SiO2, aes(x=tid))+
     axis.text.y.right = element_text(color="green"),
   )+
   labs(x="Time[h]", color="Legend")
+
+dfgdfg
+
   
