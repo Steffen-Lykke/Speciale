@@ -48,29 +48,23 @@ ggplot(data=SiO2, aes(x=tid))+
   geom_line(aes( y=SiO2_conc_conc,color="Concentrate"))+
   geom_line(aes( y=SiO2_conc_permeate,color="Permeate"))+
   scale_color_manual(values=c("Feed"="red","Concentrate"="blue","Permeate"="green"),labels=c("Feed", "Concentrate", "Permeate"))+
-  labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")
+  labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")+
+  ggtitle("Concentration, feed, concentrate, permeate")
 
 
 ggplot(data=SiO2, aes(x=tid))+
   geom_line(aes( y=SiO2_conc_inlet, color="Inlet"))+
   geom_line(aes( y=SiO2_conc_permeate,color="Permeate"))+
   scale_color_manual(values=c("Inlet"="red","Permeate"="green"),labels=c("Inlet", "Permeate"))+
-  labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")
+  labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")+
+  ggtitle("Concentration 'inlet' and permeate")
 
 ### rejection 
 
 ggplot(data=SiO2, aes(x=tid))+
-  geom_line(aes( y=SiO2_conc_feed, color="Feed"))+
-  geom_line(aes( y=SiO2_conc_conc,color="Concentrate"))+
-  geom_line(aes( y=SiO2_conc_permeate,color="Permeate"))+
-  geom_line(aes(y=SiO2_rejection,color="black"))+
-  scale_color_manual(values=c("Feed"="red","Concentrate"="blue","Permeate"="green"),labels=c("Feed", "Concentrate", "Permeate"))+
-  labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")
-
-
-ggplot(data=SiO2, aes(x=tid))+
   geom_line(aes(y=SiO2_rejection),color="black")+
-  ggtitle("Rejection")
+  ylim(0,100)+
+  ggtitle("Rejection %")
 
 scalefactor_rej <- max(SiO2_conc_feed)/max(SiO2_rejection)
 ggplot(data=SiO2, aes(x=tid))+
@@ -86,9 +80,23 @@ ggplot(data=SiO2, aes(x=tid))+
     axis.text.y.right = element_text(color="green"),
   )+
   labs(x="Time[h]", color="Legend")+
-  ggtitle("Rejection mod feed og perm concentration")
+  ggtitle("Rejection og feed og perm concentration over tid")
 
-
+## rejection af SiO2 og pH over tid. 
+scalefactor_rej_pH <- max(SiO2_ph_feed)/max(SiO2_rejection)
+ggplot(data=SiO2, aes(x=tid))+
+  geom_line(aes(y=SiO2_ph_feed,color="pH Feed"))+
+  geom_line(aes(y=SiO2_rejection*scalefactor_rej_pH, color="Rejection"))+
+  scale_y_continuous(name="pH",sec.axis = sec_axis(~./scalefactor_rej_pH,name="Rejection [%]"))+
+  scale_color_manual(values=c("pH Feed"="red","Rejection"="green"),labels=c("pH Feed", "Rejection"))+
+  theme(
+    #axis.title.y.left = element_text(color="red"),
+    #axis.text.y.left = element_text(color="red"),
+    #axis.title.y.right = element_text(color="green"),
+    axis.text.y.right = element_text(color="green"),
+  )+
+  labs(x="Time[h]", color="Legend")+
+  ggtitle("Rejection og pH over tid.")
 
 ### raw data pH. 
 ggplot(data=SiO2, aes(x=tid))+
@@ -100,7 +108,7 @@ ggplot(data=SiO2, aes(x=tid))+
 
 #### digital pH data mod målt pH data. 
 #test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
-CWF <- read_delim("data/singlesalt_CaCl2_3mM_15-09-2021.csv", 
+CWF <- read_delim("data/singlesalt_Na2OSiO2_1mM_22-09-2021.csv", 
                   delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 #str(CWF)
@@ -115,7 +123,10 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat = dat %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
 dat$time = dmy_hms(dat$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
-#str(dat)
+
+ggplot(dat,aes(time,pH0201)) + geom_line() + theme_bw() +
+  ylab("pH") + xlab("Time") + 
+  scale_x_datetime(breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")
 
 ## combi af conc og pH. 
 
@@ -132,7 +143,8 @@ ggplot(data=SiO2, aes(x=tid))+
     axis.text.y.right = element_text(color="green"),
   )+
   labs(x="Time[h]", color="Legend")
+  
 
-dfgdfg
+
 
   
