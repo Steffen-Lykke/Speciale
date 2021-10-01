@@ -1,0 +1,127 @@
+---
+title: "Single salt"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+```{R chuck 1, include=FALSE}
+#Loading af pakker 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+library(readxl)
+```
+Summary of single salt experiments. 
+All experiments were preformed with flux 20 LMH (permeate flow 17 mL/min), a crossflow of 0.5 m/s (feed flow 1160 mL/min) and with an initial feed volume of 6L. 
+
+The concentraiton of the various salts were selected based on concentration of authentic CT reservior water. 
+
+
+The first single salt experiment performed was with 3mM NaCl concentration.
+Where the pressure was logged before and after the the membrane and the TMP was calculated. 
+There is many flucturations in the data due to insufficient regulations of the regulation pressure valve 
+```{R chuck 2, include=TRUE}
+### NaCl 3 mM 
+#knitr::opts_knit$set(root.dir = "C:/Users/102222/OneDrive - Grundfos/Desktop/Speciale")
+CWF_NaCl <- read_delim(file.path("data","singlesalt_NaCl3mM_14-09-2021.csv"), 
+                  delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_NaCl = as.data.frame(CWF_NaCl) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_NaCl = dat_NaCl %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_NaCl$time = dmy_hms(dat_NaCl$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~time,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="NaCl Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]"),
+         xaxis=list(title="Time")) #Her plottet de to tryk på feed siden plus et TMP
+
+```
+
+
+```{R chuck 3, include=TRUE}
+###CaCl2 3 mM 
+CWF <- read_delim("data/singlesalt_CaCl2_3mM_15-09-2021.csv", 
+                  delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_CaCl2 = as.data.frame(CWF) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_CaCl2 = dat_CaCl2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_CaCl2$time = dmy_hms(dat_CaCl2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+
+###Na2OSiO2 1 mM 
+CWF <- read_delim("data/singlesalt_Na2OSiO2_1mM_22-09-2021.csv", 
+                    delim = "\t", escape_double = FALSE, 
+                    trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_SiO2 = as.data.frame(CWF) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_SiO2 = dat_SiO2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_SiO2$time = dmy_hms(dat_SiO2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+```
+
+
+```{R chuck 4, include=TRUE}
+
+
+
+
+```

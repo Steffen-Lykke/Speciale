@@ -20,8 +20,7 @@ library(latex2exp)
 library(zoo)
 
 ################ Hent Data ##################
-#test= read.csv("data/CWF_12.4.2021_07-09-2021 084249.csv")
-CWF <- read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv", 
+CWF <- read_delim("data/singlesalt_Na2OSiO2_1mM_22-09-2021.csv", 
                     delim = "\t", escape_double = FALSE, 
                     trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 #str(CWF)
@@ -94,4 +93,11 @@ dat %>%
          yaxis=list(title="\U03BC S/cm")) #Her conductivity over tid + en form for rejection, 
 #læg gerne mærke til farverne der nægter at se ud som de er blevet bedt.
 
+############### plot af pH ################
 
+lims <- as.POSIXct(strptime(c("2021-09-22 07:00:00","2021-09-22 13:00:00"), format = "%Y-%m-%d %H:%M:%S"))
+
+ggplot(dat,aes(time,pH0201)) + geom_point() + theme_bw() +
+  ylab("pH") + xlab("Time") +ylim(7,9)+
+  scale_x_datetime(limits=ymd_hm(c("2021-09-22 07:48","2021-09-22 12:00")), breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")+
+  ggtitle("pH Na2OSiO2")
