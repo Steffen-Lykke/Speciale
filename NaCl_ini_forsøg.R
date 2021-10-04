@@ -20,7 +20,7 @@ library(latex2exp)
 library(zoo)
 
 ################ Hent Data ##################
-CWF <- read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv", 
+CWF <- read_delim("data/CWF_12.4.2021_28-09-2021 000002.csv", 
                   delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 #str(CWF)
@@ -100,3 +100,7 @@ ggplot(dat,aes(time,pH0201)) + geom_point() + theme_bw() +
   ylab("pH") + xlab("Time") +ylim(7,8.5)+
   scale_x_datetime(limits=ymd_hm(c("2021-09-14 09:00","2021-09-14 13:15")), breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")+
   ggtitle("pH NaCl")
+
+ggplot(dat,aes(x=time,y=dat[,23])) + geom_line() + theme_bw() +
+  scale_x_datetime(limits=ymd_hm(c("2021-09-28 00:10","2021-09-28 06:00")), breaks = scales::date_breaks("30 mins"),date_labels = "%H:%M")+
+  ylab("Boolean") + xlab("Time")
