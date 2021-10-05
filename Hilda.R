@@ -57,15 +57,16 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
 dat = dat %>% rename_at(all_of(old_names),~new_names) #Vi ændrer navnene til de nye
 dat$time = dmy_hms(dat$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 
-### Forsøg på automatisk at finde t=0
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
 
-start_tid = min(which(dat$flow0501>16&dat$flow0501<25))
+flow_boolean = dat$flow0501>16&dat$flow0501<25
+start_tid = min(which(flow_boolean))
 dat=dat[-c(1:start_tid),]
 ### Tid i s fra forsøgs start
 dat = dat%>%
    mutate(sek=(
            as.numeric(as.POSIXct(time))-as.numeric(dat$time[1], format='%Y-%m-%d %H:%M:%S'))
-                ) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow rammer 17 ml/min. 
+                )  
             
 
 
@@ -113,7 +114,7 @@ ay <- list(
 dat %>%mutate(rejection=(1-(con0501/con0301))*100)%>%
   mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
   mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
-  plot_ly(x=~time,
+  plot_ly(x=~sek/3600,
           y=~feed_slid,
           name="Feed",
           color="red",
