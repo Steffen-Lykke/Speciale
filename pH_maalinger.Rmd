@@ -66,3 +66,25 @@ From the plot it is evident that all solutions go towards the initial pH at abou
 Meaning that pH 5 increase slightly and then decrease, the samples with pH 10 and 11 decrease. 
 The buffer solution with pH 9.2 also decrease bus significantly less than the remaining samples. 
 
+The samples which had been bobbles over night is plotted in following graph. 
+
+```{r chuck 2, echo=FALSE, message=FALSE}
+#loading of data: 
+pH5_boble <- c()
+pH10_boble <- c()
+pH11_boble <- c()
+tid_boble <- c()
+
+data_boble <- data.frame(tid_boble, pH5_boble, pH10_boble, pH11_boble)
+
+
+ggplot(data=data_noboble, aes(x=tid_noboble))+
+  geom_line(aes( y=pH5_boble, color="pH 5"),linetype="dashed")+ 
+  geom_line(aes( y=pH10_boble,color="pH 10"),linetype="dashed")+
+  geom_line(aes( y=pH11_boble,color="pH 11"),linetype="dashed")+
+  geom_line(data=data_buffer, aes(x=tid_buffer, y=pH_buffer, color="pH Buffer"),linetype="dashed")+
+  scale_color_manual(values=c("pH 5"="red","pH 10"="green", "pH 11"="blue", "pH Buffer"="orange"),labels=c("pH 5", "pH 10", "pH 11", "pH 9.2 Buffer"))+
+  labs(x="Time [min]",y="pH ", color="Legend")+
+  ggtitle("pH measurements bobble ")
+
+```
