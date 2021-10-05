@@ -45,7 +45,7 @@ There is many fluctuations in the data due to insufficient regulations of the re
 The larger pressure fluctuations after 1 h, 2h, 3.5h is due to sampling from the permeate stream, which disrupts the automatic pressure regulation.
 The TMP decrease slightly from 2.5 bar to 2.3 bar over the time duration of 4 hours. 
 
-```{R chuck 2, echo=FALSE, message=FALSE}
+```{R NaCl import data plot pressure, echo=FALSE, message=FALSE}
 ### NaCl 3 mM
 CWF_NaCl = read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
@@ -96,7 +96,7 @@ dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
 The conductivity was measure with sensors in the feed and permeate stream. As expected the conductivity in the feed stream increase due to batch setup, and the likewise the conductivity of the permeate stream increase. 
 From these measurements the rejection of conductivity was calculated, which decrease from 50 % - 25 % over time as the conductivity increase in the feed stream. 
 
-```{R chuck 3, echo=FALSE, message=FALSE}
+```{R NaCl plot conductivity, echo=FALSE, message=FALSE}
 ay <- list(
   tickfont = list(color = "red"),
   overlaying = "y",
@@ -135,7 +135,7 @@ dat_NaCl %>%
 Bicarboante was measured in the feed stream and then in permeate and concentrate at the end of the experiment. 
 It is evident from the following plot that the bicarbonate concentration increase in the feed stream, and is significantly lower in the permeate stream and slightly higher in the concentrate stream. 
 
-```{R chuck 4, echo=FALSE, message=FALSE}
+```{R NaCl plot bicarbonate, echo=FALSE, message=FALSE}
 B_NaCl_feed <- c(8.4,31,42,43)
 tid_kort <- c(0,2,3.5,4)
 B_NaCl_permeate <- 15
@@ -159,9 +159,9 @@ ggplot(data=SingleSalt_b_NaCl, aes(x=tid_kort))+
 <h3> CaCl2 3mM </h3>
 
 An experiment with single salt CaCl2 was conducted at concentration 3mM (should have been 1.5 mM). 
+There are further fluctuations in the data which is due to intake of air in the system which lead to the air dampener to be filled with air and thus not dampening the flow fluctuations, thus occurred after 2.5 hours. 
 
-
-```{R chuck 5, echo=FALSE, message=FALSE}
+```{R CaCl2 import data plot pressure, echo=FALSE, message=FALSE}
 ###CaCl2 3 mM 
 CWF_CaCl2 = read_delim("data/singlesalt_CaCl2_3mM_15-09-2021.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
@@ -180,14 +180,26 @@ dat_CaCl2$time = dmy_hms(dat_CaCl2$time)#Vi ændrer formatet af 'dato' kolonnen 
 #str(dat)
 
 
-tid_sec <- as.numeric(as.POSIXct(dat_CaCl2$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow rammer 17 ml/min. 
-dat_CaCl2 <- data.frame(dat_CaCl2,tid_sec) #tilføjer tid til data.frame
+#tid_sec <- as.numeric(as.POSIXct(dat_CaCl2$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", #format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow #rammer 17 ml/min. 
+#dat_CaCl2 <- data.frame(dat_CaCl2,tid_sec) #tilføjer tid til data.frame
 
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_CaCl2$flow0501>16&dat_CaCl2$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_CaCl2=dat_CaCl2[-c(1:start_tid),]
+flow_boolean_slut = dat_CaCl2$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_CaCl2=dat_CaCl2[-c(slut_tid:(nrow(dat_CaCl2)) ),]
+### Tid i s fra forsøgs start
+dat_CaCl2 = dat_CaCl2%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_CaCl2$time))-as.numeric(dat_CaCl2$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
 
-dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
+dat_CaCl2 %>%#dplyr arbejder indenfor 'dat' data framen
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
-  plot_ly(x=~(tid_sec)/60/60,
+  plot_ly(x=~sek/3600,
           y=~p_avg0301,
           name="Pressure before membrane",
           color='#1f77b4',
@@ -199,17 +211,57 @@ dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
   add_lines(y=~TMP_slid,
             name='TMP',
             color='#forestgreen')%>%
-  layout(title="NaCl Pressure",
+  layout(title="CaCl2 Pressure",
          legend=list(x=0.7,y=0.2),
-         yaxis=list(title="Pressure [bar]"),
-         xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
+         yaxis=list(title="Pressure [bar]", range=c(0,3.5)),
+         xaxis=list(title="Time [h]", range=c(0,4)))#Her plottet de to tryk på feed siden plus et TMP
 
 
 ``` 
 
+```{R CaCl2 plot conductivity, echo=FALSE, message=FALSE}
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection") #Her noget hokus-pokus for at kunne lave 2 y akser
 
 
-```{R chuck 7, echo=FALSE, message=FALSE}
+dat_CaCl2 %>%
+  mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
+  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
+  plot_ly(x=~sek/3600,
+          y=~feed_slid,
+          name="Feed",
+          color="red",
+          type='scatter',
+          mode='lines',
+          line=list(color=('#1f77b4')))%>%
+  add_trace(y=~con0501,
+            name='Permeate',
+            line=list(color="#E41317"))%>%
+  add_trace(y=~rej_slid,
+            name='Rejection',
+            yaxis="y2",
+            line=list(color="#forestgreen"))%>%
+  # Set figure title, x and y-axes titles
+  layout(title="CaCl2 Conductivity",yaxis2=ay,
+         legend=list(x=0.6,y=0.5),
+         yaxis=list(title="\U03BC S/cm"),
+         xaxis=list(title="Time [h]")) #Her conductivity over tid + en form for rejection, 
+#læg gerne mærke til farverne der nægter at se
+
+
+```
+
+
+```{r stop knit, include=FALSE, echo=FALSE, message=FALSE}
+knitr::knit_exit()
+```
+
+
+```{R Na2OSiO2 import data plot pressure, echo=FALSE, message=FALSE}
 ###Na2OSiO2 1 mM 
 CWF <- read_delim("data/singlesalt_Na2OSiO2_1mM_22-09-2021.csv", 
                     delim = "\t", escape_double = FALSE, 
