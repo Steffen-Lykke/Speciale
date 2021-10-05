@@ -26,15 +26,19 @@ library(zoo)
 library(latex2exp)
 ```
 
-Summary of single salt experiments. 
-All experiments were preformed with:  
+Summary of single salt experiments.
+
+All experiments were preformed with:
+
 Flux 20 LMH (permeate flow 17 mL/min)
+
 Crossflow of 0.5 m/s (feed flow 1160 mL/min) 
+
 Initial feed volume of 6L. 
 
 The concentraiton of the various salts were selected based on concentration of authentic CT reservior water. 
 
-
+<h3> NaCl </h3>
 The first single salt experiment performed was with 3mM NaCl concentration.
 Where the pressure was logged before and after the the membrane and the TMP was calculated. 
 There is many fluctuations in the data due to insufficient regulations of the regulation pressure valve. 
@@ -42,10 +46,7 @@ The larger pressure fluctuations after 1 h, 2h, 3.5h is due to sampling from the
 The TMP decrease slightly from 2.5 bar to 2.3 bar over the time duration of 4 hours. 
 
 ```{R chuck 2, echo=FALSE, message=FALSE}
-### NaCl 3 mM 
-#knitr::opts_knit$set(root.dir = "C:/Users/102222/OneDrive - Grundfos/Desktop/Speciale")
-
-
+### NaCl 3 mM
 CWF_NaCl = read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 #str(CWF)
@@ -130,10 +131,39 @@ dat_NaCl %>%
 
 ```
 
+
+Bicarboante was measured in the feed stream and then in permeate and concentrate at the end of the experiment. 
+It is evident from the following plot that the bicarbonate concentration increase in the feed stream, and is significantly lower in the permeate stream and slightly higher in the concentrate stream. 
+
 ```{R chuck 4, echo=FALSE, message=FALSE}
+B_NaCl_feed <- c(8.4,31,42,43)
+tid_kort <- c(0,2,3.5,4)
+B_NaCl_permeate <- 15
+B_NaCl_concentrate <- 48
+
+SingleSalt_b_NaCl <- data.frame(tid_kort,B_NaCl_feed)
+## plot 
+
+ggplot(data=SingleSalt_b_NaCl, aes(x=tid_kort))+
+  geom_point(aes( y=B_NaCl_feed, color="Feed"))+
+  geom_point(aes(x=4, y=B_NaCl_permeate, color="Permeate"))+
+  geom_point(aes(x=4, y=B_NaCl_concentrate, color="Concentrate"))+
+  scale_color_manual(values=c("Feed"="red", "Permeate"="blue", "Concentrate"="green"),labels=c("Feed", "Permeate", "Concentrate"))+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
+  ggtitle("Bicarbonate concentration NaCl")
+
+
+
+
+```
+<h3> CaCl2 3mM </h3>
+
+An experiment with single salt CaCl2 was conducted at concentration 3mM (should have been 1.5 mM). 
+
+
+```{R chuck 5, echo=FALSE, message=FALSE}
 ###CaCl2 3 mM 
-CWF_CaCl2 <- read_delim("data/singlesalt_CaCl2_3mM_15-09-2021.csv", 
-                  delim = "\t", escape_double = FALSE, 
+CWF_CaCl2 = read_delim("data/singlesalt_CaCl2_3mM_15-09-2021.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 #str(CWF)
 dat_CaCl2 = as.data.frame(CWF_CaCl2) #Ændrer strukturen af dataen til noget vi kan arbejde med
@@ -146,13 +176,18 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_CaCl2 = dat_CaCl2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-dat_CaCl2$time = dmy_hms(dat_CaCl2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og dater istedet for at det bare er noget tekst
+dat_CaCl2$time = dmy_hms(dat_CaCl2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 #str(dat)
 
-dat_CaCl2 %>%#dplyr arbejder indenfor 'dat' data framen
+
+tid_sec <- as.numeric(as.POSIXct(dat_CaCl2$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow rammer 17 ml/min. 
+dat_CaCl2 <- data.frame(dat_CaCl2,tid_sec) #tilføjer tid til data.frame
+
+
+dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
-  plot_ly(x=~time,
+  plot_ly(x=~(tid_sec)/60/60,
           y=~p_avg0301,
           name="Pressure before membrane",
           color='#1f77b4',
@@ -164,16 +199,17 @@ dat_CaCl2 %>%#dplyr arbejder indenfor 'dat' data framen
   add_lines(y=~TMP_slid,
             name='TMP',
             color='#forestgreen')%>%
-  layout(title="CaCl2 Pressure",
+  layout(title="NaCl Pressure",
          legend=list(x=0.7,y=0.2),
          yaxis=list(title="Pressure [bar]"),
-         xaxis=list(title="Time")) #Her plottet de to tryk på feed siden plus et TMP
+         xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
+
 
 ``` 
 
 
 
-```{R chuck 5, echo=FALSE, message=FALSE}
+```{R chuck 7, echo=FALSE, message=FALSE}
 ###Na2OSiO2 1 mM 
 CWF <- read_delim("data/singlesalt_Na2OSiO2_1mM_22-09-2021.csv", 
                     delim = "\t", escape_double = FALSE, 
@@ -194,7 +230,7 @@ dat_SiO2$time = dmy_hms(dat_SiO2$time)#Vi ændrer formatet af 'dato' kolonnen ti
 ```
 
 
-```{R chuck 6, include=TRUE}
+```{R chuck 8, include=TRUE}
 
 
 
