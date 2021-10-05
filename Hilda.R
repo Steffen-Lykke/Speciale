@@ -81,6 +81,7 @@ ggplot(dat,aes(sek/3600,flow0501)) + geom_line() + theme_bw() +
 
 
 
+
 dat %>%#dplyr arbejder indenfor 'dat' data framen
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
