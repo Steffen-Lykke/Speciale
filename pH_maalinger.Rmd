@@ -1,0 +1,68 @@
+---
+title: "pH maalinger"
+author: "Lærke"
+date: "5/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Loading af pakker 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+
+```
+
+Summary of pH measurement to determine possible buffer properties of the 3 mM NaCl in Ro water.  
+Half of the samples were bobbles with atmospheric air overnight, to impact the carbonate system. 
+About 500 mL solution was set to various pH, with 2M NaCl and 2M NaOH. 
+When setting the pH it was very difficult to achieve a pH of 8, a lower concentratino of acid and base could be used to set the pH.  
+One samples was prepared with a sodium-bicarbonate-carbonate buffer with initial pH at 9.2. 
+The pH was measure intially (time 0) and following the pH was set about time 15 min. 
+
+```{r chuck 2, echo=FALSE, message=FALSE}
+#loading of data: 
+pH5_noboble <- c(6.37, 5.07, 5.11, 5.28, 5.42, 5.25)
+pH10_noboble <- c(6.56, 10.05, 10.01, 9.85, 9.75, 8.47)
+pH11_noboble <- c(6.60, 11.04, 11.03, 10.96, 10.89, 10.24)
+tid_noboble <- c(0, 15, 35, 135, 280, 1350)
+
+data_noboble <- data.frame(tid_noboble, pH5_noboble, pH10_noboble, pH11_noboble)
+
+tid_buffer <- c(0,135, 280, 1350)
+pH_buffer <- c(9.18, 9.14, 9.10, 8.85)
+
+data_buffer <- data.frame(tid_buffer, pH_buffer)
+
+ggplot(data=data_noboble, aes(x=tid_noboble))+
+  geom_line(aes( y=pH5_noboble, color="pH 5"),linetype="dashed")+ 
+  geom_line(aes( y=pH10_noboble,color="pH 10"),linetype="dashed")+
+  geom_line(aes( y=pH11_noboble,color="pH 11"),linetype="dashed")+
+  geom_line(data=data_buffer, aes(x=tid_buffer, y=pH_buffer, color="pH Buffer"),linetype="dashed")+
+  scale_color_manual(values=c("pH 5"="red","pH 10"="green", "pH 11"="blue", "pH Buffer"="orange"),labels=c("pH 5", "pH 10", "pH 11", "pH 9.2 Buffer"))+
+  labs(x="Time [min]",y="pH ", color="Legend")+
+  ggtitle("pH measurements no bobble ")
+
+```
+
+From the plot it is evident that all solutions go towards the initial pH at about pH 6.5. 
+Meaning that pH 5 increase slightly and then decrease, the samples with pH 10 and 11 decrease. 
+The buffer solution with pH 9.2 also decrease bus significantly less than the remaining samples. 
+
