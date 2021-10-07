@@ -30,32 +30,32 @@ library(latex2exp)
 
 ```
 
-Summary of pH measurement to determine possible buffer properties of the 3 mM NaCl in Ro water.  
-Half of the samples were bobbles with atmospheric air overnight, to impact the carbonate system. 
+pH measurement to determine possible buffer properties of the 3 mM NaCl in RO water.  
+Half of the samples were bobbled with atmospheric air overnight, to impact the carbonate system. 
 About 500 mL solution was set to various pH, with 2M NaCl and 2M NaOH. 
-When setting the pH it was very difficult to achieve a pH of 8, a lower concentratino of acid and base could be used to set the pH.  
+When setting the pH it was very difficult to achieve a pH of 8, a lower concentration of acid and base could be used to set the pH.  
 One samples was prepared with a sodium-bicarbonate-carbonate buffer with initial pH at 9.2. 
-The pH was measure intially (time 0) and following the pH was set about time 15 min. 
+The pH was measure initially (time 0) and following the pH was set about time 15 min. 
 
-```{r chuck 2, echo=FALSE, message=FALSE}
+
+The First data displayed if of samples which were not bobbled with atmospheric air. 
+```{r pH no bobble, echo=FALSE, message=FALSE}
 #loading of data: 
-pH5_noboble <- c(6.37, 5.07, 5.11, 5.28, 5.42, 5.25)
-pH10_noboble <- c(6.56, 10.05, 10.01, 9.85, 9.75, 8.47)
-pH11_noboble <- c(6.60, 11.04, 11.03, 10.96, 10.89, 10.24)
-tid_noboble <- c(0, 15, 35, 135, 280, 1350)
+pH5_noboble <- c( 5.07, 5.11, 5.28, 5.42, 5.25)
+pH10_noboble <- c( 10.05, 10.01, 9.85, 9.75, 8.47)
+pH11_noboble <- c(11.04, 11.03, 10.96, 10.89, 10.24)
+tid_noboble <- c( 15, 35, 135, 280, 1350)
 
 data_noboble <- data.frame(tid_noboble, pH5_noboble, pH10_noboble, pH11_noboble)
 
-tid_buffer <- c(0,135, 280, 1350)
-pH_buffer <- c(9.18, 9.14, 9.10, 8.85)
-
-data_buffer <- data.frame(tid_buffer, pH_buffer)
+start_pH <- mean(c(6.37,6.56,6.60,6.58,6.50,6.52))
 
 ggplot(data=data_noboble, aes(x=tid_noboble))+
   geom_line(aes( y=pH5_noboble, color="pH 5"),linetype="dashed")+ 
   geom_line(aes( y=pH10_noboble,color="pH 10"),linetype="dashed")+
   geom_line(aes( y=pH11_noboble,color="pH 11"),linetype="dashed")+
-  geom_line(data=data_buffer, aes(x=tid_buffer, y=pH_buffer, color="pH Buffer"),linetype="dashed")+
+  geom_hline(yintercept = start_pH)+
+  geom_text(aes(750,start_pH, label="Initial pH value", vjust=-1))+
   scale_color_manual(values=c("pH 5"="red","pH 10"="green", "pH 11"="blue", "pH Buffer"="orange"),labels=c("pH 5", "pH 10", "pH 11", "pH 9.2 Buffer"))+
   labs(x="Time [min]",y="pH ", color="Legend")+
   ggtitle("pH measurements no bobble ")
@@ -63,28 +63,74 @@ ggplot(data=data_noboble, aes(x=tid_noboble))+
 ```
 
 From the plot it is evident that all solutions go towards the initial pH at about pH 6.5. 
-Meaning that pH 5 increase slightly and then decrease, the samples with pH 10 and 11 decrease. 
-The buffer solution with pH 9.2 also decrease bus significantly less than the remaining samples. 
+An outlier is the sample with pH 5 (red) which increase slightly and then decrease, the samples with pH 10 and 11 decrease. 
 
-The samples which had been bobbles over night is plotted in following graph. 
 
-```{r chuck 2, echo=FALSE, message=FALSE}
+
+The samples which had been bobbles over night is plotted in following plot. 
+
+```{r pH with bobble, echo=FALSE, message=FALSE}
 #loading of data: 
-pH5_boble <- c()
-pH10_boble <- c()
-pH11_boble <- c()
-tid_boble <- c()
+pH5_boble <- c(5.57,5.71,5.78,5.80,6.12)
+pH9.5_boble <- c(9.51,9.38,9.18,8.93,7.15)
+pH11_boble <- c(10.99,10.92,10.80,10.65,9.75)
+tid_boble <- c(5,20,220,330,1755)
 
-data_boble <- data.frame(tid_boble, pH5_boble, pH10_boble, pH11_boble)
+data_boble <- data.frame(tid_boble, pH5_boble, pH9.5_boble, pH11_boble)
 
 
-ggplot(data=data_noboble, aes(x=tid_noboble))+
-  geom_line(aes( y=pH5_boble, color="pH 5"),linetype="dashed")+ 
-  geom_line(aes( y=pH10_boble,color="pH 10"),linetype="dashed")+
-  geom_line(aes( y=pH11_boble,color="pH 11"),linetype="dashed")+
-  geom_line(data=data_buffer, aes(x=tid_buffer, y=pH_buffer, color="pH Buffer"),linetype="dashed")+
-  scale_color_manual(values=c("pH 5"="red","pH 10"="green", "pH 11"="blue", "pH Buffer"="orange"),labels=c("pH 5", "pH 10", "pH 11", "pH 9.2 Buffer"))+
+ggplot(data=data_boble, aes(x=tid_boble))+
+  geom_line(aes( y=pH5_boble, color="pH 5"),linetype="dotted")+ 
+  geom_line(aes( y=pH9.5_boble,color="pH 9.5"),linetype="dotted")+
+  geom_line(aes( y=pH11_boble,color="pH 11"),linetype="dotted")+
+  geom_hline(yintercept = start_pH)+
+  geom_text(aes(750,start_pH, label="Initial pH value", vjust=-1))+
+  scale_color_manual(values=c("pH 5"="red","pH 9.5"="green", "pH 11"="blue"),labels=c("pH 5", "pH 9.5", "pH 11"))+
   labs(x="Time [min]",y="pH ", color="Legend")+
   ggtitle("pH measurements bobble ")
 
 ```
+
+This this plot, all sample decrease toward the initial pH value, where the sample with initial pH 5 decrease less, this is most likely as it was initlaly closer to the initial pH. 
+
+
+
+Comparison of pH measurement where the samples were bobbled with atmospheric air prior to change in pH, denoted b, and were the samples were not bobbled. The pH developmed of the buffer soluiton is also included in this plot.
+
+
+```{r samlet, echo=FALSE, message=FALSE}
+
+
+tid_buffer <- c(0,135, 280, 1350, 1595,1755,3180)
+pH_buffer <- c(9.18, 9.14, 9.10, 8.85,8.83,8.78,8.57)
+data_buffer <- data.frame(tid_buffer, pH_buffer)
+
+
+
+ggplot()+
+  geom_line(data=data_noboble, aes(x=tid_noboble, y=pH5_noboble, color="pH 5"),linetype="dashed")+ 
+  geom_line(data=data_noboble, aes(x=tid_noboble, y=pH10_noboble,color="pH 10"),linetype="dashed")+
+  geom_line(data=data_noboble, aes(x=tid_noboble, y=pH11_noboble,color="pH 11"),linetype="dashed")+
+  geom_line(data=data_buffer, aes(x=tid_buffer, y=pH_buffer, color="pH Buffer"))+
+  geom_line(data=data_boble, aes(x=tid_boble, y=pH5_boble, color="pH 5 b"),linetype="dotted")+ 
+  geom_line(data=data_boble, aes(x=tid_boble, y=pH9.5_boble,color="pH 9.5 b"),linetype="dotted")+
+  geom_line(data=data_boble, aes(x=tid_boble, y=pH11_boble,color="pH 11 b"),linetype="dotted")+
+  geom_hline(yintercept = start_pH)+
+  geom_text(aes(1500,start_pH, label="Initial pH value", vjust=-1))+
+  scale_color_manual(values=c("pH 5"="red","pH 10"="green", "pH 11"="blue", "pH Buffer"="orange","pH 5 b"="red","pH 9.5 b"="green", "pH 11 b"="blue" ),labels=c("pH 5", "pH 10", "pH 11", "pH 9.2 Buffer","pH 5 b", "pH 9.5 b", "pH 11 b"))+
+  labs(x="Time [min]",y="pH ", color="Legend")+
+  ggtitle("pH measurements ")
+
+
+
+             
+```
+
+Please not that the bobbled samples, illustrated with dotted lines,  were left to interact with the surroundings for a longer time period than the samples which were not bobbed, illustrated with dashed lines.
+They have approxibately the same decline in pH. 
+The buffer solution was left for significantly longer time, and did decrease towards the initial pH value from pH 9.2 to pH 8.6, but this sample had significantly smaller decrease in pH compared to the other samples. 
+
+<h3> Conclusion </h3>
+
+It is necessary to use a buffer solution if the pH value should be kept constant. 
+
