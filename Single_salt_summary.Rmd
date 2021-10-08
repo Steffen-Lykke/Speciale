@@ -24,6 +24,7 @@ library(readxl)
 require(readr)
 library(zoo)
 library(latex2exp)
+library(fs)
 ```
 
 Summary of single salt experiments.
@@ -156,6 +157,39 @@ ggplot(data=SingleSalt_b_NaCl, aes(x=tid_kort))+
 
 
 ```
+
+```{R NaCl plot IC data, echo=FALSE, message=FALSE}
+
+NaCl_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx")
+str(NaCl_IC_data)
+
+
+old_names_IC=colnames(NaCl_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Sodium","Chloride","Stream") #Vi finder på nogle lidt bedre nogle
+NaCl_IC_data = NaCl_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+NaCl_IC_data <- as.data.frame(NaCl_IC_data)
+
+NaCl_Permeate <- filter(NaCl_IC_data, Stream=="Permeate")
+NaCl_Feed <- filter(NaCl_IC_data, Stream=="Feed")
+NaCl_Concentrate <- filter(NaCl_IC_data, Stream=="Concentrate")   
+
+NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Concentrate$Chloride)/2)))*100
+
+NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentrate$Sodium)/2)))*100
+
+
+ggplot()+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 9)+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl))+
+  ggtitle("Chloride concentration and rejection")
+
+ggplot()+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 0)+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
+  ggtitle("Sodium concentration and rejection")
+
+
+```
 <h3> CaCl2 3mM </h3>
 
 An experiment with single salt CaCl2 was conducted at concentration 3mM (should have been 1.5 mM). 
@@ -255,6 +289,38 @@ dat_CaCl2 %>%
 
 ```
 
+```{R CaCl2 plot IC data, echo=FALSE, message=FALSE}
+
+CaCl2_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx",2)
+str(CaCl2_IC_data)
+
+
+old_names_IC_CaCl2=colnames(CaCl2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC_CaCl2=c("time","Calcium","Chloride","Stream") #Vi finder på nogle lidt bedre nogle
+CaCl2_IC_data = CaCl2_IC_data %>% rename_at(vars(old_names_IC_CaCl2),~new_names_IC_CaCl2) #Vi ændrer navnene til de nye
+CaCl2_IC_data <- as.data.frame(CaCl2_IC_data)
+
+CaCl2_Permeate <- filter(CaCl2_IC_data, Stream=="Permeate")
+CaCl2_Feed <- filter(CaCl2_IC_data, Stream=="Feed")
+CaCl2_Concentrate <- filter(CaCl2_IC_data, Stream=="Concentrate")   
+
+CaCl2_rej_Cl <- (1-(CaCl2_Permeate$Chloride[-6]/((CaCl2_Feed$Chloride[-1]+CaCl2_Concentrate$Chloride)/2)))*100
+
+CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Concentrate$Calcium)/2)))*100
+
+
+ggplot()+
+  geom_point(data=CaCl2_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 9)+
+  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl))+
+  ggtitle("Chloride concentration and rejection")
+
+ggplot()+
+  geom_point(data=CaCl2_IC_data, aes(x=time, y=Calcium, col=Stream), shape= 0)+
+  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca))+
+  ggtitle("Calcium concentration and rejection")
+  
+       
+```
 
 ```{r stop knit, include=FALSE, echo=FALSE, message=FALSE}
 knitr::knit_exit()
