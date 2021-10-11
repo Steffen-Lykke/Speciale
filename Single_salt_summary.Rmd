@@ -41,6 +41,7 @@ The concentraiton of the various salts were selected based on concentration of a
 
 <h3> NaCl </h3>
 The first single salt experiment performed was with 3mM NaCl concentration.
+The water recoveyr for this experiment is 88.6 %
 Where the pressure was logged before and after the the membrane and the TMP was calculated. 
 There is many fluctuations in the data due to insufficient regulations of the regulation pressure valve. 
 The larger pressure fluctuations after 1 h, 2h, 3.5h is due to sampling from the permeate stream, which disrupts the automatic pressure regulation.
@@ -94,7 +95,7 @@ dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
 
 ```
 
-The conductivity was measure with sensors in the feed and permeate stream. As expected the conductivity in the feed stream increase due to batch setup, and the likewise the conductivity of the permeate stream increase. 
+The conductivity was measured with sensors in the feed and permeate stream. As expected the conductivity in the feed stream increase due to batch setup, and the likewise the conductivity of the permeate stream increase. 
 From these measurements the rejection of conductivity was calculated, which decrease from 50 % - 25 % over time as the conductivity increase in the feed stream. 
 
 ```{R NaCl plot conductivity, echo=FALSE, message=FALSE}
@@ -131,36 +132,14 @@ dat_NaCl %>%
 
 
 ```
-
-
-Bicarboante was measured in the feed stream and then in permeate and concentrate at the end of the experiment. 
-It is evident from the following plot that the bicarbonate concentration increase in the feed stream, and is significantly lower in the permeate stream and slightly higher in the concentrate stream. 
-
-```{R NaCl plot bicarbonate, echo=FALSE, message=FALSE}
-B_NaCl_feed <- c(8.4,31,42,43)
-tid_kort <- c(0,2,3.5,4)
-B_NaCl_permeate <- 15
-B_NaCl_concentrate <- 48
-
-SingleSalt_b_NaCl <- data.frame(tid_kort,B_NaCl_feed)
-## plot 
-
-ggplot(data=SingleSalt_b_NaCl, aes(x=tid_kort))+
-  geom_point(aes( y=B_NaCl_feed, color="Feed"))+
-  geom_point(aes(x=4, y=B_NaCl_permeate, color="Permeate"))+
-  geom_point(aes(x=4, y=B_NaCl_concentrate, color="Concentrate"))+
-  scale_color_manual(values=c("Feed"="red", "Permeate"="blue", "Concentrate"="green"),labels=c("Feed", "Permeate", "Concentrate"))+
-  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
-  ggtitle("Bicarbonate concentration NaCl")
-
-
-
-
-```
 IC analysis was made for Sodium and Chloride. The results are presented in the following plot. 
-Sodium and Chloride data is presented together where Chloride is sodium is represented by 
+Sodium and Chloride data is presented together where Chloride is represented by circles and sodium represented by squares. 
+The Concentration measured of feed and concentrate was almost identical for both sodium and chloride, for sodium it cannot be differentiated between feed and concentrate. 
+This indicate that there isn't a  major concentration difference across the membrane and it is sufficient to take samples from either the Feed or concentrate stream. 
 
- plot indicate some increase in concentration for both feed and permeate
+The plot indicate some increase in concentration for both feed/concentrate and permeate, we do not achieve the increase in concentration that were anticipated, this might be due to a too low water recovery at 88.6 %. 
+The final data point for permeate is taken from the well mixed permeate collected during the whole 4 hours, and is therefore lower than the sample taken at 4 hours. 
+Likewise the final data point for feed is taken from the feed bucket.  -> hvorfor er den lavere.
 
 ```{R NaCl plot IC data, echo=FALSE, message=FALSE}
 
@@ -185,20 +164,45 @@ NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentr
 ggplot()+
   geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 1)+
   #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl))+
-  labs(x="Time [h]",y="Chloride concentration [mg/L]")+
-  ylim(0,135)+
-  ggtitle("Concentration and rejection")+
   geom_point(data=NaCl_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 0)+
   #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
-  labs(x="Time [h]",y="Sodium concentration [mg/L]")+
+  labs(x="Time [h]",y=" concentration [mg/L]")+
   ylim(0,135)+
-  ggtitle("Concentration")
+  ggtitle("IC analysis, Concentration")
 
 
 ```
+
+
+
+```{R NaCl plot bicarbonate, include=FALSE, echo=FALSE, message=FALSE}
+#Bicarboante was measured in the feed stream and then in permeate and concentrate at the end of the experiment. 
+#It is evident from the following plot that the bicarbonate concentration increase in the feed stream, and is significantly lower in the permeate stream and slightly higher in the concentrate stream. 
+B_NaCl_feed <- c(8.4,31,42,43)
+tid_kort <- c(0,2,3.5,4)
+B_NaCl_permeate <- 15
+B_NaCl_concentrate <- 48
+
+SingleSalt_b_NaCl <- data.frame(tid_kort,B_NaCl_feed)
+## plot 
+
+ggplot(data=SingleSalt_b_NaCl, aes(x=tid_kort))+
+  geom_point(aes( y=B_NaCl_feed, color="Feed"))+
+  geom_point(aes(x=4, y=B_NaCl_permeate, color="Permeate"))+
+  geom_point(aes(x=4, y=B_NaCl_concentrate, color="Concentrate"))+
+  scale_color_manual(values=c("Feed"="red", "Permeate"="blue", "Concentrate"="green"),labels=c("Feed", "Permeate", "Concentrate"))+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
+  ggtitle("Bicarbonate concentration NaCl")
+
+
+
+
+```
+
 <h3> CaCl2 3mM </h3>
 
 An experiment with single salt CaCl2 was conducted at concentration 3mM (should have been 1.5 mM). 
+The water recovery was 80 %. 
 There are further fluctuations in the data which is due to intake of air in the system which lead to the air dampener to be filled with air and thus not dampening the flow fluctuations, thus occurred after 2.5 hours. 
 
 ```{R CaCl2 import data plot pressure, echo=FALSE, message=FALSE}
@@ -259,6 +263,10 @@ dat_CaCl2 %>%#dplyr arbejder indenfor 'dat' data framen
 
 ``` 
 
+This intake of air into the system also had an effect on conductivity and conductivity rejection as there are major fluctuations, also the rejection increase after these flucturations are introduced, this is different from the NaCl experiment. . 
+Otherwise similar trends as from the NaCl as seen in conductivty, conductivity rejection is about 60-50 % which is significantly higher than for the NaCl experiment. The increase in conductivity rejection might be due to presence of multicalent ions. 
+
+
 ```{R CaCl2 plot conductivity, echo=FALSE, message=FALSE}
 ay <- list(
   tickfont = list(color = "red"),
@@ -294,6 +302,10 @@ dat_CaCl2 %>%
 
 
 ```
+IC analysis was made for Calcium and Chloride. The results are presented in the following plot where Chloride is presented by circles and Calcium presented by squares. 
+As for the NaCl experiment there was almost identical concentration for feed and concentrate for both Chloride and Calcium, which back the previous conclusion of taking fewer samples. 
+
+There is a higher concentration of Chloride in this expeirment compared to the NaCl experiment, otherwise there is similar trend in the plot, with increase in concentraiton of both feed/concentrate and permeate.
 
 ```{R CaCl2 plot IC data, echo=FALSE, message=FALSE}
 
@@ -316,37 +328,29 @@ CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Co
 
 
 ggplot()+
-  geom_point(data=CaCl2_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 9)+
-  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl))+
-  ggtitle("Chloride concentration and rejection")
-
-ggplot()+
+  geom_point(data=CaCl2_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 1)+
+  #geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl))+
   geom_point(data=CaCl2_IC_data, aes(x=time, y=Calcium, col=Stream), shape= 0)+
-  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca))+
+  #geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  ylim(0,350)+
   ggtitle("Calcium concentration and rejection")
   
+
        
 ```
-Comparison of Rejection 
-```{r stop knit, include=FALSE, echo=FALSE, message=FALSE}
 
 
-ggplot()+
-  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca, color="CaCl2 R Ca"))+
-  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl,color="CaCl2 R Cl"))+
-  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
-  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))+
-  scale_color_manual(values=c("CaCl2 R Ca"="red", "CaCl2 R Cl"="blue", "NaCl R Na"="green", "NaCl R Cl"="orange"),labels=c("CaCl2 R Ca", "CaCl2 R Cl", "NaCl R Na", "NaCl R Cl"))+
-  labs(x="Time [h]",y="Rejection  %", color="Legend")+
-  ylim(0,100)+
-  ggtitle("Rejection Singlesalt")
 
-```
 
-```{r stop knit, include=FALSE, echo=FALSE, message=FALSE}
-knitr::knit_exit()
-```
 
+
+
+<h3> Na2OSiO2 3mM </h3>
+
+An experiment with single salt Na2OSiO2 was conducted at concentration 1mM. 
+The water recovery was ?? %. 
+Again the large flucturations is due to sampleing of the permeate stream. 
 
 ```{R Na2OSiO2 import data plot pressure, echo=FALSE, message=FALSE}
 ###Na2OSiO2 1 mM 
@@ -366,12 +370,176 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
 dat_SiO2 = dat_SiO2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
 dat_SiO2$time = dmy_hms(dat_SiO2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean_SiO2 = dat_SiO2$flow0501>16&dat_SiO2$flow0501<25
+start_tid_SiO2 = min(which(flow_boolean_SiO2))
+dat_SiO2=dat_SiO2[-c(1:start_tid_SiO2),]
+flow_boolean_slut_SiO2 = dat_SiO2$flow0501<5
+slut_tid_SiO2 = min(which(flow_boolean_slut_SiO2))
+dat_SiO2=dat_SiO2[-c(slut_tid_SiO2:(nrow(dat_SiO2)) ),]
+### Tid i s fra forsøgs start
+dat_SiO2 = dat_SiO2%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_SiO2$time))-as.numeric(dat_SiO2$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+dat_SiO2 %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~sek/3600,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="SiO2 Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]", range=c(0,3.5)),
+         xaxis=list(title="Time [h]", range=c(0,4)))#Her plottet de to tryk på feed siden plus et TMP
+
+```
+The same trends as for the NaCl and the CaCl2 experiments are seen in the SiO2 expeirment regarding conductivity rejection. Where conductivity rejection is about 70-60 %.   
+There are some fluctuations in just after 2 and 3 hours, this might be due to the large flucturations due to sampling of permeate also seen in the previous plot. 
+
+```{R Na2OSiO2 plot conductivity, include=TRUE, message=FALSE}
+
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection") #Her noget hokus-pokus for at kunne lave 2 y akser
+
+
+dat_SiO2 %>%
+  mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
+  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
+  plot_ly(x=~sek/3600,
+          y=~feed_slid,
+          name="Feed",
+          color="red",
+          type='scatter',
+          mode='lines',
+          line=list(color=('#1f77b4')))%>%
+  add_trace(y=~con0501,
+            name='Permeate',
+            line=list(color="#E41317"))%>%
+  add_trace(y=~rej_slid,
+            name='Rejection',
+            yaxis="y2",
+            line=list(color="#forestgreen"))%>%
+  # Set figure title, x and y-axes titles
+  layout(title="SiO2 Conductivity",yaxis2=ay,
+         legend=list(x=0.6,y=0.5),
+         yaxis=list(title="\U03BC S/cm"),
+         xaxis=list(title="Time [h]")) #Her conductivity over tid + en form for rejection, 
+#læg gerne mærke til farverne der nægter at se
+
+
+```
+
+```{R Na2OSiO2 plot concentration, include=TRUE, message=FALSE}
+ #Na2OSiO2 data 
+
+tid <- c(1,2,3,3.5,4)
+
+#concentrations data: 
+SiO2_conc_feed <- c(60.7,60.3,63.6,63.6,63)
+SiO2_conc_conc <- c(62,62.7,63.9,63.4,65.3)
+SiO2_conc_permeate <- c(52.8,55.5,54.7,56.7,51.6)
+SiO2_conc_inlet = (SiO2_conc_feed+SiO2_conc_conc)/2
+SiO2_rejection = (1-(SiO2_conc_permeate/SiO2_conc_feed))*100
+
+###pH data: 
+SiO2_ph_feed <- c(8.29,8.26,8.29,8.35,8.37)
+SiO2_ph_conc <- c(8.29,8.27,8.29,8.33,8.37)
+SiO2_ph_permeate <- c(7.77,7.87,7.93,7.96,7.9)
+SiO2_ph_inlet = (SiO2_ph_feed+SiO2_ph_conc)/2
+
+SiO2 <- data.frame(tid,SiO2_conc_feed,SiO2_conc_conc, SiO2_conc_permeate,SiO2_ph_feed,SiO2_ph_conc, SiO2_ph_permeate)
+
+
+ggplot(data=SiO2, aes(x=tid))+
+  geom_point(aes( y=SiO2_conc_feed, color="Feed"),shape= 0)+
+  geom_point(aes( y=SiO2_conc_conc,color="Concentrate"),shape= 0)+
+  geom_point(aes( y=SiO2_conc_permeate,color="Permeate"),shape= 0)+
+  scale_color_manual(values=c("Feed"="green","Concentrate"="red","Permeate"="blue"),labels=c("Feed", "Concentrate", "Permeate"))+
+  labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")+
+  ggtitle("Concentration, feed, concentrate, permeate")
+
+
+
+
+```
+
+<h3> Rejection IC data </h3>
+
+The rejection of both the NaCl and the CaCl2 experiment is compared in the follow plot. 
+The rejection in the CaCl2 experiment is significantly larger and increase slightly over the corse of the experiment, where it was expected that the rejection would increase as seen for the conductivity rejection, this might be due to the small no of data samples for IC data. The rejection is about 50-60% which is similar for the conductivity experiment. 
+
+The rejection in the NaCl experiment is sinificantly lower than the CaCl2 experiment, and is more constant over the 4 hours. When comparing to the conductivity rejection which decrease from 50-25 % it is similar. 
+It is interesting to compare the chloride rejection from the two experiment where there is a higher concentration in the CaCl2 (double) but also significantly higher rejeciton also double. 
+It would be expected to have similar or lower rejection with increase in concentration therefore the increase in rejection for the CaCl2 experiment is most likely due to the presence of multivalent ions. 
+There is a much higher rejection of Calcium than sodium, despite a similar concentraiton of 3mM, this difference is again contributed to the nature of the multivalent calcium ions. 
+-> mere teroi om hvorfor de har bedre rejection. 
+
+-> mangler at kommentere på SiO2 rejection. 
+
+```{r Summary rejection, echo=FALSE, message=FALSE}
+#ggplot(data=SiO2, aes(x=tid))+
+#  geom_point(aes(y=SiO2_rejection),color="black")+
+#  ylim(0,100)+
+#  ggtitle("Rejection %")
+
+ggplot()+
+  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca, color="CaCl2 R Ca"))+
+  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl,color="CaCl2 R Cl"))+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))+
+  geom_point(data=SiO2,aes(x=tid, y=SiO2_rejection,color="R SiO2 "))+
+  scale_color_manual(values=c("CaCl2 R Ca"="red", "CaCl2 R Cl"="blue", "NaCl R Na"="green", "NaCl R Cl"="orange", "R SiO2"="black"),labels=c("CaCl2 R Ca", "CaCl2 R Cl", "NaCl R Na", "NaCl R Cl", "R SiO2"))+
+  labs(x="Time [h]",y="Rejection  %", color="Legend")+
+  ylim(0,100)+
+  ggtitle("Rejection Singlesalt")
+
+```
+
+<h3> Bicarboante </h3>
+Bicarboante was measured in the feed stream and then in permeate and concentrate at the end of the experiment. 
+When comparing the different experiment there is singiciantly higher concentaiton of bicarbonate in SiO2 expeirment, floweed by NaCl and CaCl2 which have more similar bicarbonate concentraiton. 
+There is a general trend for all experiments, that the bicarbonate concentration increase in the feed stream, and is significantly lower in the permeate stream and slightly higher in the concentrate stream. 
+
+```{r Summary bicarbonat, echo=FALSE, message=FALSE}
+
+
+B_NaCl <- c(8.4,31,42,43,15,48)
+B_CaCl2 <- c(6,15,18,20,7.8,20)
+
+B_Na2OSiO2 <- c(126,128,141,157,196,205,61,212)
+tid_lang <- (c(0,0,1,2,3.5,4,4,4))
+tid_kort <- c(0,2,3.5,4,4,4)
+
+SingleSalt_Cl <- data.frame(tid_kort,B_NaCl, B_CaCl2)
+Singlesalt_SiO2 <- data.frame(tid_lang,B_Na2OSiO2)
+
+
+### Plottet sammen ###
+
+ggplot(data=SingleSalt_Cl, aes(x=tid_kort))+
+  geom_point(aes( y=B_NaCl, color="NaCl"))+
+  geom_point(aes( y=B_CaCl2,color="CaCl2"))+
+  geom_point(data=Singlesalt_SiO2, aes(x=tid_lang, y=B_Na2OSiO2, color="SiO2"))+
+  scale_color_manual(values=c("NaCl"="red","CaCl2"="green", "SiO2"="blue"),labels=c("NaCl", "CaCl2", "SiO2"))+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
+  ggtitle("Bicarbonate concentration Singlesalt")
 ```
 
 
-```{R chuck 8, include=TRUE}
-
-
-
-
-```
+<h3> Mangler PH sammenligning </h3>
