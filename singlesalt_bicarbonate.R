@@ -36,13 +36,13 @@ ggplot(data=SingleSalt_Cl, aes(x=tid_kort))+
   geom_point(aes( y=B_NaCl, color="NaCl"))+
   geom_point(aes( y=B_CaCl2,color="CaCl2"))+
   scale_color_manual(values=c("NaCl"="red","CaCl2"="green"),labels=c("NaCl", "CaCl2"))+
-  labs(x="Time[h]",y="Bicarbonate  [mg/L]", color="Legend")+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
   ggtitle("Bicarbonate concentration Singlesalt")
 
 ggplot(data=Singlesalt_SiO2, aes(x=tid_lang))+
   geom_point(aes( y=B_Na2OSiO2, color="SiO2"))+
   scale_color_manual(values=c("SiO2"="black"),labels=c("SiO2"))+
-  labs(x="Time[h]",y="Bicarbonate  [mg/L]", color="Legend")+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
   ggtitle("Bicarbonate concentration Singlesalt")
 
 ### Plottet sammen ###
@@ -52,7 +52,7 @@ ggplot(data=SingleSalt_Cl, aes(x=tid_kort))+
   geom_point(aes( y=B_CaCl2,color="CaCl2"))+
   geom_point(data=Singlesalt_SiO2, aes(x=tid_lang, y=B_Na2OSiO2, color="SiO2"))+
   scale_color_manual(values=c("NaCl"="red","CaCl2"="green", "SiO2"="blue"),labels=c("NaCl", "CaCl2", "SiO2"))+
-  labs(x="Time[h]",y="Bicarbonate  [mg/L]", color="Legend")+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="Legend")+
   ggtitle("Bicarbonate concentration Singlesalt")
 
 
