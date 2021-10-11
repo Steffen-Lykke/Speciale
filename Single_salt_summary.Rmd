@@ -157,6 +157,10 @@ ggplot(data=SingleSalt_b_NaCl, aes(x=tid_kort))+
 
 
 ```
+IC analysis was made for Sodium and Chloride. The results are presented in the following plot. 
+Sodium and Chloride data is presented together where Chloride is sodium is represented by 
+
+ plot indicate some increase in concentration for both feed and permeate
 
 ```{R NaCl plot IC data, echo=FALSE, message=FALSE}
 
@@ -179,14 +183,16 @@ NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentr
 
 
 ggplot()+
-  geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 9)+
-  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl))+
-  ggtitle("Chloride concentration and rejection")
-
-ggplot()+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 1)+
+  #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl))+
+  labs(x="Time [h]",y="Chloride concentration [mg/L]")+
+  ylim(0,135)+
+  ggtitle("Concentration and rejection")+
   geom_point(data=NaCl_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 0)+
-  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
-  ggtitle("Sodium concentration and rejection")
+  #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
+  labs(x="Time [h]",y="Sodium concentration [mg/L]")+
+  ylim(0,135)+
+  ggtitle("Concentration")
 
 
 ```
@@ -320,6 +326,21 @@ ggplot()+
   ggtitle("Calcium concentration and rejection")
   
        
+```
+Comparison of Rejection 
+```{r stop knit, include=FALSE, echo=FALSE, message=FALSE}
+
+
+ggplot()+
+  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca, color="CaCl2 R Ca"))+
+  geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl,color="CaCl2 R Cl"))+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))+
+  scale_color_manual(values=c("CaCl2 R Ca"="red", "CaCl2 R Cl"="blue", "NaCl R Na"="green", "NaCl R Cl"="orange"),labels=c("CaCl2 R Ca", "CaCl2 R Cl", "NaCl R Na", "NaCl R Cl"))+
+  labs(x="Time [h]",y="Rejection  %", color="Legend")+
+  ylim(0,100)+
+  ggtitle("Rejection Singlesalt")
+
 ```
 
 ```{r stop knit, include=FALSE, echo=FALSE, message=FALSE}
