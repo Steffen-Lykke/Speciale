@@ -176,9 +176,9 @@ NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentr
 
 
 ggplot()+
-  geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 1)+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 16)+
   #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl))+
-  geom_point(data=NaCl_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 0)+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
   #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
   labs(x="Time [h]",y=" concentration [mg/L]")+
   ylim(0,135)+
@@ -342,9 +342,9 @@ CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Co
 
 
 ggplot()+
-  geom_point(data=CaCl2_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 1)+
+  geom_point(data=CaCl2_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 16)+
   #geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl))+
-  geom_point(data=CaCl2_IC_data, aes(x=time, y=Calcium, col=Stream), shape= 0)+
+  geom_point(data=CaCl2_IC_data, aes(x=time, y=Calcium, col=Stream), shape= 17)+
   #geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca))+
   labs(x="Time [h]",y=" Concentration [mg/L]")+
   ylim(0,350)+
@@ -481,9 +481,9 @@ SiO2 <- data.frame(tid,SiO2_conc_feed,SiO2_conc_conc, SiO2_conc_permeate,SiO2_ph
 
 
 ggplot(data=SiO2, aes(x=tid))+
-  geom_point(aes( y=SiO2_conc_feed, color="Feed"),shape= 0)+
-  geom_point(aes( y=SiO2_conc_conc,color="Concentrate"),shape= 0)+
-  geom_point(aes( y=SiO2_conc_permeate,color="Permeate"),shape= 0)+
+  geom_point(aes( y=SiO2_conc_feed, color="Feed"),shape= 16)+
+  geom_point(aes( y=SiO2_conc_conc,color="Concentrate"),shape= 16)+
+  geom_point(aes( y=SiO2_conc_permeate,color="Permeate"),shape= 16)+
   scale_color_manual(values=c("Feed"="green","Concentrate"="red","Permeate"="blue"),labels=c("Feed", "Concentrate", "Permeate"))+
   labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")+
   ggtitle("Concentration, feed, concentrate, permeate")

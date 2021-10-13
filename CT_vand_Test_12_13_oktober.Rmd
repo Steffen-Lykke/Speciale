@@ -46,11 +46,11 @@ The pressure seems to stabilize at around 2.5 bar after the 2 initial hours, it 
 
 ```{R CT-vand import data plot pressure, echo=FALSE, message=FALSE}
 
-CWF_CT_vand = read_delim("data/CT_vand_12.10.2021_del1.csv",delim = "\t", escape_double = FALSE, 
+CWF_CT_vand1 = read_delim("data/CT_vand_12.10.2021_del1.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 #str(CWF)
-dat_CT = as.data.frame(CWF_CT_vand) #Ændrer strukturen af dataen til noget vi kan arbejde med
-old_names=colnames(CWF_CT_vand) #Vi finder de latterlige navne kolonnerne i dataen har 
+dat_CT1 = as.data.frame(CWF_CT_vand1) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_CT_vand1) #Vi finder de latterlige navne kolonnerne i dataen har 
 new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p0301","p0302","p0401","flow0401","p0501","con0501",
             "temp0501","p0601","temp0601","16","17","18","19","20",
@@ -58,18 +58,35 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
-dat_CT = dat_CT %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-dat_CT$time = dmy_hms(dat_CT$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+dat_CT1 = dat_CT1 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_CT1$time = dmy_hms(dat_CT1$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 
+
+CWF_CT_vand2 = read_delim("data/CT_vand_13.10.2021_del2.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_CT2 = as.data.frame(CWF_CT_vand2) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_CT_vand2) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_CT2 = dat_CT2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_CT2$time = dmy_hms(dat_CT2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+dat_CT = rbind(as.data.frame(dat_CT1),as.data.frame(dat_CT2))
 
 
 ### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
 flow_boolean = dat_CT$flow0501>16&dat_CT$flow0501<25
 start_tid = min(which(flow_boolean))
 dat_CT=dat_CT[-c(1:start_tid),]
-#flow_boolean_slut = dat_CT$flow0501<1
-#slut_tid = min(which(flow_boolean_slut))
-#dat_CT=dat_CT[-c(slut_tid:(nrow(dat_CT)) ),]
+flow_boolean_slut = dat_CT$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_CT=dat_CT[-c(slut_tid:(nrow(dat_CT)) ),]
 ### Tid i s fra forsøgs start
 dat_CT = dat_CT%>%
    mutate(sek=(
@@ -92,7 +109,7 @@ dat_CT %>%#dplyr arbejder indenfor 'dat' data framen
             name='TMP',
             color='#forestgreen')%>%
   layout(title="CT Pressure",
-         legend=list(x=0.7,y=0.2),
+         legend=list(x=0.7,y=0.9),
          yaxis=list(title="Pressure [bar]"),
          xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
 
@@ -149,7 +166,7 @@ ggplot(data=dat_CT, aes(x=sek/3600, y=pH0201, color="CT vand pH"))+
   geom_line()+
   scale_color_manual(values=c("CT vand pH"="black"),labels=c("CT vand pH"))+
   labs(x="Time [h]",y="pH", color="Legend")+
-  #ylim(0,9)+
+  ylim(0,9)+
   ggtitle("pH af CT vand ")
 
 
