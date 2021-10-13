@@ -1,6 +1,8 @@
 ---
 title: "Single salt"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -66,14 +68,26 @@ dat_NaCl$time = dmy_hms(dat_NaCl$time)#Vi ændrer formatet af 'dato' kolonnen ti
 #str(dat)
 
 
-tid_sec <- as.numeric(as.POSIXct(dat_NaCl$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow rammer 17 ml/min. 
-dat_NaCl <- data.frame(dat_NaCl,tid_sec) #tilføjer tid til data.frame
+#tid_sec <- as.numeric(as.POSIXct(dat_NaCl$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow rammer 17 ml/min. 
+#dat_NaCl <- data.frame(dat_NaCl,tid_sec) #tilføjer tid til data.frame
 
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_NaCl$flow0501>16&dat_NaCl$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_NaCl=dat_NaCl[-c(1:start_tid),]
+flow_boolean_slut = dat_NaCl$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_NaCl=dat_NaCl[-c(slut_tid:(nrow(dat_NaCl)) ),]
+### Tid i s fra forsøgs start
+dat_NaCl = dat_NaCl%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_NaCl$time))-as.numeric(dat_NaCl$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
 
 dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
-  plot_ly(x=~(tid_sec)/60/60,
+  plot_ly(x=~(sek)/3600,
           y=~p_avg0301,
           name="Pressure before membrane",
           color='#1f77b4',
@@ -408,7 +422,7 @@ dat_SiO2 %>%#dplyr arbejder indenfor 'dat' data framen
 The same trends as for the NaCl and the CaCl2 experiments are seen in the SiO2 expeirment regarding conductivity rejection. Where conductivity rejection is about 70-60 %.   
 There are some fluctuations in just after 2 and 3 hours, this might be due to the large flucturations due to sampling of permeate also seen in the previous plot. 
 
-```{R Na2OSiO2 plot conductivity, include=TRUE, message=FALSE}
+```{R Na2OSiO2 plot conductivity, echo=FALSE, message=FALSE}
 
 ay <- list(
   tickfont = list(color = "red"),
@@ -445,7 +459,7 @@ dat_SiO2 %>%
 
 ```
 
-```{R Na2OSiO2 plot concentration, include=TRUE, message=FALSE}
+```{R Na2OSiO2 plot concentration, echo=FALSE, message=FALSE}
  #Na2OSiO2 data 
 
 tid <- c(1,2,3,3.5,4)
@@ -485,12 +499,16 @@ The rejection of both the NaCl and the CaCl2 experiment is compared in the follo
 The rejection in the CaCl2 experiment is significantly larger and increase slightly over the corse of the experiment, where it was expected that the rejection would increase as seen for the conductivity rejection, this might be due to the small no of data samples for IC data. The rejection is about 50-60% which is similar for the conductivity experiment. 
 
 The rejection in the NaCl experiment is sinificantly lower than the CaCl2 experiment, and is more constant over the 4 hours. When comparing to the conductivity rejection which decrease from 50-25 % it is similar. 
+The rejection of SiO2 is lower than both the rejection seen in the NaCl and CaCl2 experiment. The rejection of SiO2 is fluctuating around 13 %. The Sodium concentraiton has not been measured yet, but it is theorized that this will be much higher and match the conductivity rejection at 60-70%, as Sodium accounts for the conductivity in this experiment.   
+
+
 It is interesting to compare the chloride rejection from the two experiment where there is a higher concentration in the CaCl2 (double) but also significantly higher rejeciton also double. 
 It would be expected to have similar or lower rejection with increase in concentration therefore the increase in rejection for the CaCl2 experiment is most likely due to the presence of multivalent ions. 
 There is a much higher rejection of Calcium than sodium, despite a similar concentraiton of 3mM, this difference is again contributed to the nature of the multivalent calcium ions. 
+
 -> mere teroi om hvorfor de har bedre rejection. 
 
--> mangler at kommentere på SiO2 rejection. 
+
 
 ```{r Summary rejection, echo=FALSE, message=FALSE}
 #ggplot(data=SiO2, aes(x=tid))+
@@ -542,4 +560,28 @@ ggplot(data=SingleSalt_Cl, aes(x=tid_kort))+
 ```
 
 
-<h3> Mangler PH sammenligning </h3>
+<h3> pH sammenligning </h3>
+
+The pH between each experiment vary greatly despite the pH being set at 8.5. 
+The only pH which remained at pH 8.5 was for the Na2OSiO2 experiment, which increased slightly but otherwise was stable during the experiment. 
+For the NaCl experiment the pH had already increased to pH 8.1 at the start of the experiment and the pH decreased during the filtration, to about pH 7.7. 
+The CaCl2 experiment had the lowest pH at 7.3 initally and decrease to 7.4 with flucturations which might be caused by the inlet of air described earlier arond 2.5 hours. 
+The pH is not stable for the salt solutions produced from the pH is set to the experiment is started, this pose a problem in relation to relatability to authentic CT water. 
+
+
+
+
+```{r Summary pH, echo=FALSE, message=FALSE}
+
+ggplot()+
+  geom_line(data=dat_NaCl, aes(x=sek/3600, y=pH0201, color="NaCl"))+
+  geom_line(data=dat_CaCl2, aes(x=sek/3600, y=pH0201,color="CaCl2"))+
+  geom_line(data=dat_SiO2, aes(x=sek/3600, y=pH0201,color="SiO2"))+
+  scale_color_manual(values=c("NaCl"="red","CaCl2"="green", "SiO2"="blue"),labels=c("NaCl", "CaCl2", "SiO2"))+
+  labs(x="Time [h]",y="pH", color="Legend")+
+  ggtitle("pH Singlesalt")
+
+
+```
+
+
