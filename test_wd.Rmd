@@ -1,0 +1,17 @@
+---
+title: "test_Wd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+```{r chuck 1, include=TRUE}
+CWF <- read_delim(file.path("data","singlesalt_NaCl3mM_14-09-2021.csv"), 
+                  delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned 
+```
+
+

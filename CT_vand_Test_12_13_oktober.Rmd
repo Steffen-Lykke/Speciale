@@ -1,0 +1,156 @@
+---
+title: "CT_vand_Test_12_13_oktober"
+author: "Lærke"
+date: "13/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Loading af pakker 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+```
+
+CT-water first test. 
+
+Performed with:
+
+Flux 20 LMH (permeate flow 17 mL/min)
+
+Crossflow of 0.5 m/s (feed flow 1160 mL/min) 
+
+Initial feed volume of approx. 4L. 
+
+Time duration 24 h. 
+
+The following plots show the pressure before and after the membrane as well as TMP. The initial pressure is 3.2 bar which decease to about 2.5 bar, which is the pressure observed at previous experiments. There is large pressure fluctuations every 2 hours, this might be due to the experimental set up, where 2L of permeate is dumped into the feed tank, which only contain about 4L initially. This might cause air bobbles to enter the system, this air enter the pressure dampener and cause fluctuations in the pressure, it is also observed that these fluctuations become more severe as the experiment go on. 
+The pressure seems to stabilize at around 2.5 bar after the 2 initial hours, it was expected that the pressure would increase rather than decrease due to fouling. 
+
+```{R CT-vand import data plot pressure, echo=FALSE, message=FALSE}
+
+CWF_CT_vand = read_delim("data/CT_vand_12.10.2021_del1.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_CT = as.data.frame(CWF_CT_vand) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_CT_vand) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_CT = dat_CT %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_CT$time = dmy_hms(dat_CT$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_CT$flow0501>16&dat_CT$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_CT=dat_CT[-c(1:start_tid),]
+#flow_boolean_slut = dat_CT$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_CT=dat_CT[-c(slut_tid:(nrow(dat_CT)) ),]
+### Tid i s fra forsøgs start
+dat_CT = dat_CT%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_CT$time))-as.numeric(dat_CT$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+dat_CT %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~(sek)/3600,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="CT Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]"),
+         xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
+
+
+
+
+```
+
+The conductivity of feed and permeate stream is plotted with the following plot, as well as calculated rejection. 
+Due to the experimental set up with re circulation of permeate introduced every 2 hours this cause large fluctuation in conductivity. The feed conductivity is initially 1000 \mu S/cm and increase to about 1300 \mu S/cm within 2 hours, were it afterwards decrease to 1000 \mu S/cm again.
+This give similar fluctuation in permeate where the conductivity increase from 400 \mu S/cm to about 500 \mu S/cm every 2 hours. <- hvilket vi ikke forstår, den burde falde . 
+This also cause fluctuation in the rejection but over all the rejection decrease and becomes steady around 55-60%.
+
+```{R CT-vand plot conductivity, echo=FALSE, message=FALSE}
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection") #Her noget hokus-pokus for at kunne lave 2 y akser
+
+
+dat_CT %>%
+  mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
+  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
+  plot_ly(x=~sek/3600,
+          y=~feed_slid,
+          name="Feed",
+          color="red",
+          type='scatter',
+          mode='lines',
+          line=list(color=('#1f77b4')))%>%
+  add_trace(y=~con0501,
+            name='Permeate',
+            line=list(color="#E41317"))%>%
+  add_trace(y=~rej_slid,
+            name='Rejection',
+            yaxis="y2",
+            line=list(color="#forestgreen"))%>%
+  # Set figure title, x and y-axes titles
+  layout(title="CT Conductivity",yaxis2=ay,
+         legend=list(x=0.6,y=0.5),
+         yaxis=list(title="\U03BC S/cm")) #Her conductivity over tid + en form for rejection, 
+#læg gerne mærke til farverne der nægter at se
+
+
+```
+
+The pH was initially 8.8 (measured on external pH meter to 8.85) and increase slightly to in every 2 hour cycle, but overall the pH decrease from pH 8.8-8.7.
+
+```{r Summary pH, echo=FALSE, message=FALSE}
+
+ggplot(data=dat_CT, aes(x=sek/3600, y=pH0201, color="CT vand pH"))+
+  geom_line()+
+  scale_color_manual(values=c("CT vand pH"="black"),labels=c("CT vand pH"))+
+  labs(x="Time [h]",y="pH", color="Legend")+
+  #ylim(0,9)+
+  ggtitle("pH af CT vand ")
+
+
+```

@@ -1,8 +1,8 @@
 ---
 title: "Single salt"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -31,7 +31,7 @@ library(fs)
 
 Summary of single salt experiments.
 
-All experiments were preformed with:
+All experiments were performed with:
 
 Flux 20 LMH (permeate flow 17 mL/min)
 
@@ -124,7 +124,7 @@ dat_NaCl %>%
   mutate(rejection=(1-(con0501/con0301))*100)%>%
   mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
   mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
-  plot_ly(x=~time,
+  plot_ly(x=~sek/3600,
           y=~feed_slid,
           name="Feed",
           color="red",
