@@ -459,11 +459,43 @@ dat_SiO2 %>%
 
 ```
 
-```{R Na2OSiO2 plot concentration, echo=FALSE, message=FALSE}
+
+
+
+```{R Na2OSiO2 plot IC analyse, echo=FALSE, message=FALSE}
  #Na2OSiO2 data 
 
-tid <- c(1,2,3,3.5,4)
+SiO2_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx",3)
+str(SiO2_IC_data)
 
+
+old_names_IC_SiO2=colnames(SiO2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC_SiO2=c("time","Silica","Sodium","Stream") #Vi finder på nogle lidt bedre nogle
+SiO2_IC_data = SiO2_IC_data %>% rename_at(vars(old_names_IC_SiO2),~new_names_IC_SiO2) #Vi ændrer navnene til de nye
+SiO2_IC_data <- as.data.frame(SiO2_IC_data)
+
+SiO2_Permeate <- filter(SiO2_IC_data, Stream=="Permeate")
+SiO2_Feed <- filter(SiO2_IC_data, Stream=="Feed")
+SiO2_Concentrate <- filter(SiO2_IC_data, Stream=="Concentrate")   
+
+SiO2_rej_Si<- (1-(SiO2_Permeate$Silica[-6]/((SiO2_Feed$Silica[-1]+SiO2_Concentrate$Silica)/2)))*100
+
+SiO2_rej_Na <- (1-(SiO2_Permeate$Sodium[-6]/((SiO2_Feed$Sodium[-1]+SiO2_Concentrate$Sodium)/2)))*100
+
+
+ggplot()+
+  geom_point(data=SiO2_IC_data, aes(x=time, y=Silica, col=Stream), shape= 16)+
+  #geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Cl))+
+  geom_point(data=SiO2_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Ca))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  ggtitle("Na and Si concentration")
+
+```
+  
+```{R Na2OSiO2 old plot, include=FALSE, echo=FALSE, message=FALSE}
+#old måde at plotte på. 
+tid <- c(1,2,3,3.5,4)
 #concentrations data: 
 SiO2_conc_feed <- c(60.7,60.3,63.6,63.6,63)
 SiO2_conc_conc <- c(62,62.7,63.9,63.4,65.3)
@@ -484,7 +516,7 @@ ggplot(data=SiO2, aes(x=tid))+
   geom_point(aes( y=SiO2_conc_feed, color="Feed"),shape= 16)+
   geom_point(aes( y=SiO2_conc_conc,color="Concentrate"),shape= 16)+
   geom_point(aes( y=SiO2_conc_permeate,color="Permeate"),shape= 16)+
-  scale_color_manual(values=c("Feed"="green","Concentrate"="red","Permeate"="blue"),labels=c("Feed", "Concentrate", "Permeate"))+
+   scale_color_manual(values=c("Feed"="green","Concentrate"="red","Permeate"="blue"),labels=c("Feed", "Concentrate", "Permeate"))+
   labs(x="Time[h]",y="SiO2 concentration  [mg/L]", color="Legend")+
   ggtitle("Concentration, feed, concentrate, permeate")
 
@@ -521,8 +553,10 @@ ggplot()+
   geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Cl,color="CaCl2 R Cl"))+
   geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
   geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))+
-  geom_point(data=SiO2,aes(x=tid, y=SiO2_rejection,color="R SiO2 "))+
-  scale_color_manual(values=c("CaCl2 R Ca"="red", "CaCl2 R Cl"="blue", "NaCl R Na"="green", "NaCl R Cl"="orange", "R SiO2"="black"),labels=c("CaCl2 R Ca", "CaCl2 R Cl", "NaCl R Na", "NaCl R Cl", "R SiO2"))+
+  geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Na,color="SiO2 R Na"))+
+  geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Si,color="SiO2 R Si"))+
+  #geom_point(data=SiO2,aes(x=tid, y=SiO2_rejection,color="R SiO2 "))+
+  scale_color_manual(values=c("CaCl2 R Ca"="red", "CaCl2 R Cl"="blue", "NaCl R Na"="green", "NaCl R Cl"="orange", "SiO2 R Na"="black", "SiO2 R Si"="purple"),labels=c("CaCl2 R Ca", "CaCl2 R Cl", "NaCl R Na", "NaCl R Cl", "SiO2 R Na", "SiO2 R Si"))+
   labs(x="Time [h]",y="Rejection  %", color="Legend")+
   ylim(0,100)+
   ggtitle("Rejection Singlesalt")
