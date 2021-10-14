@@ -147,7 +147,7 @@ dat_NaCl %>%
 
 ```
 IC analysis was made for Sodium and Chloride. The results are presented in the following plot. 
-Sodium and Chloride data is presented together where Chloride is represented by circles and sodium represented by squares. 
+Sodium and Chloride data is presented together where Chloride is represented by circles and sodium represented by Triangles. 
 The Concentration measured of feed and concentrate was almost identical for both sodium and chloride, for sodium it cannot be differentiated between feed and concentrate. 
 This indicate that there isn't a  major concentration difference across the membrane and it is sufficient to take samples from either the Feed or concentrate stream. 
 
@@ -182,7 +182,7 @@ ggplot()+
   #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
   labs(x="Time [h]",y=" concentration [mg/L]")+
   ylim(0,135)+
-  ggtitle("IC analysis, Concentration")
+  ggtitle("Concentration, Dot = Cl, Triangle = Na")
 
 
 ```
@@ -316,7 +316,7 @@ dat_CaCl2 %>%
 
 
 ```
-IC analysis was made for Calcium and Chloride. The results are presented in the following plot where Chloride is presented by circles and Calcium presented by squares. 
+IC analysis was made for Calcium and Chloride. The results are presented in the following plot where Chloride is presented by circles and Calcium presented by triangles. 
 As for the NaCl experiment there was almost identical concentration for feed and concentrate for both Chloride and Calcium, which back the previous conclusion of taking fewer samples. 
 
 There is a higher concentration of Chloride in this expeirment compared to the NaCl experiment, otherwise there is similar trend in the plot, with increase in concentraiton of both feed/concentrate and permeate.
@@ -348,7 +348,7 @@ ggplot()+
   #geom_point(data=CaCl2_Feed[-1,], aes(x=CaCl2_Feed$time[-1], y=CaCl2_rej_Ca))+
   labs(x="Time [h]",y=" Concentration [mg/L]")+
   ylim(0,350)+
-  ggtitle("Calcium concentration and rejection")
+  ggtitle(" Concentration, Dot = Cl, Triangle = Ca")
   
 
        
@@ -459,7 +459,11 @@ dat_SiO2 %>%
 
 ```
 
+The concentration of Si was measured with Hack kits, and the concentration of Na was measured with IC analysis, similar to the NaCl and the CaCl2 experiments. 
+Also for this experiment there is not a large difference between concentrate (red) and feed (red), which again confirmed that only one sample is necessary. 
+For Si presented by dots, there is not a huge difference between feed/concentrate and permeate, indicating a low rejection.This also means that there is not a major increase in concentration of the feed, it is almost constant with some flucturations, which also could be caused by uncertainy of the measureing analysis which is +/- XX mg/L. 
 
+For Na there is a larger difference between feed/concenrate and permeate and also increase in both over the duration of the experiment. The data for Na is more similar to the results seen for the two other experiemtn with NaCl and CaCl2. 
 
 
 ```{R Na2OSiO2 plot IC analyse, echo=FALSE, message=FALSE}
@@ -489,7 +493,7 @@ ggplot()+
   geom_point(data=SiO2_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
   #geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Ca))+
   labs(x="Time [h]",y=" Concentration [mg/L]")+
-  ggtitle("Na and Si concentration")
+  ggtitle("Concentration,  Dot = Si, Triangle = Na")
 
 ```
   
@@ -527,16 +531,15 @@ ggplot(data=SiO2, aes(x=tid))+
 
 <h3> Rejection IC data </h3>
 
-The rejection of both the NaCl and the CaCl2 experiment is compared in the follow plot. 
-The rejection in the CaCl2 experiment is significantly larger and increase slightly over the corse of the experiment, where it was expected that the rejection would increase as seen for the conductivity rejection, this might be due to the small no of data samples for IC data. The rejection is about 50-60% which is similar for the conductivity experiment. 
+The rejection of the 3 singlesalt experiments are compared in the follow plot. 
+The rejection in the CaCl2 experiment is significantly larger, as well as Sodium fro Na2OSiO2 experiment. The rejection from CaCl2 increase slightly over the course of the experiment, where it was expected that the rejection would decrease as seen for the conductivity rejection, this might be due to the small no of data samples for IC data. The rejection is about 50-60% which is similar for the conductivity experiment. 
 
-The rejection in the NaCl experiment is sinificantly lower than the CaCl2 experiment, and is more constant over the 4 hours. When comparing to the conductivity rejection which decrease from 50-25 % it is similar. 
-The rejection of SiO2 is lower than both the rejection seen in the NaCl and CaCl2 experiment. The rejection of SiO2 is fluctuating around 13 %. The Sodium concentraiton has not been measured yet, but it is theorized that this will be much higher and match the conductivity rejection at 60-70%, as Sodium accounts for the conductivity in this experiment.   
+The rejection in the NaCl experiment is significantly lower than the CaCl2 experiment, and is more constant over the 4 hours. When comparing to the conductivity rejection which decrease from 50-25 % it is similar. 
+The rejection of Si (from the Na2OSiO2) is lower than both the rejection seen in the NaCl and CaCl2 experiment. The rejection of SiO2 is fluctuating around 13 %. The Sodium concentraiton is higher above 50 % which better match the conductivity rejection at 60-70%, Sodium thus must account the conductivity in this experiment.   
 
-
-It is interesting to compare the chloride rejection from the two experiment where there is a higher concentration in the CaCl2 (double) but also significantly higher rejeciton also double. 
+It is interesting to compare the chloride rejection from the two experiment where there is a higher concentration in the CaCl2 (double) but also significantly higher rejection around double. 
 It would be expected to have similar or lower rejection with increase in concentration therefore the increase in rejection for the CaCl2 experiment is most likely due to the presence of multivalent ions. 
-There is a much higher rejection of Calcium than sodium, despite a similar concentraiton of 3mM, this difference is again contributed to the nature of the multivalent calcium ions. 
+There is a much higher rejection of Calcium than sodium, despite a similar concentration of 3mM, this difference is again contributed to the nature of the multivalent calcium ions. 
 
 -> mere teroi om hvorfor de har bedre rejection. 
 
