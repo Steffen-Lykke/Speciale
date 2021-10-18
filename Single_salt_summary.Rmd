@@ -186,7 +186,22 @@ ggplot()+
 
 
 ```
+```{R NaCl plot temp, include=FALSE, echo=FALSE, message=FALSE}
 
+
+ggplot()+
+  geom_point(data=dat_NaCl, aes(x=time, y=temp0501), shape= 16)+
+  labs(x="Time [h]",y=" Temperature")+
+  ylim(0,27)+
+  ggtitle("temperature")
+
+ggplot()+
+  geom_point(data=dat_NaCl, aes(x=time, y=((flow0501/0.053)/(p_avg0301+p_avg0302)/2-p_avg0501)), shape= 16)+
+  labs(x="Time [h]",y=" permeability")+
+  ylim(0,100)+
+  ggtitle("Permeability")
+
+```
 
 
 ```{R NaCl plot bicarbonate, include=FALSE, echo=FALSE, message=FALSE}
