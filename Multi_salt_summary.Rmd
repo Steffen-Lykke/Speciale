@@ -297,3 +297,34 @@ ggplot()+
 
 
 ```
+```{R pH10 plot IC data, echo=FALSE, message=FALSE}
+
+pH10_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx",2)
+
+old_names_IC=colnames(pH10_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl") #Vi finder på nogle lidt bedre nogle
+pH10_IC_data = pH10_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+pH10_IC_data <- as.data.frame(pH10_IC_data)
+pH10_IC_data <- pH10_IC_data[-c(14:22),] #cutter bicarbonat af. 
+
+pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
+pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
+   
+
+#pH10_rej_Cl <- (1-(pH10_Permeate$Chloride/(pH10_Feed$Chloride[-1])))*100
+#pH10_rej_Na <- (1-(pH10_Permeate$Sodium/(pH10_Feed$Sodium[-1])))*100
+#pH10_rej_Ca <- (1-(pH10_Permeate$Calcium/(pH10_Feed$Calcium[-1])))*100
+#pH10_rej_SO4 <- (1-(pH10_Permeate$Sulphate/(pH10_Feed$Sulphate[-1])))*100
+pH10_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
+
+ggplot()+
+  geom_point(data=pH10_IC_data, aes(x=Time, y=Silica, col=Stream), shape= 16)+
+  geom_point(data=pH10_Feed[-1,], aes(x=pH10_Feed$Time[-1], y=pH10_rej_SiO2))+
+  #geom_point(data=pH10_IC_data, aes(x=Time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=pH10_Feed[-1,], aes(x=pH10_Feed$Time[-1], y=pH10_rej_Na))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  ylim(0,100)+
+  ggtitle("Concentration and rejection of Silica")
+
+
+```
