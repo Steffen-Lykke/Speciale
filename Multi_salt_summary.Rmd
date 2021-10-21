@@ -37,9 +37,9 @@ Flux 20 LMH (permeate flow 17 mL/min)
 
 Crossflow of 0.5 m/s (feed flow 1160 mL/min) 
 
-The concentraiton of the various salts were selected based on concentration of authentic CT reservior water. 
+The concentration of the various salts were selected based on concentration of authentic CT reservior water, it might have been diluted. 
 
-<h3> pH 9.2 </h3>
+<h3> Multi salt experiment with pH 9.2 </h3>
 
 The pH was adjusted to pH 9.2 which is the lower end of the capacity for the bicarboante-carbonate buffer. 
 The data has been collected every second and a rolling average have been applied to the data set, giving data every minute. 
@@ -55,7 +55,7 @@ CWF_Multi_9.2 = read_delim("data/Multi_9.2_18-10-2021_del1.csv",delim = "\t", es
 #str(CWF)
 dat_M_9.2 = as.data.frame(CWF_Multi_9.2) #Ændrer strukturen af dataen til noget vi kan arbejde med
 old_names=colnames(CWF_Multi_9.2) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+new_names=c("Time","level","con0201","pH0201","con0301","flow0301",
             "p0301","p0302","p0401","flow0401","p0501","con0501",
             "temp0501","p0601","temp0601","16","17","18","19","20",
             "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
@@ -63,21 +63,15 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_M_9.2 = dat_M_9.2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-dat_M_9.2$time = dmy_hms(dat_M_9.2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+dat_M_9.2$Time = dmy_hms(dat_M_9.2$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 #str(dat)
 
 
 ggplot()+
-  geom_point(data=dat_M_9.2, aes(x=time, y=flow0301), shape= 16)+
+  geom_point(data=dat_M_9.2, aes(x=Time, y=flow0301), shape= 16)+
   labs(x="Time (18 okt 2021)",y=" Flow mL/min")+
   ylim(1000,1500)+
   ggtitle("Flow during flush") 
-
-
-
-
-
-
 
 
 
@@ -89,7 +83,7 @@ CWF_Multi_9.2 = read_delim("data/Multi_9.2_19-10-2021_del2.csv",delim = "\t", es
 #str(CWF)
 dat_M_9.2 = as.data.frame(CWF_Multi_9.2) #Ændrer strukturen af dataen til noget vi kan arbejde med
 old_names=colnames(CWF_Multi_9.2) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+new_names=c("Time","level","con0201","pH0201","con0301","flow0301",
             "p0301","p0302","p0401","flow0401","p0501","con0501",
             "temp0501","p0601","temp0601","16","17","18","19","20",
             "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
@@ -97,7 +91,7 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_M_9.2 = dat_M_9.2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-dat_M_9.2$time = dmy_hms(dat_M_9.2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+dat_M_9.2$Time = dmy_hms(dat_M_9.2$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 #str(dat)
 
 
@@ -112,7 +106,7 @@ dat_M_9.2=dat_M_9.2[-c(slut_tid:(nrow(dat_M_9.2)) ),]
 ### Tid i s fra forsøgs start
 dat_M_9.2 = dat_M_9.2%>%
    mutate(sek=(
-           as.numeric(as.POSIXct(dat_M_9.2$time))-as.numeric(dat_M_9.2$time[1], format='%Y-%m-%d %H:%M:%S'))
+           as.numeric(as.POSIXct(dat_M_9.2$Time))-as.numeric(dat_M_9.2$Time[1], format='%Y-%m-%d %H:%M:%S'))
                 )  
 
 
@@ -141,14 +135,18 @@ dat_M_9.2 %>%#dplyr arbejder indenfor 'dat' data framen
 
 
 ```
-The average permeate flow was 16.995 mL/min, the plot show rooling average of the permeate flow indicating only minor flucturations during the experiment. 
 
-The initial feed volume of 10.54 L, where 540 mL was taken out as samples.
-The experiment was set to run for 9 h and 5 min, bus as the feed tank ran out around 8 h 40 min, the experiment was stopped. This also mean there was no feed left when the experiment was ended. 
+
+The initial feed volume of 10.54 L, where approx. 540 mL was taken out as samples.
+The experiment was set to run for 9 h and 5 min, bus as the feed tank ran out around 8 h 40 min (8.68 h), the experiment was stopped. This also mean there was no feed left when the experiment was ended.
 It was suspected that the feed thank ran out before time due to some water being "used"/supressed into the dampener, this volume was estimated to 250 mL. 
 As the permeate flow is fluctuating this might also cause the faster time to use all feed water. 
+The average permeate flow was 16.995 mL/min, the plot below show rooling average of the permeate flow indicating only minor fluctuations during the experiment. 
+The end volume of permeate was 8.8 L, as the initial feed volume was 10 L subtracting the samples, the water recovery was estimated to 88 %. 
 
-```{R Multi pH 9.2, permeate flow , echo=FALSE, message=FALSE}
+HVOR ER DET SIDSTE FEED BLEVET AF? VI MANGLER 1L. 
+
+```{R Multi pH 9.2 permeate flow , echo=FALSE, message=FALSE}
 
 print(Total_time_h <- tail(dat_M_9.2$sek, n=1)/3600)
 print(mean(dat_M_9.2$flow0501))
@@ -164,15 +162,23 @@ ggplot()+
 csumflow0501 <- cumsum((dat_M_9.2$flow0501)/60)
 dat_M_9.2 <- cbind(dat_M_9.2,csumflow0501)
 print(total_perm_volume <- tail(dat_M_9.2$csumflow0501, n=1))
+print(8.8/10*100)
 
 
-ggplot()+
-  geom_line(data=dat_M_9.2, aes(x=sek/3600, y=csumflow0501/1000), shape= 16)+
-  labs(x="Time [h]",y=" Accumulation of Permeate [L]")+
-  ylim(0,9)+
-  ggtitle("Multi salt pH 9.2 Accumulate of Permeate ") 
+#ggplot()+
+ # geom_line(data=dat_M_9.2, aes(x=sek/3600, y=csumflow0501/1000), shape= 16)+
+  #labs(x="Time [h]",y=" Accumulation of Permeate [L]")+
+  #ylim(0,9)+
+  #ggtitle("Multi salt pH 9.2 Accumulate of Permeate ") 
 
 ```
+Samples were taken out during the experiment to analyse for different ion content and there by determine the rejection. The last permeate sample was taken from accumulated permeate, as there was no more feed left no more permeate was produced. The accumulated permeate had a volume below 1L, therefore this sample is expected to show slightly lower concentration than in reality.  
+
+The Silica concentration was analysed using Hack-Lange kits. Where the feed concentration is higher than the permeate concentration which increase during the experiment. 
+
+The recovery also increase during the experiment from 21 % - 27 %, meaning the feed concentration  has increased faster than the permeate concentration. There is an outlier at 6 hours, where the permeate concentration is much higher than expected and thus the recovery becomes much lower. 
+
+
 ```{R pH9.2 plot IC data, echo=FALSE, message=FALSE}
 
 pH9.2_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx")
@@ -187,17 +193,17 @@ pH9.2_Permeate <- filter(pH9.2_IC_data, Stream=="Permeate")
 pH9.2_Feed <- filter(pH9.2_IC_data, Stream=="Feed")
    
 
-pH9.2_rej_Cl <- (1-(pH9.2_Permeate$Chloride/((pH9.2_Feed$Chloride[-1]))))*100
-pH9.2_rej_Na <- (1-(pH9.2_Permeate$Sodium/((pH9.2_Feed$Sodium[-1]))))*100
-pH9.2_rej_Ca <- (1-(pH9.2_Permeate$Calcium/((pH9.2_Feed$Calcium[-1]))))*100
-pH9.2_rej_SO4 <- (1-(pH9.2_Permeate$Sulphate/((pH9.2_Feed$Sulphate[-1]))))*100
-pH9.2_rej_SiO2 <- (1-(pH9.2_Permeate$Silica/((pH9.2_Feed$Silica[-1]))))*100
+#pH9.2_rej_Cl <- (1-(pH9.2_Permeate$Chloride/(pH9.2_Feed$Chloride[-1])))*100
+#pH9.2_rej_Na <- (1-(pH9.2_Permeate$Sodium/(pH9.2_Feed$Sodium[-1])))*100
+#pH9.2_rej_Ca <- (1-(pH9.2_Permeate$Calcium/(pH9.2_Feed$Calcium[-1])))*100
+#pH9.2_rej_SO4 <- (1-(pH9.2_Permeate$Sulphate/(pH9.2_Feed$Sulphate[-1])))*100
+pH9.2_rej_SiO2 <- (1-(pH9.2_Permeate$Silica/(pH9.2_Feed$Silica[-1])))*100
 
 ggplot()+
   geom_point(data=pH9.2_IC_data, aes(x=Time, y=Silica, col=Stream), shape= 16)+
   geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$Time[-1], y=pH9.2_rej_SiO2))+
-  #geom_point(data=pH9.2_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
-  #geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$time[-1], y=pH9.2_rej_Na))+
+  #geom_point(data=pH9.2_IC_data, aes(x=Time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$Time[-1], y=pH9.2_rej_Na))+
   labs(x="Time [h]",y=" Concentration [mg/L]")+
   #ylim(0,135)+
   ggtitle("Concentration and rejection of Silica")
@@ -207,7 +213,12 @@ ggplot()+
 
 
 The conductivity was initially 1320 microS/cm in the feed stream where it increased to about 2500 microS/cm. The permeate stream was initially 550 microS/cm, and the conductivity of the permeate surpassed the maximum of the conductivity sensor at 1000 microS/cm after about 7.5 hours. 
-The rejection of 
+The conductivity was measured manually of the permeate stream with a "hand-held conductivity meter", and were slightly higher than conductivity measured by the sensor in the system. The manually meaused conductivity show increase in permeate past the 1000 microS/cm, as expected. Furthermore as mentioned the last permeate sample was taken from accumulated permeate, and will thus have slightly lower concentration than in reality.  
+
+The rejection of conductivity is more or less stable above 50 %, the recovery should not be considered when the permeate conductivity increase past the conductivity sensor. 
+
+
+
 
 ```{R pH 9.2 plot conductivity, echo=FALSE, message=FALSE}
 ay <- list(
@@ -249,19 +260,40 @@ dat_M_9.2 %>%
 
 
 ```
+The PH was also measured by sensor continually in the system, and tested manually on samples. In the plot below the pH of the feed stream is shows, where the manually measured pH represented by dots is slightly lower about 0.1 pH than the sensor. This discrepancy is accepted, but taken into consideration when comparing pH values measured with the different instruments. 
 
-```{R pH9.2 plot IC data, echo=FALSE, message=FALSE}
+
+```{R pH9.2 plot pH, echo=FALSE, message=FALSE}
 
 
 ggplot()+
   geom_point(data=dat_M_9.2, aes(x=sek/3600, y=pH0201), shape= 16)+
   geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$Time[-1], y=pH))+
-  #geom_point(data=pH9.2_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
-  #geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$time[-1], y=pH9.2_rej_Na))+
   labs(x="Time [h]",y=" Concentration [mg/L]")+
   #ylim(0,135)+
-  ggtitle("Concentration and rejection of Silica")
+  ggtitle("pH of multisalt pH 9.2")
 
 
 ```
+The bicarbonate was measured in the feed stream using titration. The plot below show increase in bicarbonate content as the filtration durinf the experiment. 
 
+```{R pH9.2 plot Bicarbonate data, echo=FALSE, message=FALSE}
+
+pH9.2_Bi_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx")
+
+old_names_Bi=colnames(pH9.2_Bi_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_Bi=c("Time","Stream","Name","Bicarbonate","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl","Conductivity","pH","Dilution") #Vi finder på nogle lidt bedre nogle
+pH9.2_Bi_data = pH9.2_Bi_data %>% rename_at(vars(old_names_Bi),~new_names_Bi) #Vi ændrer navnene til de nye
+pH9.2_Bi_data <- as.data.frame(pH9.2_Bi_data)
+pH9.2_Bi_data <- pH9.2_Bi_data[-c(1:16),-c(5:12)] #cutter IC data fra så det kun er bicarboant.  
+
+ggplot()+
+  geom_point(data=pH9.2_Bi_data, aes(x=Time, y=Bicarbonate, col=Stream), shape= 16)+
+  #geom_point(data=pH9.2_IC_data, aes(x=Time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$Time[-1], y=pH9.2_rej_Na))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  #ylim(0,135)+
+  ggtitle("Concentration of Bicarbonate")
+
+
+```
