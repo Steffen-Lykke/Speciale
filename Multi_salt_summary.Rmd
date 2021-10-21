@@ -41,8 +41,10 @@ The concentraiton of the various salts were selected based on concentration of a
 
 <h3> pH 9.2 </h3>
 
-The pH was ajusted to pH 9.2 which is the lower end of the capacity for the bicarboante-carbonate buffer. 
-The pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment. The osmotic pressure will be calculated to determine if the increase in pressure is due to increase in the osmotic pressure on the feed side of the membrane or if it is due to fouling of the membrane. 
+The pH was adjusted to pH 9.2 which is the lower end of the capacity for the bicarboante-carbonate buffer. 
+The data has been collected every second and a rolling average have been applied to the data set, giving data every minute. 
+The pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
+The osmotic pressure will be calculated to determine if the increase in pressure is due to increase in the osmotic pressure on the feed side of the membrane or if it is due to fouling of the membrane. 
 
 
 
@@ -113,9 +115,11 @@ dat_M_9.2 = dat_M_9.2%>%
            as.numeric(as.POSIXct(dat_M_9.2$time))-as.numeric(dat_M_9.2$time[1], format='%Y-%m-%d %H:%M:%S'))
                 )  
 
+
+
 dat_M_9.2 %>%#dplyr arbejder indenfor 'dat' data framen
   mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
-  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(TMP_slid=rollapply(TMP,60,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
   plot_ly(x=~(sek)/3600,
           y=~TMP_slid,
           name="TMP",
@@ -137,44 +141,6 @@ dat_M_9.2 %>%#dplyr arbejder indenfor 'dat' data framen
 
 
 ```
-The conductivity was initially 1320 microS/cm in the feed stream where it increased to about 2500 microS/cm. The permeate stream was initially 550 microS/cm, and the conductivity of the permeate surpassed the maximum of the conductivity sensor at 1000 microS/cm after about 7.5 hours. 
-The rejection of 
-
-```{R pH 9.2 plot conductivity, echo=FALSE, message=FALSE}
-ay <- list(
-  tickfont = list(color = "red"),
-  overlaying = "y",
-  side = "right",
-  title = "Rejection") #Her noget hokus-pokus for at kunne lave 2 y akser
-
-
-dat_M_9.2 %>%
-  mutate(rejection=(1-(con0501/con0301))*100)%>%
-  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
-  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
-  plot_ly(x=~sek/3600,
-          y=~feed_slid,
-          name="Feed",
-          color="red",
-          type='scatter',
-          mode='lines',
-          line=list(color=('#1f77b4')))%>%
-  add_trace(y=~con0501,
-            name='Permeate',
-            line=list(color="#E41317"))%>%
-  add_trace(y=~rej_slid,
-            name='Rejection',
-            yaxis="y2",
-            line=list(color="#forestgreen"))%>%
-  # Set figure title, x and y-axes titles
-  layout(title="Conductivity and rejection Multi salt pH 9.2",yaxis2=ay,
-         legend=list(x=0.6,y=0.5),
-         yaxis=list(title= "Conductivity \U03BC S/cm")) #Her conductivity over tid + en form for rejection, 
-#læg gerne mærke til farverne der nægter at se
-
-
-```
-
 The average permeate flow was 16.995 mL/min, the plot show rooling average of the permeate flow indicating only minor flucturations during the experiment. 
 
 The initial feed volume of 10.54 L, where 540 mL was taken out as samples.
@@ -184,18 +150,29 @@ As the permeate flow is fluctuating this might also cause the faster time to use
 
 ```{R Multi pH 9.2, permeate flow , echo=FALSE, message=FALSE}
 
+print(Total_time_h <- tail(dat_M_9.2$sek, n=1)/3600)
 print(mean(dat_M_9.2$flow0501))
 
-flow0501_slid=dat_M_9.2$flow0501=rollapply(dat_M_9.2$flow0501,100,mean,align="right",fill=NA)
 
+flow0501_slid <- rollapply(dat_M_9.2$flow0501,60,mean,align="right",fill=NA)
 ggplot()+
   geom_point(data=dat_M_9.2, aes(x=sek/3600, y=flow0501_slid), shape= 16)+
   labs(x="Time [h]",y=" Permeate Flow mL/min")+
   ylim(15,20)+
   ggtitle("Multi salt pH 9.2 Permeate flow ") 
 
-```
+csumflow0501 <- cumsum((dat_M_9.2$flow0501)/60)
+dat_M_9.2 <- cbind(dat_M_9.2,csumflow0501)
+print(total_perm_volume <- tail(dat_M_9.2$csumflow0501, n=1))
 
+
+ggplot()+
+  geom_line(data=dat_M_9.2, aes(x=sek/3600, y=csumflow0501/1000), shape= 16)+
+  labs(x="Time [h]",y=" Accumulation of Permeate [L]")+
+  ylim(0,9)+
+  ggtitle("Multi salt pH 9.2 Accumulate of Permeate ") 
+
+```
 ```{R pH9.2 plot IC data, echo=FALSE, message=FALSE}
 
 pH9.2_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx")
@@ -227,3 +204,64 @@ ggplot()+
 
 
 ```
+
+
+The conductivity was initially 1320 microS/cm in the feed stream where it increased to about 2500 microS/cm. The permeate stream was initially 550 microS/cm, and the conductivity of the permeate surpassed the maximum of the conductivity sensor at 1000 microS/cm after about 7.5 hours. 
+The rejection of 
+
+```{R pH 9.2 plot conductivity, echo=FALSE, message=FALSE}
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection") #Her noget hokus-pokus for at kunne lave 2 y akser
+
+
+dat_M_9.2 %>%
+  mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
+  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
+  plot_ly(x=~sek/3600) %>%
+  add_trace(y=~feed_slid,
+          name="Feed",
+          type='scatter',
+          mode='lines',
+          line=list(color="red"))%>%
+  add_trace(y=~con0501,
+            name='Permeate',
+             mode='lines',
+            line=list(color="green"))%>%
+  add_trace(y=~rej_slid,
+            name='Rejection',
+            yaxis="y2",
+            mode='lines',
+            line=list(color="blue"))%>%
+  add_trace(x=~pH9.2_Permeate$Time,
+            y=~pH9.2_Permeate$Conductivity,
+            name='Conductivity perm',
+            mode='markers',
+            marker=list(color="blue"))%>%
+  # Set figure title, x and y-axes titles
+  layout(title="Conductivity and rejection Multi salt pH 9.2",yaxis2=ay,
+         legend=list(x=0.6,y=0.5),
+         yaxis=list(title= "Conductivity \U03BC S/cm")) #Her conductivity over tid + en form for rejection, 
+#læg gerne mærke til farverne der nægter at se
+
+
+```
+
+```{R pH9.2 plot IC data, echo=FALSE, message=FALSE}
+
+
+ggplot()+
+  geom_point(data=dat_M_9.2, aes(x=sek/3600, y=pH0201), shape= 16)+
+  geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$Time[-1], y=pH))+
+  #geom_point(data=pH9.2_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=pH9.2_Feed[-1,], aes(x=pH9.2_Feed$time[-1], y=pH9.2_rej_Na))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  #ylim(0,135)+
+  ggtitle("Concentration and rejection of Silica")
+
+
+```
+
