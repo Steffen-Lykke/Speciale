@@ -1,0 +1,271 @@
+---
+title: "Multi_salt_pH_10"
+author: "Lærke"
+date: "22/10/2021"
+output: html_document
+---
+
+---
+title: "Multi_salt_summary"
+author: "Lærke"
+date: "19/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Loading af pakker 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+```
+
+Summary of Multi salt experiments.
+
+All experiments were performed with:
+
+Flux 20 LMH (permeate flow 17 mL/min)
+
+Crossflow of 0.5 m/s (feed flow 1160 mL/min) 
+
+The concentration of the various salts were selected based on concentration of authentic CT reservior water, it might have been diluted. 
+
+<h3> Multi salt experiment with pH 10 </h3>
+
+The pH was adjusted to pH 10 which is the lower end of the capacity for the bicarboante-carbonate buffer. 
+The data has been collected every second and a rolling average have been applied to the data set, giving data every minute. 
+The pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
+The osmotic pressure will be calculated to determine if the increase in pressure is due to increase in the osmotic pressure on the feed side of the membrane or if it is due to fouling of the membrane. 
+
+
+```{R pH 10 import data plot pressure, echo=FALSE, message=FALSE}
+CWF_Multi_10 = read_delim("data/Multi_10_21_10_2021_del2.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_M_10 = as.data.frame(CWF_Multi_10) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_Multi_10) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("Time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_M_10 = dat_M_10 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_M_10$Time = dmy_hms(dat_M_10$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_M_10$flow0501>16&dat_M_10$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_M_10=dat_M_10[-c(1:start_tid),]
+flow_boolean_slut = dat_M_10$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_M_10=dat_M_10[-c(slut_tid:(nrow(dat_M_10)) ),]
+### Tid i s fra forsøgs start
+dat_M_10 = dat_M_10%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_M_10$Time))-as.numeric(dat_M_10$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+
+dat_M_10 %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,60,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~(sek)/3600,
+          y=~TMP_slid,
+          name="TMP",
+          color='#forestgreen',
+          type='scatter',
+          mode='lines')%>%
+  #add_lines(y=~p_avg0302,
+   #         name='Pressure after membrane',
+   #         color='#E41317')%>%
+ # add_lines(y=~TMP_slid,
+  #          name='TMP',
+  #          color='#forestgreen')%>%
+  layout(title="TMP Multi salt pH 10",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]"),
+         xaxis=list(title="Time [h]")) #Her plottet TMP
+
+
+
+
+```
+
+
+The initial feed volume of 10.54 L, where approx. 540 mL was taken out as samples.
+The experiment was set to run for 9 h and 5 min, bus as the feed tank ran out around 8 h 40 min (8.68 h), the experiment was stopped. This also mean there was no feed left when the experiment was ended.
+It was suspected that the feed thank ran out before time due to some water being "used"/supressed into the dampener, this volume was estimated to 250 mL. 
+As the permeate flow is fluctuating this might also cause the faster time to use all feed water. 
+The average permeate flow was 16.995 mL/min, the plot below show rooling average of the permeate flow indicating only minor fluctuations during the experiment. 
+The end volume of permeate was 8.8 L, as the initial feed volume was 10 L subtracting the samples, the water recovery was estimated to 88 %. 
+
+HVOR ER DET SIDSTE FEED BLEVET AF? VI MANGLER 1L. 
+
+```{R Multi pH 10 permeate flow , echo=FALSE, message=FALSE}
+
+print(Total_time_h <- tail(dat_M_10$sek, n=1)/3600)
+print(mean(dat_M_10$flow0501))
+
+
+flow0501_slid <- rollapply(dat_M_10$flow0501,60,mean,align="right",fill=NA)
+ggplot()+
+  geom_point(data=dat_M_10, aes(x=sek/3600, y=flow0501_slid), shape= 16)+
+  labs(x="Time [h]",y=" Permeate Flow mL/min")+
+  ylim(15,20)+
+  ggtitle("Multi salt pH 10 Permeate flow ") 
+
+csumflow0501 <- cumsum((dat_M_10$flow0501)/60)
+dat_M_10 <- cbind(dat_M_10,csumflow0501)
+initial_feed_volume <- 8
+print(total_perm_volume <- tail(dat_M_10$csumflow0501, n=1))
+print((total_perm_volume/1000)/initial_feed_volume*100)
+
+
+#ggplot()+
+ # geom_line(data=dat_M_10, aes(x=sek/3600, y=csumflow0501/1000), shape= 16)+
+  #labs(x="Time [h]",y=" Accumulation of Permeate [L]")+
+  #ylim(0,9)+
+  #ggtitle("Multi salt pH 10 Accumulate of Permeate ") 
+
+```
+Samples were taken out during the experiment to analyse for different ion content and there by determine the rejection. The last permeate sample was taken from accumulated permeate, as there was no more feed left no more permeate was produced. The accumulated permeate had a volume below 1L, therefore this sample is expected to show slightly lower concentration than in reality.  
+
+The Silica concentration was analysed using Hack-Lange kits. Where the feed concentration is higher than the permeate concentration which increase during the experiment. 
+
+The recovery also increase during the experiment from 21 % - 27 %, meaning the feed concentration  has increased faster than the permeate concentration. There is an outlier at 6 hours, where the permeate concentration is much higher than expected and thus the recovery becomes much lower. 
+
+
+```{R pH10 plot IC data, echo=FALSE, message=FALSE}
+
+pH10_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx",2)
+
+old_names_IC=colnames(pH10_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl") #Vi finder på nogle lidt bedre nogle
+pH10_IC_data = pH10_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+pH10_IC_data <- as.data.frame(pH10_IC_data)
+pH10_IC_data <- pH10_IC_data[-c(16:19),] #cutter bicarbonat af. 
+
+pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
+pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
+   
+
+#pH10_rej_Cl <- (1-(pH10_Permeate$Chloride/(pH10_Feed$Chloride[-1])))*100
+#pH10_rej_Na <- (1-(pH10_Permeate$Sodium/(pH10_Feed$Sodium[-1])))*100
+#pH10_rej_Ca <- (1-(pH10_Permeate$Calcium/(pH10_Feed$Calcium[-1])))*100
+#pH10_rej_SO4 <- (1-(pH10_Permeate$Sulphate/(pH10_Feed$Sulphate[-1])))*100
+pH10_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
+
+ggplot()+
+  geom_point(data=pH10_IC_data, aes(x=Time, y=Silica, col=Stream), shape= 16)+
+  geom_point(data=pH10_Feed[-1,], aes(x=pH10_Feed$Time[-1], y=pH10_rej_SiO2))+
+  #geom_point(data=pH10_IC_data, aes(x=Time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=pH10_Feed[-1,], aes(x=pH10_Feed$Time[-1], y=pH10_rej_Na))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  #ylim(0,135)+
+  ggtitle("Concentration and rejection of Silica")
+
+
+```
+
+
+The conductivity was initially 1320 microS/cm in the feed stream where it increased to about 2500 microS/cm. The permeate stream was initially 550 microS/cm, and the conductivity of the permeate surpassed the maximum of the conductivity sensor at 1000 microS/cm after about 7.5 hours. 
+The conductivity was measured manually of the permeate stream with a "hand-held conductivity meter", and were slightly higher than conductivity measured by the sensor in the system. The manually meaused conductivity show increase in permeate past the 1000 microS/cm, as expected. Furthermore as mentioned the last permeate sample was taken from accumulated permeate, and will thus have slightly lower concentration than in reality.  
+
+The rejection of conductivity is more or less stable above 50 %, the recovery should not be considered when the permeate conductivity increase past the conductivity sensor. 
+
+
+
+
+```{R pH 10 plot conductivity, echo=FALSE, message=FALSE}
+ay <- list(
+  tickfont = list(color = "red"),
+  overlaying = "y",
+  side = "right",
+  title = "Rejection") #Her noget hokus-pokus for at kunne lave 2 y akser
+
+
+dat_M_10 %>%
+  mutate(rejection=(1-(con0501/con0301))*100)%>%
+  mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
+  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
+  plot_ly(x=~sek/3600) %>%
+  add_trace(y=~feed_slid,
+          name="Feed",
+          type='scatter',
+          mode='lines',
+          line=list(color="red"))%>%
+  add_trace(y=~con0501,
+            name='Permeate',
+             mode='lines',
+            line=list(color="green"))%>%
+  add_trace(y=~rej_slid,
+            name='Rejection',
+            yaxis="y2",
+            mode='lines',
+            line=list(color="blue"))%>%
+  # Set figure title, x and y-axes titles
+  layout(title="Conductivity and rejection Multi salt pH 10",yaxis2=ay,
+         legend=list(x=0.6,y=0.5),
+         yaxis=list(title= "Conductivity \U03BC S/cm")) #Her conductivity over tid + en form for rejection, 
+#læg gerne mærke til farverne der nægter at se
+
+
+```
+The PH was also measured by sensor continually in the system, and tested manually on samples. In the plot below the pH of the feed stream is shows, where the manually measured pH represented by dots is slightly lower about 0.1 pH than the sensor. This discrepancy is accepted, but taken into consideration when comparing pH values measured with the different instruments. 
+
+
+```{R pH10 plot pH, echo=FALSE, message=FALSE}
+
+
+ggplot()+
+  geom_point(data=dat_M_10, aes(x=sek/3600, y=pH0201), shape= 16)+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  #ylim(0,135)+
+  ggtitle("pH of multisalt pH 10")
+
+
+```
+The bicarbonate was measured in the feed stream using titration. The plot below show increase in bicarbonate content as the filtration durinf the experiment. 
+
+```{R pH10 plot Bicarbonate data, include= FALSE, echo=FALSE, message=FALSE}
+
+pH10_Bi_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx")
+
+old_names_Bi=colnames(pH10_Bi_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_Bi=c("Time","Stream","Name","Bicarbonate","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl","Conductivity","pH","Dilution") #Vi finder på nogle lidt bedre nogle
+pH10_Bi_data = pH10_Bi_data %>% rename_at(vars(old_names_Bi),~new_names_Bi) #Vi ændrer navnene til de nye
+pH10_Bi_data <- as.data.frame(pH10_Bi_data)
+pH10_Bi_data <- pH10_Bi_data[-c(1:16),-c(5:12)] #cutter IC data fra så det kun er bicarboant.  
+
+ggplot()+
+  geom_point(data=pH10_Bi_data, aes(x=Time, y=Bicarbonate, col=Stream), shape= 16)+
+  #geom_point(data=pH10_IC_data, aes(x=Time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=pH10_Feed[-1,], aes(x=pH10_Feed$Time[-1], y=pH10_rej_Na))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  #ylim(0,135)+
+  ggtitle("Concentration of Bicarbonate")
+
+
+```
