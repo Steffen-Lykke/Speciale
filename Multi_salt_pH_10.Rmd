@@ -36,6 +36,8 @@ library(latex2exp)
 library(fs)
 ```
 
+TEKST IKKE REDIGERET TIL pH 10, MEN ER SKREVET TIL pH 9.2
+
 Summary of Multi salt experiments.
 
 All experiments were performed with:
