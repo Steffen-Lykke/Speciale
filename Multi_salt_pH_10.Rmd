@@ -138,7 +138,7 @@ ggplot()+
 
 csumflow0501 <- cumsum((dat_M_10$flow0501)/60)
 dat_M_10 <- cbind(dat_M_10,csumflow0501)
-initial_feed_volume <- 8
+initial_feed_volume <- 8.5
 print(total_perm_volume <- tail(dat_M_10$csumflow0501, n=1))
 print((total_perm_volume/1000)/initial_feed_volume*100)
 

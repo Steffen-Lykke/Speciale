@@ -200,7 +200,37 @@ dat_M_9.2 %>%
 
 
 ``` 
-total time is `r tail(dat_M_10$sek, n=1)/3600`.
+```{R Recovery , include = FALSE, echo=FALSE, message=FALSE}
+#definer start volumen for de respektive forsøg. 
+initial_feed_volume_9.2 <- 10
+initial_feed_volume_10 <- 8.5
+initial_feed_volume_10.5 <- 10
+
+
+csumflow0501_9.2 <- cumsum((dat_M_9.2$flow0501)/60)
+dat_M_9.2 <- cbind(dat_M_9.2,csumflow0501_9.2)
+csumflow0501_10 <- cumsum((dat_M_10$flow0501)/60)
+dat_M_10 <- cbind(dat_M_10,csumflow0501_10)
+#csumflow0501_10.5 <- cumsum((dat_M_10.5$flow0501)/60)
+#dat_M_10.5 <- cbind(dat_M_10.5,csumflow0501_10.5)
+perm_volume_9.2 <- tail(dat_M_9.2$csumflow0501_9.2, n=1)/1000
+perm_volume_10 <- tail(dat_M_10$csumflow0501_10, n=1)/1000
+#perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
+
+
+```
+
+
+
+pH of experiment    | 9.2               |      10         | 10.5
+-------------       | -------------     | -------------   | -------------  
+Total time [h]       | `r tail(dat_M_9.2$sek, n=1)/3600`|`r tail(dat_M_10$sek, n=1)/3600`| xx 
+Average permeate flow [mL/min]|`r mean(dat_M_9.2$flow0501)`|`r mean(dat_M_10$flow0501)`| xx   
+Total permeate volume [L]|`r perm_volume_9.2`|`r perm_volume_10`| xx   
+Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_volume_10/initial_feed_volume_10)*100`|xx
+
+
+
 
 ```{r}
 1 + 1
@@ -209,28 +239,39 @@ knitr::knit_exit()
 
 ```{R Multi pH 10 permeate flow , include = FALSE, results= asis, echo=FALSE, message=FALSE}
 
-print(Total_time_h <- tail(dat_M_10$sek, n=1)/3600)
-print(mean(dat_M_10$flow0501))
+
+flow0501_slid_9.2 <- rollapply(dat_M_9.2$flow0501,60,mean,align="right",fill=NA)
+dat_M_9.2 <- cbind(dat_M_9.2,flow0501_slid_9.2)
+
+flow0501_slid_10 <- rollapply(dat_M_10$flow0501,60,mean,align="right",fill=NA)
+dat_M_10 <- cbind(dat_M_10,flow0501_slid_10)
+
+#klar til 10.5
+#flow0501_slid_10.5 <- rollapply(dat_M_10.5$flow0501,60,mean,align="right",fill=NA)
+#dat_M_10.5 <- cbind(dat_M_10.5,flow0501_slid_10.5)
 
 
-flow0501_slid <- rollapply(dat_M_10$flow0501,60,mean,align="right",fill=NA)
-ggplot()+
-  geom_point(data=dat_M_10, aes(x=sek/3600, y=flow0501_slid), shape= 16)+
-  labs(x="Time [h]",y=" Permeate Flow mL/min")+
-  ylim(15,20)+
-  ggtitle("Multi salt pH 10 Permeate flow ") 
+dat_M_9.2 %>%
+  plot_ly(x=~(sek)/3600,
+          y=~flow0501_slid_9.2,
+          name="Permeate flow pH 9.2",
+          color='#forestgreen',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(x=~(dat_M_10$sek)/3600,
+          y=~dat_M_10$flow0501_slid_10,
+          name='Permeate flow pH 10',
+          color='#E41317')%>%
+# add_lines(x=~(dat_M_10.5$sek)/3600,
+ #         y=~dat_M_10.5$flow0501_slid_10.5,
+#          name='Permeate flow pH 10.5',
+#       color='#E41317')%>%
+  layout(title="Flow Permeate ",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="Permeate Flow [mg/L]"),
+         xaxis=list(title="Time [h]")) #Her plottet TMP
 
-csumflow0501 <- cumsum((dat_M_10$flow0501)/60)
-dat_M_10 <- cbind(dat_M_10,csumflow0501)
-initial_feed_volume <- 8
-print(total_perm_volume <- tail(dat_M_10$csumflow0501, n=1))
-print((total_perm_volume/1000)/initial_feed_volume*100)
 
 
-#ggplot()+
- # geom_line(data=dat_M_10, aes(x=sek/3600, y=csumflow0501/1000), shape= 16)+
-  #labs(x="Time [h]",y=" Accumulation of Permeate [L]")+
-  #ylim(0,9)+
-  #ggtitle("Multi salt pH 10 Accumulate of Permeate ") 
 
 ```
