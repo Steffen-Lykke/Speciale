@@ -55,10 +55,11 @@ COC_max = c_guideline/c_makeup
 COC = min(COC_max)
 drift=0
 ##### Model Parameters #####
-dt=60 #minutes
-run_time = 10 #days
+dt=1 #minutes
+dt=dt/1440
+run_time = 1 #days
 max_time = run_time*60*24 #i minutter
-n_time_step = max_time/dt+1
+n_time_step = run_time/dt+1
 tid = 0
 
 #### Data frames ####
@@ -72,16 +73,16 @@ nf = data.frame(
   tid=double(),
   Na=double(),
   Cl=double(),
-  Ca=double(),
-  SO4=double()
+  SO4=double(),
+  SiO2=double()
 )
 
 cf = data.frame(
   tid=double(),
   Na=double(),
   Cl=double(),
-  Ca=double(),
-  SO4=double()
+  SO4=double(),
+  SiO2=double()
 )
 #Initial Values
 df[1:n_time_step,]=0
@@ -94,9 +95,10 @@ cf[1,]=nf[1,]/df$V_CT[1]
 for (i in 2:n_time_step) {
   
   ## Volume flow
-  Q_blowdown=Q_vap/(-1+COC)
+  
+  Q_vap = Q_vap*dt #big math
+  Q_blowdown=(Q_vap/(-1+COC))
   Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
-  Q_vap = Q_vap #big math
   Q = Q_makeup-Q_blowdown-Q_vap
   ## Current volume
   df$V_CT[i]=df$V_CT[i-1]+Q
@@ -113,16 +115,16 @@ for (i in 2:n_time_step) {
   nf[i,2:5] = nf[i-1,2:5]+n_flow
   cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
 
-  df$tid[i]=df$tid[i-1]+1
-  nf$tid[i]=nf$tid[i-1]+1
-  cf$tid[i]=cf$tid[i-1]+1
+  df$tid[i]=df$tid[i-1]+dt
+  nf$tid[i]=nf$tid[i-1]+dt
+  cf$tid[i]=cf$tid[i-1]+dt
   
 }
 
 ########## plot #############
 cf.long = cf %>% 
-  gather(key,value, Na,Cl)
+  gather(,value,Na,Cl,SO4,SiO2)
 
-ggplot(cf.long,aes(x=tid/60,y=value,color=key))+geom_line()+
-  scale_color_brewer(palette="Set1",labels = c("Na", "Cl"))+
+ggplot(cf.long,aes(x=tid,y=value,color=key))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = c("Na", "Cl","SO4","SiO2"))+
   theme_bw()+labs( y = "Concentration [mM?]", x = "Time [days]", color = "")
