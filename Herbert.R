@@ -115,15 +115,18 @@ for (i in 2:n_time_step) {
   nf[i,2:5] = nf[i-1,2:5]+n_flow
   cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
 
+
   df$tid[i]=df$tid[i-1]+dt
   nf$tid[i]=nf$tid[i-1]+dt
   cf$tid[i]=cf$tid[i-1]+dt
+
   
 }
 
 ########## plot #############
 cf.long = cf %>% 
-  gather(,value,Na,Cl,SO4,SiO2)
+  gather(key,value, Na,Cl,SO4,SiO2)
+
 
 ggplot(cf.long,aes(x=tid,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1",labels = c("Na", "Cl","SO4","SiO2"))+
