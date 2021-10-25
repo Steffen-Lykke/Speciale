@@ -50,7 +50,7 @@ COC = min(COC_max)
 
 ##### Model Parameters #####
 dt=10 #minutes
-dt=dt/1440
+dt=dt/1440 #hvad er det her??
 run_time = 100 #days
 max_time = run_time*60*24 #i minutter
 n_time_step = run_time/dt+1
@@ -95,7 +95,7 @@ Q_vap = Q_vap*dt #big math
 for (i in 2:n_time_step) {
   
   ## Volume flow
-  Q_blowdown=(Q_vap/(-1+COC))
+  Q_blowdown=(Q_vap/(-1+COC)) #denne forstår jeg ikke lige.
   Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
   Q = Q_makeup-Q_blowdown-Q_vap
   ## Current volume

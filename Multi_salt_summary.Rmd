@@ -26,6 +26,7 @@ require(readr)
 library(zoo)
 library(latex2exp)
 library(fs)
+library(fcuk)
 ```
 
 Summary of Multi salt experiments.
