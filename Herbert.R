@@ -1,5 +1,5 @@
 #Der skal ske noget syg programmering her
-#CT model ud fra COC
+#CT model ud fra COC me antagelsen om konstant volumeflow
 
 
 
@@ -51,7 +51,7 @@ COC = min(COC_max)
 ##### Model Parameters #####
 dt=10 #minutes
 dt=dt/1440
-run_time = 100 #days
+run_time = 60 #days
 max_time = run_time*60*24 #i minutter
 n_time_step = run_time/dt+1
 tid = 0
@@ -90,18 +90,16 @@ cf[1:n_time_step,]=0
 df[1,]=c(tid,V_CT)
 cf[1,]=c(tid,c_makeup)
 nf[1,]=cf[1,]*df$V_CT[1]
+
+#Assuming constant volume flows
 Q_vap = Q_vap*dt #big math
+Q_blowdown=(Q_vap/(-1+COC))
+Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
+Q = Q_makeup-Q_blowdown-Q_vap
+df$V_CT=df$V_CT[1]
 ###### CT Model ######
 for (i in 2:n_time_step) {
-  
-  ## Volume flow
-  Q_blowdown=(Q_vap/(-1+COC))
-  Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
-  Q = Q_makeup-Q_blowdown-Q_vap
-  ## Current volume
-  df$V_CT[i]=df$V_CT[i-1]+Q
-  
-  
+
   ## mass flow ##
   n_mu = Q_makeup*c_makeup
   n_bd = Q_blowdown*cf[i-1,2:5]
