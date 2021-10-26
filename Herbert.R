@@ -50,8 +50,8 @@ COC = min(COC_max)
 
 ##### Model Parameters #####
 dt=10 #minutes
-dt=dt/1440
 run_time = 60 #days
+dt=dt/1440 #hvad er det her??
 max_time = run_time*60*24 #i minutter
 n_time_step = run_time/dt+1
 tid = 0
@@ -100,6 +100,7 @@ df$V_CT=df$V_CT[1]
 ###### CT Model ######
 for (i in 2:n_time_step) {
 
+  
   ## mass flow ##
   n_mu = Q_makeup*c_makeup
   n_bd = Q_blowdown*cf[i-1,2:5]

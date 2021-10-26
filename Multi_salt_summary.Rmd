@@ -1,6 +1,5 @@
 ---
 title: "Multi_salt_summary"
-author: "Lærke"
 date: "22/10/2021"
 output: html_document
 ---
@@ -27,6 +26,7 @@ require(readr)
 library(zoo)
 library(latex2exp)
 library(fs)
+library(fcuk)
 ```
 
 Summary of Multi salt experiments.
@@ -37,14 +37,24 @@ Flux 20 LMH (permeate flow 17 mL/min)
 
 Crossflow of 0.5 m/s (feed flow 1160 mL/min) 
 
-The concentration of the various salts were selected based on concentration of authentic CT reservior water, it might have been diluted. 
+The concentration of the various salts were selected based on concentration of authentic CT reservior water, see table below.
+It was attempted to mimic the concentration of authentic CT reservoir water, the focus was on species: Na, Cl, SO4, Ca, Sio2 and HCO3. The concentration of the various species was chosen based on possible salt combination and concentration. A bicarbonate-carbonate buffer was used to achieve some buffer effect with range between pH 9.2-10.6. 
+Three different experiment were made with varying pH value of 9.2, 10 and 10.5. This gave varying concentration og HCO3 and Na due to content in buffer species. 
 
-<h3> Multi salt experiment with pH 9.2 </h3>
 
-The pH was adjusted to pH 9.2 which is the lower end of the capacity for the bicarboante-carbonate buffer. 
-The data has been collected every second and a rolling average have been applied to the data set, giving data every minute. 
-The pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
-The osmotic pressure will be calculated to determine if the increase in pressure is due to increase in the osmotic pressure on the feed side of the membrane or if it is due to fouling of the membrane. 
+Ion Species    |Authentic CT water | pH 9.2      |   pH    10       | pH 10.5
+------------- |--------------  | -------------    | -------------   | -------------  
+Na [mM]        |10.81            |11.77            |  14.76        |16.63    
+Cl [mM]        |2.48            |2.50            |   2.50        |2.50
+SO4 [mM]        |0.64            |0.70            |   0.70        |0.70     
+Ca [mM]        |0.35            |0.40            |  0.40       |0.40     
+SiO2 [mM]        |0.68            |0.70           |   0.70        |0.70    
+HCO3[mM]        |7.29            |6.07           |   3.08        |1.21     
+
+The experiment will investigate the impact of change in pH on ion rejection. 
+
+
+
 
 
 
@@ -156,10 +166,130 @@ pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
 pH10_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
 
 ```
+The pH was monitored in the feed stream with data logging every 1 sec. The pH increase slightly for all filtration but at a similar rate,  giving stable pH for comparison between filtration with different initial pH value. 
 
-<h3> Comparison Pressure </h3>
+
+```{R pH ,  echo=FALSE, message=FALSE}
+
+
+dat_M_9.2 %>%
+  plot_ly(x=~(sek)/3600,
+          y=~pH0201,
+          name=" pH 9.2",
+          type='scatter',
+          mode='line',
+          line=list(color= '#00CC96'))%>%
+  add_lines(x=~(dat_M_10$sek)/3600,
+          y=~dat_M_10$pH0201,
+          name=' pH 10',
+          type='scatter',
+          mode='line',
+          line=list(color='#636EFA'))%>%
+# add_lines(x=~(dat_M_10.5$sek)/3600,
+#          y=~dat_M_10.5$pH0201,
+#          name=' pH 10.5',
+#          type='scatter',
+#          mode='line',
+#       color='#EF553B')%>%
+  layout(title="pH of feed",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="pH ", range=c(9,11)),
+         xaxis=list(title="Time [h]",range=c(0,8))
+         ) #Her plottet TMP
+
+```
+
+
+```{R Recovery , include = FALSE, echo=FALSE, message=FALSE}
+#definer start volumen for de respektive forsøg. 
+initial_feed_volume_9.2 <- 10 #uden prøver 10.54
+initial_feed_volume_10 <- 8.5 #uden prøver (8.5+0.54)
+initial_feed_volume_10.5 <- 10
+
+
+csumflow0501_9.2 <- cumsum((dat_M_9.2$flow0501)/60)
+dat_M_9.2 <- cbind(dat_M_9.2,csumflow0501_9.2)
+csumflow0501_10 <- cumsum((dat_M_10$flow0501)/60)
+dat_M_10 <- cbind(dat_M_10,csumflow0501_10)
+#csumflow0501_10.5 <- cumsum((dat_M_10.5$flow0501)/60)
+#dat_M_10.5 <- cbind(dat_M_10.5,csumflow0501_10.5)
+perm_volume_9.2 <- tail(dat_M_9.2$csumflow0501_9.2, n=1)/1000
+perm_volume_10 <- tail(dat_M_10$csumflow0501_10, n=1)/1000
+#perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
+
+
+```
+
+The three different filtration have been performed with the same parameters, except that filtration with pH 10 had initial feed volume of 8.5 L which also lead to lower total filtration time at 6.6 hours compared to 8.6 hours for the filtration with pH 9.2.
+The shorter filtration time leads to lower water recovery. When performing the experiment the feed container was run until nothing was left, and still only a recovery of 88 % was maximum obtained from filtration with pH 9.2. When ending the experiment water exits the system presumably the water which were pushed in the pressure dampeners during filtration it is estimated that this volume is 250 mL. 
+This still leaves about 0.950 L from the filtration with pH 9.2 to be lost and 1.6 L from the filtration with pH 10 to be lost. 
+
+WHERE DOES THE WATER GO???
+
+
+
+
+pH of experiment    | 9.2               |      10         | 10.5
+-------------       | -------------     | -------------   | -------------  
+Total filtration time [h]       | `r tail(dat_M_9.2$sek, n=1)/3600`|`r tail(dat_M_10$sek, n=1)/3600`| xx 
+Average permeate flow [mL/min]|`r mean(dat_M_9.2$flow0501)`|`r mean(dat_M_10$flow0501)`| xx   
+Total permeate volume [L]|`r perm_volume_9.2`|`r perm_volume_10`| xx   
+Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_volume_10/initial_feed_volume_10)*100`|xx
+Water lost for ever |`r initial_feed_volume_9.2-perm_volume_9.2-0.250`|`r initial_feed_volume_10-perm_volume_10-0.250`|xx
+
+
+The average permeate flow is the same for all experiments at 17 mL/min, which is what the system is regulated according to. There are larger fluctuations in permeate flow for the experiment with pH 9.2 but after this experiment the regulation value was altered slightly, which is why there is less fluctuations in the remaining filtration. The data has been collected every second and a rooling average have been calculated over 1 min.
+
+```{R Permeate flow ,  echo=FALSE, message=FALSE}
+
+
+flow0501_slid_9.2 <- rollapply(dat_M_9.2$flow0501,60,mean,align="right",fill=NA)
+dat_M_9.2 <- cbind(dat_M_9.2,flow0501_slid_9.2)
+
+flow0501_slid_10 <- rollapply(dat_M_10$flow0501,60,mean,align="right",fill=NA)
+dat_M_10 <- cbind(dat_M_10,flow0501_slid_10)
+
+#klar til 10.5
+#flow0501_slid_10.5 <- rollapply(dat_M_10.5$flow0501,60,mean,align="right",fill=NA)
+#dat_M_10.5 <- cbind(dat_M_10.5,flow0501_slid_10.5)
+
+
+dat_M_9.2 %>%
+  plot_ly(x=~(sek)/3600,
+          y=~flow0501_slid_9.2,
+          name="Permeate flow pH 9.2",
+          color='#00CC96',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(x=~(dat_M_10$sek)/3600,
+          y=~dat_M_10$flow0501_slid_10,
+          name='Permeate flow pH 10',
+          color='#E41317')%>%
+# add_lines(x=~(dat_M_10.5$sek)/3600,
+ #         y=~dat_M_10.5$flow0501_slid_10.5,
+#          name='Permeate flow pH 10.5',
+#       color='#EF553B')%>%
+  layout(title="Permeate Flow",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="Permeate Flow [mg/L]"),
+         xaxis=list(title="Time [h]")) #Her plottet TMP
+
+
+
+
+```
+
+<h3> Pressure </h3>
 
 NORMALISER I FORHOLD OSMOTISK TRYK. 
+
+
+The data has been collected every second.
+For experiment with pH 9.2 the pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
+The experiment with higher pH of 10 had further increase in pressure for a shorter time frame, increasing to about 3 bar. This indicate higher ion content on the feed side and thus increase in pressure due to osmotic pressure or fouling. 
+
+
+
 
 ```{R Pressure, echo=FALSE, message=FALSE}
 
@@ -182,97 +312,78 @@ dat_M_9.2 %>%
   plot_ly(x=~(sek)/3600,
           y=~TMP_9.2,
           name="TMP pH 9.2",
-          color='#forestgreen',
+          color='#00CC96',
           type='scatter',
           mode='lines')%>%
   add_lines(x=~(dat_M_10$sek)/3600,
           y=~dat_M_10$TMP_10,
           name='TMP pH 10',
-          color='#E41317')%>%
+          color='#636EFA')%>%
 # add_lines(x=~(dat_M_10.5$sek)/3600,
-#         y=~dat_M_10.5$TMP_10.5,
-#        name='TMP pH 10',
-#       color='#E41317')%>%
-  layout(title="TMP Multi salt",
+#          y=~dat_M_10.5$TMP_10.5,
+#          name='TMP pH 10.5',
+#       color='#EF553B')%>%
+  layout(title="TMP",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="Pressure [bar]", range=c(2,3.5)),
          xaxis=list(title="Time [h]")) #Her plottet TMP
 
 
 ``` 
-```{R Recovery , include = FALSE, echo=FALSE, message=FALSE}
-#definer start volumen for de respektive forsøg. 
-initial_feed_volume_9.2 <- 10
-initial_feed_volume_10 <- 8.5
-initial_feed_volume_10.5 <- 10
+<h3> Conductivity Rejection  </h3>
 
+The rejection for filtration with pH 9.2 fluctuate with decrease from 56 % to 52% and increase back to 54 %. 
+The rejection of filtration with pH 10 slightly increase from 65 % - 70% rejection. 
 
-csumflow0501_9.2 <- cumsum((dat_M_9.2$flow0501)/60)
-dat_M_9.2 <- cbind(dat_M_9.2,csumflow0501_9.2)
-csumflow0501_10 <- cumsum((dat_M_10$flow0501)/60)
-dat_M_10 <- cbind(dat_M_10,csumflow0501_10)
-#csumflow0501_10.5 <- cumsum((dat_M_10.5$flow0501)/60)
-#dat_M_10.5 <- cbind(dat_M_10.5,csumflow0501_10.5)
-perm_volume_9.2 <- tail(dat_M_9.2$csumflow0501_9.2, n=1)/1000
-perm_volume_10 <- tail(dat_M_10$csumflow0501_10, n=1)/1000
-#perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
+When comparing the rejection of conductivity between the filtration it correlates with data for pressure with higher rejection and higher increase in pressure of filtration with higher pH. 
 
+```{R Rejection of Conductivity ,  echo=FALSE, message=FALSE}
 
-```
+con_rej_9.2<-(1-(dat_M_9.2$con0501/dat_M_9.2$con0301))*100
+con_rej_9.2<- rollapplyr(con_rej_9.2, 60, mean, fill=NA)
+dat_M_9.2 <- cbind(dat_M_9.2,con_rej_9.2)
 
-
-
-pH of experiment    | 9.2               |      10         | 10.5
--------------       | -------------     | -------------   | -------------  
-Total time [h]       | `r tail(dat_M_9.2$sek, n=1)/3600`|`r tail(dat_M_10$sek, n=1)/3600`| xx 
-Average permeate flow [mL/min]|`r mean(dat_M_9.2$flow0501)`|`r mean(dat_M_10$flow0501)`| xx   
-Total permeate volume [L]|`r perm_volume_9.2`|`r perm_volume_10`| xx   
-Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_volume_10/initial_feed_volume_10)*100`|xx
-
-
-
-Comparison of permeate flow. 
-The regulation valvue has been modified between experiment with pH 9.2 and experiment with pH 10 which might cause the difference in flucturations on the permeate flow. 
-
-```{R Permeate flow ,  echo=FALSE, message=FALSE}
-
-
-flow0501_slid_9.2 <- rollapply(dat_M_9.2$flow0501,60,mean,align="right",fill=NA)
-dat_M_9.2 <- cbind(dat_M_9.2,flow0501_slid_9.2)
-
-flow0501_slid_10 <- rollapply(dat_M_10$flow0501,60,mean,align="right",fill=NA)
-dat_M_10 <- cbind(dat_M_10,flow0501_slid_10)
+con_rej_10<-(1-(dat_M_10$con0501/dat_M_10$con0301))*100
+con_rej_10<- rollapplyr(con_rej_10, 60, mean, fill=NA)
+dat_M_10 <- cbind(dat_M_10,con_rej_10)
 
 #klar til 10.5
-#flow0501_slid_10.5 <- rollapply(dat_M_10.5$flow0501,60,mean,align="right",fill=NA)
-#dat_M_10.5 <- cbind(dat_M_10.5,flow0501_slid_10.5)
-
+#con_rej_10.5<-(1-(dat_M_10.5$con0501/dat_M_10.5$con0301))*100
+#con_rej_10.5<- rollapplyr(con_rej_10.5, 60, mean, fill=NA)
+#dat_M_10.5 <- cbind(dat_M_10.5,con_rej_10.5)
 
 dat_M_9.2 %>%
   plot_ly(x=~(sek)/3600,
-          y=~flow0501_slid_9.2,
-          name="Permeate flow pH 9.2",
-          color='#forestgreen',
+          y=~con_rej_9.2,
+          name=" pH 9.2",
           type='scatter',
-          mode='lines')%>%
+          mode='line',
+          line=list(color='#00CC96'))%>%
   add_lines(x=~(dat_M_10$sek)/3600,
-          y=~dat_M_10$flow0501_slid_10,
-          name='Permeate flow pH 10',
-          color='#E41317')%>%
-# add_lines(x=~(dat_M_10.5$sek)/3600,
- #         y=~dat_M_10.5$flow0501_slid_10.5,
-#          name='Permeate flow pH 10.5',
-#       color='#E41317')%>%
-  layout(title="Flow Permeate ",
+          y=~dat_M_10$con_rej_10,
+          name=' pH 10',
+          type='scatter',
+          mode='line',
+          line=list(color='#636EFA'))%>%
+#  add_lines(x=~(dat_M_10.5$sek)/3600,
+#          y=~dat_M_10.5$con_rej_10,
+#          name=' pH 10.5',
+#          type='scatter',
+#          mode='line',
+#       color='#EF553B')%>%
+  layout(title="Rejection of Conductivity",
          legend=list(x=0.9,y=0.9),
-         yaxis=list(title="Permeate Flow [mg/L]"),
-         xaxis=list(title="Time [h]")) #Her plottet TMP
-
-
+         yaxis=list(title="Rejection % ", range=c(0,100)),
+         xaxis=list(title="Time [h]",range=c(0,7.4))
+         ) #Her plottet TMP
 
 
 ```
+<h3> Rejection of Silica </h3>
 
+The rejection of silica correlate with rejection of over all conductivity where higher pH lead to higher rejection of silica. 
+Filtration with pH 9.2 have rejection of 21 % increasing to 27 %, with a presumed outlier at 6 h.
+Filtration with pH 10 have significantly higher rejection of 49 % increasing to 58 %. 
 
 ```{R Rejection of Silica ,  echo=FALSE, message=FALSE}
 
@@ -283,18 +394,20 @@ dat_M_9.2 %>%
           name="SiO2 rejection pH 9.2",
           type='scatter',
           mode='marker',
-          marker=list(color="blue"))%>%
+          marker=list(color='#00CC96'))%>%
   add_markers(x=~pH10_Feed$Time[-1],
           y=~pH10_rej_SiO2,
           name='SiO2 rejection pH 10',
           type='scatter',
           mode='marker',
-          marker=list(color="black"))%>%
-# add_lines(x=~(dat_M_10.5$sek)/3600,
- #         y=~dat_M_10.5$flow0501_slid_10.5,
-#          name='Permeate flow pH 10.5',
-#       color='#E41317')%>%
-  layout(title="Flow Permeate ",
+          marker=list(color='#636EFA'))%>%
+# add_markers(x=~pH10.5_Feed$Time[-1],
+ #         y=~pH10.5_rej_SiO2,
+#          name='SiO2 rejection pH 10.5',
+#          type='scatter',
+#          mode='marker',
+#       color='#EF553B')%>%
+  layout(title="Rejection of Silica ",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="Rejection of SiO2[mg/L]"),
          xaxis=list(title="Time [h]")) #Her plottet TMP
@@ -305,72 +418,13 @@ dat_M_9.2 %>%
 ```
 
 
-```{R Rejection of Conductivity ,  echo=FALSE, message=FALSE}
-
-# mutate(rejection=(1-(con0501/con0301))*100)%>%
- # mutate(feed_slid=rollapplyr(con0301,30,mean,fill=NA))%>%
-#  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
-
-con_rej_9.2<-(1-(dat_M_9.2$con0501/dat_M_9.2$con0301))*100
-dat_M_9.2 <- cbind(dat_M_9.2,con_rej_9.2)
-
-con_rej_10<-(1-(dat_M_10$con0501/dat_M_10$con0301))*100
-dat_M_10 <- cbind(dat_M_10,con_rej_10)
-
-#klar til 10.5
-#con_rej_10.5<-(1-(dat_M_10.5$con0501/dat_M_10.5$con0301))*100
-#dat_M_10.5 <- cbind(dat_M_10.5,con_rej_10.5)
-
-dat_M_9.2 %>% 
-plot_ly(x=~sek/3600,
-          y=~con_rej_9.2,
-          name="SiO2 rejection pH 9.2",
-          type='scatter',
-          mode='line',
-          line=list(color="blue"))%>%
-  add_markers(x=~pH10_Feed$Time[-1],
-          y=~pH10_rej_SiO2,
-          name='SiO2 rejection pH 10',
-          type='scatter',
-          mode='marker',
-          marker=list(color="black"))%>%
-  layout(title="Flow Permeate ",
-         legend=list(x=0.9,y=0.9),
-         yaxis=list(title="Rejection of SiO2[mg/L]"),
-         xaxis=list(title="Time [h]")) #Her plottet TMP
 
 
-#virker ej. 
-dat_M_9.2 %>%
-  mutate(rejection=(1-(con0501/con0301))*100)%>%
-  mutate(rej_slid=rollapplyr(rejection,30,mean,fill=NA))%>%
-  plot_ly(x=~sek/3600) %>%
-  add_lines(y=~rej_slid,
-          name="Feed",
-          type='scatter',
-          mode='lines',
-          lines=list(color="red"))%>%
-  add_trace(y=~con0501,
-            name='Permeate',
-            type='scatter',
-             mode='lines',
-            line=list(color="green"))%>%
-  add_trace(y=~rej_slid,
-            name='Rejection',
-            type='scatter',
-            yaxis="y2",
-            mode='lines',
-            line=list(color="blue"))%>%
-  add_trace(x=~pH9.2_Permeate$Time,
-            y=~pH9.2_Permeate$Conductivity,
-            name='Conductivity perm',
-            type='scatter',
-            mode='markers',
-            marker=list(color="blue"))%>%
-  # Set figure title, x and y-axes titles
-  layout(title="Conductivity and rejection Multi salt pH 9.2",yaxis2=ay,
-         legend=list(x=0.6,y=0.5),
-         yaxis=list(title= "Conductivity \U03BC S/cm")) #Her conductivity over tid + en form
 
 
+
+
+
+```{R Stop knit ,  echo=FALSE, message=FALSE}
+knitr::knit_exit()
 ```
