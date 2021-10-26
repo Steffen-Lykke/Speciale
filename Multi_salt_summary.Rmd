@@ -166,6 +166,60 @@ pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
 pH10_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
 
 ```
+
+```{R pH 10.5 import data, echo=FALSE, message=FALSE}
+CWF_Multi_10.5 = read_delim("data/Multi_10.5_25_10_2021_del2.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_M_10.5 = as.data.frame(CWF_Multi_10.5) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_Multi_10.5) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("Time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_M_10.5 = dat_M_10.5 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_M_10.5$Time = dmy_hms(dat_M_10.5$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_M_10.5$flow0501>16&dat_M_10.5$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_M_10.5=dat_M_10.5[-c(1:start_tid),]
+flow_boolean_slut = dat_M_10.5$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_M_10.5=dat_M_10.5[-c(slut_tid:(nrow(dat_M_10.5)) ),]
+### Tid i s fra forsøgs start
+dat_M_10.5 = dat_M_10.5%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_M_10.5$Time))-as.numeric(dat_M_10.5$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+#import af iC og silica data. 
+
+pH10.5_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx",3)
+
+old_names_IC=colnames(pH10.5_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl") #Vi finder på nogle lidt bedre nogle
+pH10.5_IC_data = pH10.5_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+pH10.5_IC_data <- as.data.frame(pH10.5_IC_data)
+pH10.5_IC_data <- pH10.5_IC_data[-c(18:21),] #cutter bicarbonat af. 
+
+pH10.5_Permeate <- filter(pH10.5_IC_data, Stream=="Permeate")
+pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
+   
+
+#pH10.5_rej_Cl <- (1-(pH10.5_Permeate$Chloride/(pH10.5_Feed$Chloride[-1])))*10.50
+#pH10.5_rej_Na <- (1-(pH10.5_Permeate$Sodium/(pH10.5_Feed$Sodium[-1])))*10.50
+#pH10.5_rej_Ca <- (1-(pH10.5_Permeate$Calcium/(pH10.5_Feed$Calcium[-1])))*100
+#pH10_rej_SO4 <- (1-(pH10_Permeate$Sulphate/(pH10_Feed$Sulphate[-1])))*100
+pH10.5_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
+
+```
 The pH was monitored in the feed stream with data logging every 1 sec. The pH increase slightly for all filtration but at a similar rate,  giving stable pH for comparison between filtration with different initial pH value. 
 
 
@@ -185,12 +239,12 @@ dat_M_9.2 %>%
           type='scatter',
           mode='line',
           line=list(color='#636EFA'))%>%
-# add_lines(x=~(dat_M_10.5$sek)/3600,
-#          y=~dat_M_10.5$pH0201,
-#          name=' pH 10.5',
-#          type='scatter',
-#          mode='line',
-#       color='#EF553B')%>%
+add_lines(x=~(dat_M_10.5$sek)/3600,
+          y=~dat_M_10.5$pH0201,
+          name=' pH 10.5',
+          type='scatter',
+          mode='line',
+      line=list(color='#EF553B'))%>%
   layout(title="pH of feed",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="pH ", range=c(9,11)),
@@ -202,7 +256,7 @@ dat_M_9.2 %>%
 
 ```{R Recovery , include = FALSE, echo=FALSE, message=FALSE}
 #definer start volumen for de respektive forsøg. 
-initial_feed_volume_9.2 <- 10 #uden prøver 10.54
+initial_feed_volume_9.2 <- 10 #uden prøver 10.5.54
 initial_feed_volume_10 <- 8.5 #uden prøver (8.5+0.54)
 initial_feed_volume_10.5 <- 10
 
@@ -211,11 +265,11 @@ csumflow0501_9.2 <- cumsum((dat_M_9.2$flow0501)/60)
 dat_M_9.2 <- cbind(dat_M_9.2,csumflow0501_9.2)
 csumflow0501_10 <- cumsum((dat_M_10$flow0501)/60)
 dat_M_10 <- cbind(dat_M_10,csumflow0501_10)
-#csumflow0501_10.5 <- cumsum((dat_M_10.5$flow0501)/60)
-#dat_M_10.5 <- cbind(dat_M_10.5,csumflow0501_10.5)
+csumflow0501_10.5 <- cumsum((dat_M_10.5$flow0501)/60)
+dat_M_10.5 <- cbind(dat_M_10.5,csumflow0501_10.5)
 perm_volume_9.2 <- tail(dat_M_9.2$csumflow0501_9.2, n=1)/1000
 perm_volume_10 <- tail(dat_M_10$csumflow0501_10, n=1)/1000
-#perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
+perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
 
 
 ```
@@ -231,11 +285,11 @@ WHERE DOES THE WATER GO???
 
 pH of experiment    | 9.2               |      10         | 10.5
 -------------       | -------------     | -------------   | -------------  
-Total filtration time [h]       | `r tail(dat_M_9.2$sek, n=1)/3600`|`r tail(dat_M_10$sek, n=1)/3600`| xx 
-Average permeate flow [mL/min]|`r mean(dat_M_9.2$flow0501)`|`r mean(dat_M_10$flow0501)`| xx   
-Total permeate volume [L]|`r perm_volume_9.2`|`r perm_volume_10`| xx   
-Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_volume_10/initial_feed_volume_10)*100`|xx
-Water lost for ever |`r initial_feed_volume_9.2-perm_volume_9.2-0.250`|`r initial_feed_volume_10-perm_volume_10-0.250`|xx
+Total filtration time [h]       | `r tail(dat_M_9.2$sek, n=1)/3600`|`r tail(dat_M_10$sek, n=1)/3600`| `r tail(dat_M_10.5$sek, n=1)/3600` 
+Average permeate flow [mL/min]|`r mean(dat_M_9.2$flow0501)`|`r mean(dat_M_10$flow0501)`| `r mean(dat_M_10.5$flow0501)`   
+Total permeate volume [L]|`r perm_volume_9.2`|`r perm_volume_10`| `r perm_volume_10.5`   
+Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_volume_10/initial_feed_volume_10)*100`|`r (perm_volume_10.5/initial_feed_volume_10.5)*100`
+Water lost for ever |`r initial_feed_volume_9.2-perm_volume_9.2-0.250`|`r initial_feed_volume_10-perm_volume_10-0.250`|`r initial_feed_volume_10.5-perm_volume_10.5-0.250`
 
 
 The average permeate flow is the same for all experiments at 17 mL/min, which is what the system is regulated according to. There are larger fluctuations in permeate flow for the experiment with pH 9.2 but after this experiment the regulation value was altered slightly, which is why there is less fluctuations in the remaining filtration. The data has been collected every second and a rooling average have been calculated over 1 min.
@@ -249,26 +303,25 @@ dat_M_9.2 <- cbind(dat_M_9.2,flow0501_slid_9.2)
 flow0501_slid_10 <- rollapply(dat_M_10$flow0501,60,mean,align="right",fill=NA)
 dat_M_10 <- cbind(dat_M_10,flow0501_slid_10)
 
-#klar til 10.5
-#flow0501_slid_10.5 <- rollapply(dat_M_10.5$flow0501,60,mean,align="right",fill=NA)
-#dat_M_10.5 <- cbind(dat_M_10.5,flow0501_slid_10.5)
+flow0501_slid_10.5 <- rollapply(dat_M_10.5$flow0501,60,mean,align="right",fill=NA)
+dat_M_10.5 <- cbind(dat_M_10.5,flow0501_slid_10.5)
 
 
 dat_M_9.2 %>%
   plot_ly(x=~(sek)/3600,
           y=~flow0501_slid_9.2,
           name="Permeate flow pH 9.2",
-          color='#00CC96',
           type='scatter',
-          mode='lines')%>%
+          mode='lines',
+          line=list(color= '#00CC96'))%>%
   add_lines(x=~(dat_M_10$sek)/3600,
           y=~dat_M_10$flow0501_slid_10,
           name='Permeate flow pH 10',
-          color='#E41317')%>%
-# add_lines(x=~(dat_M_10.5$sek)/3600,
- #         y=~dat_M_10.5$flow0501_slid_10.5,
-#          name='Permeate flow pH 10.5',
-#       color='#EF553B')%>%
+          line=list(color= '#636EFA'))%>%
+ add_lines(x=~(dat_M_10.5$sek)/3600,
+          y=~dat_M_10.5$flow0501_slid_10.5,
+        name='Permeate flow pH 10.5',
+        line=list(color= '#EF553B'))%>%
   layout(title="Permeate Flow",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="Permeate Flow [mg/L]"),
@@ -302,30 +355,30 @@ TMP_10<-(dat_M_10$p_avg0301+dat_M_10$p_avg0302)/2-dat_M_10$p_avg0501
   #TMP_slid_10<-rollapply(TMP,60,mean,align="right",fill=NA)
 dat_M_10 <- cbind(dat_M_10,TMP_10)
 
-#klar til 10.5
-#TMP_10.5<-(dat_M_10.5$p_avg0301+dat_M_10.5$p_avg0302)/2-dat_M_10.5$p_avg0501
+
+TMP_10.5<-(dat_M_10.5$p_avg0301+dat_M_10.5$p_avg0302)/2-dat_M_10.5$p_avg0501
   #TMP_slid_10.5<-rollapply(TMP,60,mean,align="right",fill=NA)
-#dat_M_10.5 <- cbind(dat_M_10.5,TMP_10.5)
+dat_M_10.5 <- cbind(dat_M_10.5,TMP_10.5)
 
 
 dat_M_9.2 %>%
   plot_ly(x=~(sek)/3600,
           y=~TMP_9.2,
           name="TMP pH 9.2",
-          color='#00CC96',
           type='scatter',
-          mode='lines')%>%
+          mode='lines',
+          line=list(color= '#00CC96'))%>%
   add_lines(x=~(dat_M_10$sek)/3600,
           y=~dat_M_10$TMP_10,
           name='TMP pH 10',
-          color='#636EFA')%>%
-# add_lines(x=~(dat_M_10.5$sek)/3600,
-#          y=~dat_M_10.5$TMP_10.5,
-#          name='TMP pH 10.5',
-#       color='#EF553B')%>%
+          line=list(color= '#636EFA'))%>%
+ add_lines(x=~(dat_M_10.5$sek)/3600,
+          y=~dat_M_10.5$TMP_10.5,
+          name='TMP pH 10.5',
+       line=list(color= '#EF553B'))%>%
   layout(title="TMP",
-         legend=list(x=0.9,y=0.9),
-         yaxis=list(title="Pressure [bar]", range=c(2,3.5)),
+         legend=list(x=0.1,y=0.9),
+         yaxis=list(title="Pressure [bar]", range=c(2,4)),
          xaxis=list(title="Time [h]")) #Her plottet TMP
 
 
@@ -347,10 +400,10 @@ con_rej_10<-(1-(dat_M_10$con0501/dat_M_10$con0301))*100
 con_rej_10<- rollapplyr(con_rej_10, 60, mean, fill=NA)
 dat_M_10 <- cbind(dat_M_10,con_rej_10)
 
-#klar til 10.5
-#con_rej_10.5<-(1-(dat_M_10.5$con0501/dat_M_10.5$con0301))*100
-#con_rej_10.5<- rollapplyr(con_rej_10.5, 60, mean, fill=NA)
-#dat_M_10.5 <- cbind(dat_M_10.5,con_rej_10.5)
+
+con_rej_10.5<-(1-(dat_M_10.5$con0501/dat_M_10.5$con0301))*100
+con_rej_10.5<- rollapplyr(con_rej_10.5, 60, mean, fill=NA)
+dat_M_10.5 <- cbind(dat_M_10.5,con_rej_10.5)
 
 dat_M_9.2 %>%
   plot_ly(x=~(sek)/3600,
@@ -365,14 +418,14 @@ dat_M_9.2 %>%
           type='scatter',
           mode='line',
           line=list(color='#636EFA'))%>%
-#  add_lines(x=~(dat_M_10.5$sek)/3600,
-#          y=~dat_M_10.5$con_rej_10,
-#          name=' pH 10.5',
-#          type='scatter',
-#          mode='line',
-#       color='#EF553B')%>%
+  add_lines(x=~(dat_M_10.5$sek)/3600,
+          y=~dat_M_10.5$con_rej_10,
+          name=' pH 10.5',
+          type='scatter',
+          mode='line',
+       line=list(color='#EF553B'))%>%
   layout(title="Rejection of Conductivity",
-         legend=list(x=0.9,y=0.9),
+         legend=list(x=0.7,y=0.2),
          yaxis=list(title="Rejection % ", range=c(0,100)),
          xaxis=list(title="Time [h]",range=c(0,7.4))
          ) #Her plottet TMP
@@ -401,14 +454,14 @@ Filtration with pH 10 have significantly higher rejection of 49 % increasing to 
           type='scatter',
           mode='marker',
           marker=list(color='#636EFA'))%>%
-# add_markers(x=~pH10.5_Feed$Time[-1],
- #         y=~pH10.5_rej_SiO2,
-#          name='SiO2 rejection pH 10.5',
-#          type='scatter',
-#          mode='marker',
-#       color='#EF553B')%>%
+ add_markers(x=~pH10.5_Feed$Time[-1],
+          y=~pH10.5_rej_SiO2,
+          name='SiO2 rejection pH 10.5',
+         type='scatter',
+          mode='marker',
+       marker=list(color='#EF553B'))%>%
   layout(title="Rejection of Silica ",
-         legend=list(x=0.9,y=0.9),
+         legend=list(x=0.7,y=0.5),
          yaxis=list(title="Rejection of SiO2[mg/L]"),
          xaxis=list(title="Time [h]")) #Her plottet TMP
 
