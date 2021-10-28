@@ -21,7 +21,7 @@ library(ggthemes)
 
 ############# Operational Parameters ###############
 c_nacl_initial = 3*10^-3 #mol/L
-flux_LMH = 30 #
+flux_LMH = 20 #
 flux = flux_LMH/3600 #L m^-2 s^-1 
 
 
@@ -32,17 +32,17 @@ R_na = 0.7 #Rejection Na+
 R_cl=0.5 #Rejection Cl-
 
 ## Feed values ##
-feed_tank_volume = 100 #L
+feed_tank_volume = 10 #L
 feed_tank_mass = feed_tank_volume*c_nacl_initial #mol?
 feed_tank_conc = feed_tank_mass/feed_tank_volume
 Q_feed = 0.01933 # L/s --- svarer til 1160 mL/min
 
 permeate_tank_volume = 0 #L
 permeate_tank_mass = 0#mol
-permeate_tank_conc = permeate_tank_mass/permeate_tank_volume #Burde dette ikke være permeat_tank_mass/permeat_tank_volume
+permeate_tank_conc = NA #Burde dette ikke være permeat_tank_mass/permeat_tank_volume
 ############# model parameters #############
 dt=60 #s
-run_time = 40 #hours
+run_time = 8 #hours
 max_time_step = run_time*3600
 n_time_step = max_time_step/dt
 tid = 0
@@ -64,7 +64,7 @@ df[1,] = c(tid,feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volu
            permeate_tank_mass,permeate_tank_conc,0,0)
 
 ############ Model #####################
-for (i in 1:n_time_step+1) {
+for (i in 2:n_time_step+1) {
   #Volume flow
   Q_permeate = membrane_area*flux
   Q_retentate = Q_feed- Q_permeate
