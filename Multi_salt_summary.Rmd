@@ -94,10 +94,11 @@ dat_M_9.2 = dat_M_9.2%>%
 pH9.2_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx")
 
 old_names_IC=colnames(pH9.2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl","Conductivity","pH","Dilution") #Vi finder på nogle lidt bedre nogle
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl","Dilution","Cl_total","Conductivity","pH") #Vi finder på nogle lidt bedre nogle
 pH9.2_IC_data = pH9.2_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
 pH9.2_IC_data <- as.data.frame(pH9.2_IC_data)
-pH9.2_IC_data <- pH9.2_IC_data[-c(14:22),] #cutter bicarbonat af. 
+pH9.2_bi_data <- pH9.2_IC_data[c(17:19),c(1:4)] #bicarbonat data
+pH9.2_IC_data <- pH9.2_IC_data[c(1:13),] #IC data 
 
 pH9.2_Permeate <- filter(pH9.2_IC_data, Stream=="Permeate")
 pH9.2_Feed <- filter(pH9.2_IC_data, Stream=="Feed")
@@ -153,7 +154,9 @@ old_names_IC=colnames(pH10_IC_data) #Vi finder de latterlige navne kolonnerne i 
 new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl") #Vi finder på nogle lidt bedre nogle
 pH10_IC_data = pH10_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
 pH10_IC_data <- as.data.frame(pH10_IC_data)
-pH10_IC_data <- pH10_IC_data[-c(16:19),] #cutter bicarbonat af. 
+pH10_bi_data <- pH10_IC_data[c(17:19),c(1:4)] #bicarbonat data
+pH10_IC_data <- pH10_IC_data[c(1:15),] #IC data 
+
 
 pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
 pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
@@ -204,10 +207,11 @@ dat_M_10.5 = dat_M_10.5%>%
 pH10.5_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx",3)
 
 old_names_IC=colnames(pH10.5_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl") #Vi finder på nogle lidt bedre nogle
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl", "Dilution","Cl_total") #Vi finder på nogle lidt bedre nogle
 pH10.5_IC_data = pH10.5_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
 pH10.5_IC_data <- as.data.frame(pH10.5_IC_data)
-pH10.5_IC_data <- pH10.5_IC_data[-c(18:21),] #cutter bicarbonat af. 
+pH10.5_bi_data <- pH10.5_IC_data[c(17:19),c(1:4)] #bicarbonat data
+pH10.5_IC_data <- pH10.5_IC_data[c(1:15),] #IC data 
 
 pH10.5_Permeate <- filter(pH10.5_IC_data, Stream=="Permeate")
 pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
@@ -217,7 +221,7 @@ pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
 #pH10.5_rej_Na <- (1-(pH10.5_Permeate$Sodium/(pH10.5_Feed$Sodium[-1])))*10.50
 #pH10.5_rej_Ca <- (1-(pH10.5_Permeate$Calcium/(pH10.5_Feed$Calcium[-1])))*100
 #pH10_rej_SO4 <- (1-(pH10_Permeate$Sulphate/(pH10_Feed$Sulphate[-1])))*100
-pH10.5_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
+pH10.5_rej_SiO2 <- (1-(pH10.5_Permeate$Silica/(pH10.5_Feed$Silica[-1])))*100
 
 ```
 The pH was monitored in the feed stream with data logging every 1 sec. The pH increase slightly for all filtration but at a similar rate,  giving stable pH for comparison between filtration with different initial pH value. 
@@ -274,9 +278,9 @@ perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
 
 ```
 
-The three different filtration have been performed with the same parameters, except that filtration with pH 10 had initial feed volume of 8.5 L which also lead to lower total filtration time at 6.6 hours compared to 8.6 hours for the filtration with pH 9.2.
+The three different filtration have been performed with the same parameters, except that filtration with pH 10 had initial feed volume of 8.5 L which also lead to lower total filtration time at 6.6 hours compared to 8.6 hours for the filtration with pH 9.2 and 8.1 hours for filration with pH 10.5.
 The shorter filtration time leads to lower water recovery. When performing the experiment the feed container was run until nothing was left, and still only a recovery of 88 % was maximum obtained from filtration with pH 9.2. When ending the experiment water exits the system presumably the water which were pushed in the pressure dampeners during filtration it is estimated that this volume is 250 mL. 
-This still leaves about 0.950 L from the filtration with pH 9.2 to be lost and 1.6 L from the filtration with pH 10 to be lost. 
+This still leaves about 0.950 L,  1.6 L and 1.5 L from the filtration with pH 9.2, pH 10 and pH 10.5 to be lost. 
 
 WHERE DOES THE WATER GO???
 
@@ -292,7 +296,7 @@ Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_vol
 Water lost for ever |`r initial_feed_volume_9.2-perm_volume_9.2-0.250`|`r initial_feed_volume_10-perm_volume_10-0.250`|`r initial_feed_volume_10.5-perm_volume_10.5-0.250`
 
 
-The average permeate flow is the same for all experiments at 17 mL/min, which is what the system is regulated according to. There are larger fluctuations in permeate flow for the experiment with pH 9.2 but after this experiment the regulation value was altered slightly, which is why there is less fluctuations in the remaining filtration. The data has been collected every second and a rooling average have been calculated over 1 min.
+The average permeate flow is the same for all experiments at 17 mL/min, which is what the system is regulated according to. There are larger fluctuations in permeate flow for the experiment with pH 9.2 but after this experiment the regulation value was altered slightly, which is why there is less fluctuations in the remaining filtrations with pH 10 and 10.5. The data has been collected every second and a rooling average have been calculated over 1 min.
 
 ```{R Permeate flow ,  echo=FALSE, message=FALSE}
 
@@ -338,8 +342,10 @@ NORMALISER I FORHOLD OSMOTISK TRYK.
 
 
 The data has been collected every second.
-For experiment with pH 9.2 the pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
-The experiment with higher pH of 10 had further increase in pressure for a shorter time frame, increasing to about 3 bar. This indicate higher ion content on the feed side and thus increase in pressure due to osmotic pressure or fouling. 
+For filtration with pH 9.2 the pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
+The filtration with pH of 10 had further increase in pressure for a shorter time frame, increasing to about 3 bar. 
+The filtration with pH of 10.5 the pressure increased further to about max of 3.5 bar.
+This increase in pressure could indicate higher ion content on the feed side and thus increase in pressure due to osmotic pressure or fouling. This higher pH give higher rejection. 
 
 
 
@@ -387,6 +393,7 @@ dat_M_9.2 %>%
 
 The rejection for filtration with pH 9.2 fluctuate with decrease from 56 % to 52% and increase back to 54 %. 
 The rejection of filtration with pH 10 slightly increase from 65 % - 70% rejection. 
+The rejection of filtration with pH 10.h slightly increase from 75 % - 78% rejection. 
 
 When comparing the rejection of conductivity between the filtration it correlates with data for pressure with higher rejection and higher increase in pressure of filtration with higher pH. 
 
@@ -437,6 +444,8 @@ dat_M_9.2 %>%
 The rejection of silica correlate with rejection of over all conductivity where higher pH lead to higher rejection of silica. 
 Filtration with pH 9.2 have rejection of 21 % increasing to 27 %, with a presumed outlier at 6 h.
 Filtration with pH 10 have significantly higher rejection of 49 % increasing to 58 %. 
+The rejectino of filtration with pH 10.5 so only slighly higher with rejection of 65 % increasing to 72 %. 
+Overall the silica rejetion is lower than the genereal conductivity rejection. inducating that the pH influence other ions differently. 
 
 ```{R Rejection of Silica ,  echo=FALSE, message=FALSE}
 
@@ -470,11 +479,64 @@ Filtration with pH 10 have significantly higher rejection of 49 % increasing to 
 
 ```
 
+<h3> Bicarboante </h3>
+
+Bicarboante was only measured in the feed stream, at start finish and once in the middle of the filtrations. 
+Genereally the bicarboatne content increase despite pH.
+
+FINISH WHEN pH 10.5 DATA IS AVALIABLE. 
+
+```{R Bicarbonate Feed,  echo=FALSE, message=FALSE}
+
+
+
+  plot_ly(x=~pH9.2_bi_data$Time,
+          y=~pH9.2_bi_data$Sodium,
+          name="Bicarboante pH 9.2",
+          type='scatter',
+          mode='marker',
+          marker=list(color='#00CC96'))%>%
+  add_markers(x=~pH10_bi_data$Time,
+          y=~pH10_bi_data$Sodium,
+          name='Bicarboante pH 10',
+          type='scatter',
+          mode='marker',
+          marker=list(color='#636EFA'))%>%
+ #add_markers(x=~pH10.5_bi_data$Time,
+ #         y=~pH10.5_bi_data$Sodium,
+ #         name="Bicarboante pH 10.5",
+ #        type='scatter',
+ #        mode='marker',
+ #     marker=list(color='#EF553B'))%>%
+  layout(title="Concentration of bicarbonate feed",
+         legend=list(x=0.7,y=0.5),
+         yaxis=list(title="Concentration Bicarboante [mg/L]"),
+         xaxis=list(title="Time [h]")) #Her plottet TMP
 
 
 
 
+```
+<h3> Chloride DIT-M </h3>
 
+From the results achieved with DIT-M photometer nothing can be concluded regarding trends due to very high error bars.
+The errorbars are so high it cannot be distinguesed between different samples. The high errorbars is the results of very high dilution factor at 25 as well as uncertainty of the instrument of 3 mg/L. 
+Furthermore all measured samples are much higher than the theroretical calcuclated initial feed value at 88 mg/L (included as horizontal dashed line). 
+
+
+```{R Chloride with DIT-M ,  echo=FALSE, message=FALSE}
+pH9.2_IC_data[ pH9.2_IC_data == 0] <-NA
+
+ggplot()+
+  geom_point(data=pH9.2_IC_data, aes(x=Time, y=(DIT_M_Cl*Dilution), col=Stream), shape= 16)+
+  geom_errorbar(data=pH9.2_IC_data, aes(x=Time,ymin=Cl_total-75,ymax=Cl_total+75, col=Stream))+
+  geom_hline(yintercept=88, linetype="dashed", color = "black")+
+  geom_text(aes(5,58,label = "Assumed correct start conc", vjust = -1))+
+  labs(x="Time [h]",y=" Concentration [mg/L]")+
+  ylim(0,350)+xlim(0,9.5)+
+  ggtitle("Concentration of Chloride measured with DIT-M ph 9.2")
+
+```
 
 
 
