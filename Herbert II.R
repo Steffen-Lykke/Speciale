@@ -39,11 +39,16 @@ c_makeup = c(
 ) #En vektor med de forskellige koncentrationer [mM]
 
 
-
-
+## https://www.researchgate.net/figure/Ion-mobility-in-infinitely-diluted-aqueous-solutions-at-temperature-of-25-S_tbl1_26547884
+#SO4  - 80
+#Ca   - 119
+#K    - 73.5
+#Al   - 63
+#Mg   - 53.1
+##
 ion_values = data.frame(Ions=c("Na","Cl","SO4","SiO2"),
-                              value = c(6,7.1,2.5,2.5),
-                              molar_con = c(50.1,76.4,160,NA))#[S*cm^2*mol^-1]Ca = 119
+                              value = c(6,7.1,2.5,2.5),#Grænseværdier [mM]
+                              molar_con = c(50.1,76.4,160,NA))#[S*cm^2*mol^-1]
 
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
@@ -54,6 +59,8 @@ COC_max = c_guideline/c_makeup
 COC = min(COC_max)
 o = which(COC_max == COC)
 oi = ion_values[1,o]
+ci=con_lim/con_ini
+
 para = function(x){
   x1=x/run_time
   y=(x1+Q_vap/dt)/x1
@@ -61,7 +68,7 @@ paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
 }
 ##### Model Parameters #####
 dt=10 #minutes
-dt=dt/1440
+dt=dt/1440 #minutter i dage
 run_time = 60 #days
 max_time = run_time*60*24 #i minutter
 n_time_step = run_time/dt+1
@@ -86,7 +93,7 @@ nf = data.frame(
   Cl=double(),
   SO4=double(),
   SiO2=double()
-)
+)#Dataframe med masse (mol) flow i systemet [mol?]
 
 cf = data.frame(
   tid=double(),
@@ -94,11 +101,13 @@ cf = data.frame(
   Cl=double(),
   SO4=double(),
   SiO2=double()
-)
+)#Dataframe med concentrationer i systemet [mM]
+
 #Initial Values
 df[1:n_time_step,]=0
 nf[1:n_time_step,]=0
 cf[1:n_time_step,]=0
+
 df[1,]=c(tid,V_CT,con_ini)
 cf[1,]=c(tid,c_makeup)
 nf[1,]=cf[1,]*df$V_CT[1]
@@ -106,7 +115,7 @@ num_bd=0
 i=2
 
 
-Q_vap = Q_vap*dt #big math
+Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt
 #Q_blowdown=(Q_vap/(-1+COC))
 ###### CT Model ######
 while(i < n_time_step){
