@@ -39,7 +39,7 @@ ion_values = data.frame(
 rejection = ion_values[,4]
 initial_feed_conc = ion_values[,2]
 initial_con = sum(initial_feed_conc*ion_values[,3],na.rm = T)
-con = initial_con
+con_f = initial_con
 ############# model parameters #############
 dt=60 #s
 run_time = 8 #hours
@@ -55,7 +55,8 @@ df = data.frame(
   tid=double(),  
   feed_tank_volume=double(),
   permeate_tank_volume=double(),
-  con=double(),
+  con_f=double(),
+  con_p=double(),
   stringsAsFactors = FALSE
 )
 
@@ -77,11 +78,11 @@ cf_f = data.frame(
 nf_p=nf_f
 cf_p=cf_f
 #Preallocate and fill in initial values
-df[1:n_time_step+1,]=NA
+df[1:(n_time_step+1),]=NA
 cf_p[1:(n_time_step+1),]=0
 cf_f=nf_f=nf_p=cf_p
 
-df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con)
+df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con_f,NA)
 
 cf_f[1,]=initial_feed_conc # i mM
 nf_f[1,]=cf_f[1,]*feed_tank_volume # i mmol
@@ -118,24 +119,47 @@ for (i in 2:(n_time_step+1)) {
   
   ## Osmotic Pressure
   
+  ##Conductivity
+  #con_f = 
+  #con_p = 
+  
+  
+  #df$con_f = sum(cf_f[1,-(ncol(cf_f))]*ion_values[,3],na.rm = T)
+  #df$con_p[i] = con_p
+  
   
   df$tid[i] = df$tid[i-1] + dt 
 }
-
+df$con_f=rowSums(data.frame(mapply(`*`,cf_f[,1:3],ion_values$molar_con)),na.rm=T)
+df$con_p=rowSums(data.frame(mapply(`*`,cf_p[,1:3],ion_values$molar_con)),na.rm=T)
 rm(tid)
 cf_f$tid = cf_p$tid = df$tid
+cf_p[1,]=NA
+df$con_p[1]=NA
 #rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,permeate_tank_mass,permeate_tank_conc)
-#cf_p[1,]=NA
+
 ########## plot #############
 cf_f.long = cf_f %>% 
   gather(key,value, Na,Cl,SO4,SiO2)
 cf_p.long = cf_p %>% 
   gather(key,value, Na,Cl,SO4,SiO2)
+df.long = df %>% 
+  gather(key,value, feed_tank_volume,permeate_tank_volume,con_f,con_p)
 
 level_order = c('Na','Cl','SO4','SiO2')
 
 ggplot(cf_f.long,aes(x=tid/3600,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels=level_order)+
+  theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
+  
+ggplot(cf_p.long,aes(x=tid/3600,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1")+
-  theme_bw()+labs( y = "Concentration [mM?]", x = "Time [h]", color = "")
+    theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
 
+ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
+  scale_color_brewer(palette="Set1",labels=c("Feed Conductivity","Permeate Conductivity","Feed Volume","Permeate volume"))+
+  theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
 
+ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
+  scale_color_brewer(palette="Set1",labels=c("Feed Conductivity","Permeate Conductivity","Feed Volume","Permeate volume"))+
+  theme_bw()+labs( y = "Volume [L]", x = "Time [h]", color = "")+ylim(c(0,10))
