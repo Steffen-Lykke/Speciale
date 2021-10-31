@@ -46,9 +46,12 @@ c_makeup = c(
 #Al   - 63
 #Mg   - 53.1
 ##
-ion_values = data.frame(Ions=c("Na","Cl","SO4","SiO2"),
-                              value = c(6,7.1,2.5,2.5),#Grænseværdier [mM]
-                              molar_con = c(50.1,76.4,160,NA))#[S*cm^2*mol^-1]
+ion_values = data.frame(
+  Ions = c("Na", "Cl", "SO4", "SiO2"),
+  value = c(6, 7.1, 2.5, 2.5),
+  #Grænseværdier [mM]
+  molar_con = c(50.1, 76.4, 160, NA)
+)#[S*cm^2*mol^-1]
 
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
