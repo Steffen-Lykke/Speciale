@@ -573,12 +573,30 @@ ggplot()+
   geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))+
   geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Na,color="SiO2 R Na"))+
   geom_point(data=SiO2_Feed[-1,], aes(x=SiO2_Feed$time[-1], y=SiO2_rej_Si,color="SiO2 R SiO2"))+
-  #geom_point(data=SiO2,aes(x=tid, y=SiO2_rejection,color="R SiO2 "))+
   scale_color_manual(values=c("CaCl2 R Ca"="red", "CaCl2 R Cl"="blue", "NaCl R Na"="green", "NaCl R Cl"="orange", "SiO2 R Na"="black", "SiO2 R SiO2"="purple"),labels=c("CaCl2 R Ca", "CaCl2 R Cl", "NaCl R Na", "NaCl R Cl", "SiO2 R Na", "SiO2 R Si"))+
   labs(x="Time [h]",y="Rejection  %", color="Legend")+
   ylim(0,100)+
   ggtitle("Rejection Singlesalt")
 
+mean_CaCl2_rej_Ca <- mean(CaCl2_rej_Ca)
+mean_CaCl2_rej_Cl <- mean(CaCl2_rej_Cl)
+mean_NaCl_rej_Na <- mean(NaCl_rej_Na)
+mean_NaCl_rej_Cl <- mean(NaCl_rej_Cl)
+mean_SiO2_rej_Na <- mean(SiO2_rej_Na)
+mean_SiO2_rej_Si <- mean(SiO2_rej_Si)
+
+rejection_data <- data.frame(
+  ion=c("CaCl2_Ca", "CaCl2_Cl","NaCl_Na", "NaCl_Cl","SiO2_Na", "SiO2_Si" ), 
+  rej=c(mean_CaCl2_rej_Ca, mean_CaCl2_rej_Cl, mean_NaCl_rej_Na, mean_NaCl_rej_Cl, mean_SiO2_rej_Na, mean_SiO2_rej_Si))
+
+
+ggplot(data=rejection_data, aes(x=ion, y=rej))+
+  geom_bar(stat="identity")+
+  geom_text(aes(label=scales::percent(rej/100,accuracy = 0.1)),vjust=-0.3, size=3.5)+
+  ylim(0,100)+labs(y="Rejection  %", x="Species")
+
+
+rejection_data[1:2,]
 ```
 
 <h3> Bicarboante </h3>
