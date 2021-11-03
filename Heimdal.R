@@ -22,6 +22,8 @@ library(ggthemes)
 
 
 ############# Operational Parameters ###############
+R = 0.08314
+Temp = 25
 flux_LMH = 20 #
 
 membrane_area = 0.05 #m^2
@@ -40,13 +42,13 @@ rejection = ion_values[,4]
 initial_feed_conc = ion_values[,2]
 initial_con = sum(initial_feed_conc*ion_values[,3],na.rm = T)
 con_f = initial_con
+os_ini = sum(initial_feed_conc)*10^-3*R*(Temp+273)
 ############# model parameters #############
 dt=60 #s
 run_time = 8 #hours
 max_time = run_time*3600
 n_time_step = max_time/dt
 tid = 0
-
 flux = flux_LMH/3600 #L m^-2 s^-1 
 Q_feed_L_h = Q_feed_mL_min/1000/60#omregning til L/s
 Q_feed = Q_feed_L_h*dt
@@ -57,6 +59,7 @@ df = data.frame(
   permeate_tank_volume=double(),
   con_f=double(),
   con_p=double(),
+  os=double(),
   stringsAsFactors = FALSE
 )
 
@@ -82,7 +85,7 @@ df[1:(n_time_step+1),]=NA
 cf_p[1:(n_time_step+1),]=0
 cf_f=nf_f=nf_p=cf_p
 
-df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con_f,NA)
+df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con_f,NA,os_ini)
 
 cf_f[1,]=initial_feed_conc # i mM
 nf_f[1,]=cf_f[1,]*feed_tank_volume # i mmol
@@ -118,6 +121,7 @@ for (i in 2:(n_time_step+1)) {
   cf_p[i,] = nf_p[i,]/df$permeate_tank_volume[i]
   
   ## Osmotic Pressure
+  os[i]=sum(cf_f[i,1:4])*10^-3*R*(Temp+273)
   
   ##Conductivity
   #con_f = 

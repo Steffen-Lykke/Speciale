@@ -629,7 +629,30 @@ ggplot(data=SingleSalt_Cl, aes(x=tid_kort))+
   ggtitle("Bicarbonate concentration Singlesalt")
 ```
 
+```{r Summary bicarbonat_nu_med_linier, echo=FALSE, message=FALSE}
 
+
+B_NaCl <- c(8.4,NA,31,42,43)
+B_CaCl2 <- c(6,NA,15,18,20)
+B_Na2OSiO2 <- c(128,141,157,196,205)
+
+tid <- (c(0,1,2,3.5,4))
+
+
+SingleSalt <- data.frame(tid,B_NaCl, B_CaCl2,B_Na2OSiO2)
+SingleSalt = SingleSalt%>%gather(key,value,B_NaCl,B_CaCl2,B_Na2OSiO2)
+SS = na.omit(SingleSalt)
+
+
+
+### Plottet sammen ###
+labs = c('NaCl','CaCl2','SiO2')
+level_order = c('B_NaCl','B_CaCl2','B_Na2OSiO2')
+ggplot(SS, aes(x=tid, y=value, color = factor(key,level=level_order)))+geom_line()+geom_point()+
+  scale_color_brewer(palette= "Set1",labels=labs)+
+  labs(x="Time [h]",y="Bicarbonate  [mg/L]", color="")+
+  ggtitle("Bicarbonate concentration Singlesalt")
+```
 <h3> pH sammenligning </h3>
 
 The pH between each experiment vary greatly despite the pH being set at 8.5. 
