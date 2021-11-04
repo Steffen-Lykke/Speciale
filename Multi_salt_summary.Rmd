@@ -538,6 +538,56 @@ ggplot()+
 
 ```
 
+```{r }
+IC_9.2_raw = as.data.frame(pH9.2_IC_data)
+IC_9.2 = IC_9.2_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_9.2$value = as.double(IC_9.2$value)
+#IC_9.2 = IC_9.2%>%mutate(Rej = )
+A=IC_9.2%>%filter(Stream == "Feed"& Time != 0)
+B=IC_9.2%>%filter(Stream=="Permeate")
+rejection = 1-B$value/A$value
+IC_9.2$rej=NA
+IC_9.2$rej[c(-1,-14,-27,-40)]=rejection
+IC_9.2 = na.omit(IC_9.2)
+labs = c('Na','Ca','Cl','SO4')
+#level_order = c('Sodium','Calcium','Chloride','Sulphate')
+ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
+  labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
+  ggtitle("Ion concentration Multisalt pH 9.2")
+
+
+tid=c(3.5,5,6,7,8,8.7)
+na = rejection[1:6]
+cl =rejection[7:12]
+So4=rejection[13:18]
+ca=rejection[19:24]
+reje=data.frame(tid,na,cl,So4,ca)
+reje = reje%>%gather(key,value, na,cl,So4,ca)
+ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
+  labs(x="Time [h]",y="Rejection", color="")+
+  ggtitle("Multisalt pH 9.2")
+```
+
+```{r Estimation of Sulphate concentration}
+IC_9.2_raw = as.data.frame(pH9.2_IC_data)
+ion_values = data.frame(
+  ions = c("Na", "Cl", "SO4", "Ca"),
+  molar_con = c(50.1, 76.4, 160, 119),# Molær konduktivitet[S*cm^2*mol^-1]
+  molar_weight = c(23,35,96,40)#g/mol
+  )
+
+IC_9.2 = IC_9.2_raw
+IC_9.2 = IC_9.2_raw[4:7]*ion_values[,3]
+
+
+IC_9.2 = IC_9.2_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)%>%filter(Stream=="Permeate")
+IC_9.2$value = as.double(IC_9.2$value)
+
+
+
+```
 
 
 ```{R Stop knit ,  echo=FALSE, message=FALSE}
