@@ -575,18 +575,23 @@ IC_9.2_raw = as.data.frame(pH9.2_IC_data)
 ion_values = data.frame(
   ions = c("Na", "Cl", "SO4", "Ca"),
   molar_con = c(50.1, 76.4, 160, 119),# Molær konduktivitet[S*cm^2*mol^-1]
-  molar_weight = c(23,35,96,40)#g/mol
+  molar_weight = c(23,35.45,96,40)#g/mol
   )
 
-IC_9.2 = IC_9.2_raw
-IC_9.2 = IC_9.2_raw[4:7]*ion_values[,3]
-
-
+IC_9.2 =IC_9.2_raw
+IC_9.2$Sodium = as.double(IC_9.2$Sodium)
+IC_9.2$Sodium = IC_9.2$Sodium/ion_values[1,3]
+IC_9.2$Chloride = IC_9.2$Chloride /ion_values[2,3]
+IC_9.2$Sulphate = IC_9.2$Sulphate / ion_values[3,3]
+IC_9.2$Calcium = IC_9.2$Calcium / ion_values[4,3]
+#nu er værdierne i mM?
+mangler_sul = IC_9.2 %>% filter(is.na(Sulphate))
+mangler_sul %>% mutate(con = (Sodium*ion_values[1,2]+Chloride*ion_values[2,2]+Calcium*ion_values[4,2]))
 IC_9.2 = IC_9.2_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)%>%filter(Stream=="Permeate")
 IC_9.2$value = as.double(IC_9.2$value)
 
-
-
+med_sul = IC_9.2 %>% filter(!is.na(Sulphate))
+med_sul %>% mutate(con = (Sodium*ion_values[1,2]+Chloride*ion_values[2,2]+Sulphate*ion_values[3,2]+Calcium*ion_values[4,2])) %>%mutate(dCOn = Conductivity-con)
 ```
 
 
