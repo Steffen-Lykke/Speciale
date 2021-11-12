@@ -1,0 +1,199 @@
+---
+title: "FrF2-design"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(FrF2)
+library(broom)
+library(ggplot2)
+library(dplyr)
+remove(list=ls())
+
+```
+
+## Ananlyze fractional factorial design for 2^5-1
+
+###Read in data
+Read in the data that needs to be analysed. 
+Note that it might be needed to log(x), sqrt(x) or x^2 transform the response variable, which should be done in this section (first run analysis without transformation, and decide whether a transformation is needed)
+```{r read data, echo=FALSE}
+setwd("C:/Users/37040/OneDrive - Grundfos/Desktop/FrF2 design and analysis")
+DT <- read.csv2("Response.csv", header = TRUE, sep=";", stringsAsFactors = FALSE, colClasses = c("factor", "factor", "factor", "factor", "factor", "numeric"))
+
+#If response needs to be log transformed
+DT$Resp <- log(DT$Resp)
+
+DT
+```
+
+
+###Fractional Factorial Analysis
+Setup the fractional factorial design and visualise the alias structure
+```{r Fractional factorial , echo=FALSE}
+#Set up fractional factorial design [2^(5-1)].
+#The generator comes from the design, when defining how to describe factor E
+FrDesign <- FrF2(nruns=16,nfactors=5, generators = "ABCD",  alias.info = 3, factor.names = list(Flux = c("-1", "1"), Crossflow = c("-1", "1"), WR = c("-1", "1"), Recirc = c("-1", "1"), Konc = c("-1", "1")))
+
+summary(FrDesign)
+#aliasprint(FrDesign)
+
+#Set up fractional factorial design [2^(5-1)].
+#The generator comes from the design, when defining how to describe factor E
+FrDesign <- FrF2(nruns=8,nfactors=4, generators = "ABC",  alias.info = 3, factor.names = list(Na = c("-1", "1"), Cl = c("-1", "1"),pH = c("-1", "1"),SiO2 = c("-1", "1") ))
+
+summary(FrDesign)
+#aliasprint(FrDesign)
+
+```
+
+###Merging data with FrF2 design
+Experimental data is merged with the generated FrF2 design, so the FFD_resp contains information about contrasts etc. and can be analysed as a fractional factorial experiment.
+
+```{r Merge FrF2 design with data, echo=FALSE}
+#Merge "FrDesign"" with "DT".
+FFD_resp <- merge(FrDesign, DT, by = c("Flux", "Crossflow", "WR", "Recirc", "Konc"), all = FALSE)
+#Display "FFD_resp".
+FFD_resp
+summary(FFD_resp)
+```
+
+### Full model
+A model with all main effects and their interactions are made. An Anova is made on the model to see which main effects and interaction effects have the biggest influence on the model. As all degress of freedom are used, this is evaluated on the sum of squares. The main effects and two factor interactions with the largest sum of squares are chosen for the reduced model below.
+```{r Setup the linear model, echo=FALSE, warning = FALSE}
+#Include all interactions
+model <- lm(Resp ~ Flux*Crossflow*WR*Recirc*Konc, FFD_resp)
+summary(model)
+anova(model)
+```
+
+
+
+###Reduced model
+From the full model, identify factors and interaction between factors from above Anova, that give high sum of squares and use these for deciding which terms to include in the reduced model. Note that interaction effects can ONLY be included in the model if both of the main effects are included.
+In the reduced model there will be residual degress of freedom avaialbe to calculate p-values for deciding whether the model needs a further reduction (non-significant terms are removed).
+
+```{r Reduced model, echo=FALSE}
+
+#Include only effects with large sum of squares
+model_red <- lm(Resp ~ Flux+WR+Recirc+Konc+Flux:WR+Flux:Recirc, FFD_resp)
+
+summary(model_red)
+
+
+
+```
+
+If there are non-significant terms in the reduced model, a further reduction is made (to avoid overfitting). Note that interaction effects can ONLY be included in the model if both of the main effects are included.
+
+```{r Reduced model 2, echo=FALSE}
+
+#Include only effects with large sum of squares
+#state the number of predictors in the final model, this is used to calculate max Cooks distance 
+n_predictors <- 3
+
+model_red_2 <- lm(Resp ~ WR+Recirc+Konc, FFD_resp)
+
+summary(model_red_2)
+
+
+```
+
+The final reduced model shows which terms are significant and needed to describe changes in the response variable. All non-significant variables must be removed to avoid overfitting. The R-squared shows how much of the total variation that is described by the model.
+
+
+### Model diagnostics
+To check validity of the model, different diagnostics are performed
+
+####Tabulated model diagnostics metrics
+```{r model diagnostics metrics, echo=FALSE}
+
+model.diag.metrics <- augment(model_red_2)
+model.diag.metrics %>% select(-c(".se.fit", ".std.resid",".hat", ".sigma", ".cooksd"))
+
+```
+
+
+####Plotting diagnostics
+```{r model diagnostics, echo=FALSE}
+par(mfrow=c(1,2))
+#Fitted Y vs. Residuals
+plot(fitted(model_red_2), residuals(model_red_2), main = "Residuals plot", cex.main = 1)
+{qq <- qqnorm(residuals(model_red_2),main = "Normal Q-Q Plot of Residuals",cex.main = 1, pch = 1, frame = FALSE)
+qqline(residuals(model_red_2), col = "steelblue", lwd = 2)}
+
+par(mfrow=c(1,2))
+#plot(model_red_2, cex = 1.2, cex.lab = 1.2, cex.axis = 1.2)
+
+plot(model_red_2, 3)
+plot(model_red_2, 5)
+
+par(mfrow=c(1,1))
+# Cook's distance
+plot(model_red_2, 4)
+
+max_Cook <- 4/(nrow(DT)-n_predictors-1)
+```
+
+The diagnostic plots show residuals in four different ways:
+
+1. Residuals vs Fitted. Used to check the linear relationship assumptions. A horizontal line, without distinct patterns is an indication for a linear relationship, what is good.
+
+2. Normal Q-Q. Used to examine whether the residuals are normally distributed.The normal probability plot of residuals should approximately follow a straight line. Thus, it's good if residuals points follow the straight dashed line.
+
+3. Scale-Location (or Spread-Location). Used to check the homogeneity of variance of the residuals (homoscedasticity). Horizontal line with equally spread points is a good indication of homoscedasticity.
+
+
+4. Residuals vs Leverage. Used to identify influential cases, that is extreme values that might influence the regression results when included or excluded from the analysis.Standardized residuals can be interpreted as the number of standard errors away from the regression line. Observations whose standardized residuals are greater than 3 in absolute value are possible outliers
+
+5. Cook's distance, is used to detect influential values, which can be an outlier or a high leverage point. A rule of thumb is that an observation has high influence if Cook's distance exceeds 4/(n - p - 1), where n is the number of observations and p the number of predictor variables.Which in this case equals **`r round(max_Cook,2)`**.
+
+By default the top 3 most extreme data points labeled with with the row numbers of the data in the data set.
+
+
+**If the model diagnostics confirm validity then the following outcome of the model can be trusted.**
+
+
+### Effects plots
+The following graphs show how the different factors and interaction between factors influence the response variable.
+
+*IAPlot MUST be turned on/off depending on whether there are two factor interactions in the model*
+```{r effects plot, echo=FALSE}
+#Plot all main effects in the model
+MEPlot(model_red_2, abbrev = 5, cex.xax = 1.5, cex.main = 1, main = "Main Effects Plot")
+
+#Plot all interaction effects in the model
+# MUST be turned on/off depending on whether there are two factor intercations
+#IAPlot(model_red_2, abbrev = 5, show.alias = TRUE, lwd = 2, cex = 2, cex.xax = 1.2, cex.lab = 1.5)
+
+```
+
+### Print model coefficients
+Note, if the response variable was transformed (log(x), sqrt(x) or x^2), a back-transformation of the coefficients are needed to estimate non-transformed data 
+
+```{r coefficents, echo=FALSE}
+coeff <- as.data.frame(coefficients(model_red_2))
+coeff
+```
+
+###Plotting model data with experimental data
+```{r}
+pred <- exp(as.numeric(predict(model_red_2)))
+meas <- exp(model_red_2[[13]][[1]])
+
+plot_dat <- as.data.frame(cbind(meas,pred))
+
+
+p <- ggplot(plot_dat, aes(meas,pred))+
+  geom_point(aes())+
+  geom_abline()+
+  xlab("Measured")+
+  ylab("Predicted")
+  
+
+p
+
+```
+
