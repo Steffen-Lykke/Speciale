@@ -34,9 +34,9 @@ permeate_tank_volume = 0 #L
 
 ion_values = data.frame(
   ions = c("Na", "Cl", "SO4", "SiO2"),
-  feed = c( 13 , 2.5 ,  0.7 , 0.6),#Initial concentration [mM]
+  feed = c( 13 , 2.5 ,  0.7 , 1.66),#Initial concentration [mM]
   molar_con = c(50.1, 76.4, 160, NA),# Molær konduktivitet[S*cm^2*mol^-1]
-  R = c(0.7,  0.3,  0.3,  0.2)
+  R = c(0.7,  0.3,  0.3,  0.5)
   )
 rejection = ion_values[,4]
 initial_feed_conc = ion_values[,2]
@@ -121,7 +121,7 @@ for (i in 2:(n_time_step+1)) {
   cf_p[i,] = nf_p[i,]/df$permeate_tank_volume[i]
   
   ## Osmotic Pressure
-  os[i]=sum(cf_f[i,1:4])*10^-3*R*(Temp+273)
+  df$os[i]=sum(cf_f[i,1:4])*10^-3*R*(Temp+273)
   
   ##Conductivity
   #con_f = 
