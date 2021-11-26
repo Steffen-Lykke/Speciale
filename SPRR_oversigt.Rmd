@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(include = T)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -27,19 +27,32 @@ library(zoo)
 library(latex2exp)
 library(fs)
 library(fcuk)
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
 ```
 ## Run no. 1
 Cl 1
 Si 1 
 pH 1
 
+From conductivity it does not look like SS was reached :(
 
 
-```{r no. 1 data}
-nr1 = read_delim("data/SPRR/nr_1.csv",delim = "\t", escape_double = FALSE, 
+```{r no. 1 data, include=F}
+nr_1 = read_delim("data/SPRR/nr_1.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
-dat_1 = as.data.frame(nr1) #Ændrer strukturen af dataen til noget vi kan arbejde med
-old_names=colnames(nr1) #Vi finder de latterlige navne kolonnerne i dataen har 
+dat_1 = as.data.frame(nr_1) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_1) #Vi finder de latterlige navne kolonnerne i dataen har 
 new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p0301","p0302","p0401","flow0401","p0501","con0501",
             "temp0501","p0601","temp0601","16","17","18","19","20",
@@ -48,33 +61,50 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_1 = dat_1 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-dat_1$time = dmy_hms(dat_1$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
-dat_1 %>% mutate()
+dat_1$time = dmy_hms(nr_1$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+flow_boolean = dat_1$flow0501>16&dat_1$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_1=dat_1[-c(1:start_tid),]
+flow_boolean_slut = dat_1$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_1=dat_1[-c(slut_tid:(nrow(dat_1)) ),]
+### Tid i s fra forsøgs start
+dat_1 = dat_1%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_1$time))-as.numeric(dat_1$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
 
 ```
 
-
-
-```{r no. 1 plot, echo=FALSE}
-dat_1 %>%
+```{r no. 1 plot, echo=FALSE, message=FALSE}
+dat_1 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
   plot_ly(x=~(time),
           y=~pH0201,
           name="pH",
           type='scatter',
           mode='line',
-          line=list(color= '#00CC96'))%>%
+          line=list(color= colors[1]))%>%
   add_lines(x=~(time),
-          y=~p0301,
-          name='pressure',
+          y=~TMP,
+          name='TMP',
           type='scatter',
           mode='line',
-          line=list(color='#636EFA'))%>%
+          line=list(color= colors[2]))%>%
 add_lines(x=~(time),
           y=~con0501,
           name='Permeate con',
           type='scatter',
           mode='line',
-      line=list(color='#EF553B'))%>%
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
   layout(title="Run no. 1",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="value ", range=c(NA,NA)),
@@ -83,4 +113,990 @@ add_lines(x=~(time),
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Run no. 2
+Cl 2
+Si 1 
+pH 1
+
+
+```{r no. 2 data,include=F}
+nr_2 = read_delim("data/SPRR/nr_2.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_2 = as.data.frame(nr_2) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_2) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_2 = dat_2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_2$time = dmy_hms(nr_2$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_2$flow0501>16&dat_2$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_2=dat_2[-c(1:start_tid),]
+#flow_boolean_slut = dat_2$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_2=dat_2[-c(slut_tid:(nrow(dat_2)) ),]
+### Tid i s fra forsøgs start
+dat_2 = dat_2%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_2$time))-as.numeric(dat_2$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 2 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_2 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 2",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+
+
+## Run no. 3
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 3 data,include=F}
+nr_3 = read_delim("data/SPRR/nr_3.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_3 = as.data.frame(nr_3) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_3) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_3 = dat_3 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_3$time = dmy_hms(nr_3$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_3$flow0501>16&dat_3$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_3=dat_3[-c(1:start_tid),]
+#flow_boolean_slut = dat_3$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_3=dat_3[-c(slut_tid:(nrow(dat_3)) ),]
+### Tid i s fra forsøgs start
+dat_3 = dat_3%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_3$time))-as.numeric(dat_3$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 3 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_3 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 3",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+
+## Run no. 5
+Cl 2
+Si 3 
+pH 1
+
+
+```{r no. 5 data,include=F}
+nr_5 = read_delim("data/SPRR/nr_5.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_5 = as.data.frame(nr_5) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_5) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_5 = dat_5 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_5$time = dmy_hms(nr_5$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_5$flow0501>16&dat_5$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_5=dat_5[-c(1:start_tid),]
+#flow_boolean_slut = dat_5$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_5=dat_5[-c(slut_tid:(nrow(dat_5)) ),]
+### Tid i s fra forsøgs start
+dat_5 = dat_5%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_5$time))-as.numeric(dat_5$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 5 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_5 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 5",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+
+
+## Run no. 6
+Cl 3
+Si 3 
+pH 1
+
+
+```{r no. 6 data,include=F}
+nr_6 = read_delim("data/SPRR/nr_6.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_6 = as.data.frame(nr_6) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_6) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_6 = dat_6 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_6$time = dmy_hms(nr_6$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_6$flow0501>16&dat_6$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_6=dat_6[-c(1:start_tid),]
+#flow_boolean_slut = dat_6$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_6=dat_6[-c(slut_tid:(nrow(dat_6)) ),]
+### Tid i s fra forsøgs start
+dat_6 = dat_6%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_6$time))-as.numeric(dat_6$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 6 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_6 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 6",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+
+## Run no. 7
+Cl 1
+Si 1 
+pH 2
+
+
+```{r no. 7 data,include=F}
+nr_7 = read_delim("data/SPRR/nr_7.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_7 = as.data.frame(nr_7) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_7) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_7 = dat_7 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_7$time = dmy_hms(nr_7$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_7$flow0501>16&dat_7$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_7=dat_7[-c(1:start_tid),]
+#flow_boolean_slut = dat_7$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_7=dat_7[-c(slut_tid:(nrow(dat_7)) ),]
+### Tid i s fra forsøgs start
+dat_7 = dat_7%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_7$time))-as.numeric(dat_7$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 7 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_7 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 7",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+
+## Run no. 8_igen
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 8_igen data,include=F}
+nr_8_igen = read_delim("data/SPRR/nr_8_igen.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_8_igen = as.data.frame(nr_8_igen) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_8_igen) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_8_igen = dat_8_igen %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_8_igen$time = dmy_hms(nr_8_igen$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_8_igen$flow0501>16&dat_8_igen$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_8_igen=dat_8_igen[-c(1:start_tid),]
+#flow_boolean_slut = dat_8_igen$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_8_igen=dat_8_igen[-c(slut_tid:(nrow(dat_8_igen)) ),]
+### Tid i s fra forsøgs start
+dat_8_igen = dat_8_igen%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_8_igen$time))-as.numeric(dat_8_igen$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 8_igen plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_8_igen %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 8_igen",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 9
+Cl 3
+Si 1 
+pH 2
+
+
+```{r no. 9 data,include=F}
+nr_9 = read_delim("data/SPRR/nr_9.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_9 = as.data.frame(nr_9) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_9) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_9 = dat_9 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_9$time = dmy_hms(nr_9$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_9$flow0501>16&dat_9$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_9=dat_9[-c(1:start_tid),]
+#flow_boolean_slut = dat_9$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_9=dat_9[-c(slut_tid:(nrow(dat_9)) ),]
+### Tid i s fra forsøgs start
+dat_9 = dat_9%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_9$time))-as.numeric(dat_9$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 9 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_9 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 9",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 11
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 11 data,include=F}
+nr_11 = read_delim("data/SPRR/nr_11.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_11 = as.data.frame(nr_11) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_11) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_11 = dat_11 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_11$time = dmy_hms(nr_11$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_11$flow0501>16&dat_11$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_11=dat_11[-c(1:start_tid),]
+#flow_boolean_slut = dat_11$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_11=dat_11[-c(slut_tid:(nrow(dat_11)) ),]
+### Tid i s fra forsøgs start
+dat_11 = dat_11%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_11$time))-as.numeric(dat_11$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 11 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_11 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 11",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 12_igen
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 12_igen data,include=F}
+nr_12_igen = read_delim("data/SPRR/nr_12_igen.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_12 = as.data.frame(nr_12_igen) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_12_igen) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_12 = dat_12 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_12$time = dmy_hms(nr_12_igen$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_12$flow0501>16&dat_12$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_12=dat_12[-c(1:start_tid),]
+#flow_boolean_slut = dat_12$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_12=dat_12[-c(slut_tid:(nrow(dat_12)) ),]
+### Tid i s fra forsøgs start
+dat_12 = dat_12%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_12$time))-as.numeric(dat_12$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 12_igen plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_12 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 12_igen",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 13
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 13 data,include=F}
+nr_13 = read_delim("data/SPRR/nr_13.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_13 = as.data.frame(nr_13) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_13) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_13 = dat_13 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_13$time = dmy_hms(nr_13$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_13$flow0501>16&dat_13$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_13=dat_13[-c(1:start_tid),]
+#flow_boolean_slut = dat_13$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_13=dat_13[-c(slut_tid:(nrow(dat_13)) ),]
+### Tid i s fra forsøgs start
+dat_13 = dat_13%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_13$time))-as.numeric(dat_13$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 13 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_13 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 13",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 14
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 14 data,include=F}
+nr_14 = read_delim("data/SPRR/nr_14.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_14 = as.data.frame(nr_14) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_14) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_14 = dat_14 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_14$time = dmy_hms(nr_14$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_14$flow0501>16&dat_14$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_14=dat_14[-c(1:start_tid),]
+#flow_boolean_slut = dat_14$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_14=dat_14[-c(slut_tid:(nrow(dat_14)) ),]
+### Tid i s fra forsøgs start
+dat_14 = dat_14%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_14$time))-as.numeric(dat_14$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 14 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_14 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 14",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 15
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 15 data,include=F}
+nr_15 = read_delim("data/SPRR/nr_15.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_15 = as.data.frame(nr_15) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_15) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_15 = dat_15 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_15$time = dmy_hms(nr_15$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_15$flow0501>16&dat_15$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_15=dat_15[-c(1:start_tid),]
+#flow_boolean_slut = dat_15$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_15=dat_15[-c(slut_tid:(nrow(dat_15)) ),]
+### Tid i s fra forsøgs start
+dat_15 = dat_15%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_15$time))-as.numeric(dat_15$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 15 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_15 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 15",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 17
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 17 data,include=F}
+nr_17 = read_delim("data/SPRR/nr_17.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_17 = as.data.frame(nr_17) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_17) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_17 = dat_17 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_17$time = dmy_hms(nr_17$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_17$flow0501>16&dat_17$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_17=dat_17[-c(1:start_tid),]
+#flow_boolean_slut = dat_17$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_17=dat_17[-c(slut_tid:(nrow(dat_17)) ),]
+### Tid i s fra forsøgs start
+dat_17 = dat_17%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_17$time))-as.numeric(dat_17$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 17 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_17 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 17",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
+## Run no. 18
+Cl 3
+Si 1 
+pH 1
+
+
+```{r no. 18 data,include=F}
+nr_18 = read_delim("data/SPRR/nr_18.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+dat_18 = as.data.frame(nr_18) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(nr_18) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_18 = dat_18 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_18$time = dmy_hms(nr_18$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#flow_boolean = dat_18$flow0501>16&dat_18$flow0501<25
+#start_tid = min(which(flow_boolean))
+#dat_18=dat_18[-c(1:start_tid),]
+#flow_boolean_slut = dat_18$flow0501<1
+#slut_tid = min(which(flow_boolean_slut))
+#dat_18=dat_18[-c(slut_tid:(nrow(dat_18)) ),]
+### Tid i s fra forsøgs start
+dat_18 = dat_18%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_18$time))-as.numeric(dat_18$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+
+```
+
+```{r no. 18 plot, echo=FALSE, message=FALSE, warning=FALSE}
+dat_18 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(time),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~(time),
+          y=~TMP,
+          name='TMP',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[2]))%>%
+add_lines(x=~(time),
+          y=~con0501,
+          name='Permeate con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[3]))%>%
+  add_lines(x=~(time),
+          y=~R,
+          name='Rejection',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[4]))%>%
+  layout(title="Run no. 18",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value ", range=c(NA,NA)),
+         xaxis=list(title="Time ",range=c(NA,NA))
+         ) #Her plottet TMP
+
+```
