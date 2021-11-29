@@ -35,14 +35,14 @@ Setup the fractional factorial design and visualise the alias structure
 ```{r Fractional factorial , echo=FALSE}
 #Set up fractional factorial design [2^(5-1)].
 #The generator comes from the design, when defining how to describe factor E
-FrDesign <- FrF2(nruns=16,nfactors=5, generators = "ABCD",  alias.info = 3, factor.names = list(Flux = c("-1", "1"), Crossflow = c("-1", "1"), WR = c("-1", "1"), Recirc = c("-1", "1"), Konc = c("-1", "1")))
+FrDesign <- FrF2(nruns=8,nfactors=6, generators = "ABD",  alias.info = 3, factor.names = list(Flux = c("-1", "1"), Crossflow = c("-1", "1"), WR = c("-1", "1"), Recirc = c("-1", "1"), Konc = c("-1", "1"),Koncx = c("-1", "1")))
 
 summary(FrDesign)
 #aliasprint(FrDesign)
 
 #Set up fractional factorial design [2^(5-1)].
 #The generator comes from the design, when defining how to describe factor E
-FrDesign <- FrF2(nruns=8,nfactors=4, generators = "ABC",  alias.info = 3, factor.names = list(Na = c("-1", "1"), Cl = c("-1", "1"),pH = c("-1", "1"),SiO2 = c("-1", "1") ))
+FrDesign2_2 <- FrF2(nruns=4,nfactors=2, generators = "AB",  alias.info = 3, factor.names = list(Na2SO4 = c("-1", "1"), CaSO4 = c("-1", "1"),SiO2 = c("-1", "1"),pH = c("-1", "1"), cl =c("-1","1") ))
 
 summary(FrDesign)
 #aliasprint(FrDesign)
