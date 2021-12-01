@@ -570,7 +570,7 @@ ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
   ggtitle("Multisalt pH 9.2")
 ```
 
-```{r Estimation of Sulphate concentration}
+```{r Estimation of Sulphate concentration, eval=FALSE, include=FALSE}
 IC_9.2_raw = as.data.frame(pH9.2_IC_data)
 ion_values = data.frame(
   ions = c("Na", "Cl", "SO4", "Ca"),
