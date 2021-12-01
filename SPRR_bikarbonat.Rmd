@@ -1,0 +1,57 @@
+---
+title: "SPRR_Bikarbonat"
+author: "Lærke"
+date: "1/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = T)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(fcuk)
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
+```
+
+
+```{R SPRR_DATA, echo=FALSE, message=FALSE}
+
+SPRR_data <- read_excel("data/SPRR/analyse_svar_samlet.xlsx")
+
+old_names_IC=colnames(pH9.2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl","Conductivity","pH","Dilution") #Vi finder på nogle lidt bedre nogle
+pH9.2_IC_data = pH9.2_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+pH9.2_IC_data <- as.data.frame(pH9.2_IC_data)
+pH9.2_IC_data <- pH9.2_IC_data[-c(14:22),] #cutter bicarbonat af. 
+
+
+
+```
