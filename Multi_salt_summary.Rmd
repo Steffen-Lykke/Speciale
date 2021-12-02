@@ -538,7 +538,7 @@ ggplot()+
 
 ```
 
-```{r }
+```{r Ions 9.2}
 IC_9.2_raw = as.data.frame(pH9.2_IC_data)
 IC_9.2 = IC_9.2_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
 IC_9.2$value = as.double(IC_9.2$value)
@@ -568,6 +568,72 @@ ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
   labs(x="Time [h]",y="Rejection", color="")+
   ggtitle("Multisalt pH 9.2")
+```
+
+
+```{r Ions 10}
+IC_10_raw = as.data.frame(pH10_IC_data)
+IC_10 = IC_10_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_10$value = as.double(IC_10$value)
+#IC_10 = IC_10%>%mutate(Rej = )
+A=IC_10%>%filter(Stream == "Feed"& Time != 0)
+B=IC_10%>%filter(Stream=="Permeate")
+rejection = 1-B$value/A$value
+IC_10$rej=NA
+IC_10$rej[c(-1,-14,-27,-40)]=rejection
+IC_10 = na.omit(IC_10)
+labs = c('Na','Ca','Cl','SO4')
+#level_order = c('Sodium','Calcium','Chloride','Sulphate')
+ggplot(IC_10%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
+  labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
+  ggtitle("Ion concentration Multisalt pH 10")
+
+
+tid=c(1.25,3,4,5,5.5,6,6.5)
+na = rejection[1:7]
+cl =rejection[8:14]
+So4=rejection[15:21]
+ca=rejection[22:28]
+reje=data.frame(tid,na,cl,So4,ca)
+reje = reje%>%gather(key,value, na,cl,So4,ca)
+ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
+  labs(x="Time [h]",y="Rejection", color="")+
+  ggtitle("Multisalt pH 10")
+```
+
+
+```{r Ions 10.5}
+IC_10.5_raw = as.data.frame(pH10.5_IC_data)
+IC_10.5 = IC_10.5_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_10.5$value = as.double(IC_10.5$value)
+#IC_10.5 = IC_10.5%>%mutate(Rej = )
+A=IC_10.5%>%filter(Stream == "Feed"& Time != 0)
+B=IC_10.5%>%filter(Stream=="Permeate")
+rejection = 1-B$value/A$value
+IC_10.5$rej=NA
+IC_10.5$rej[c(-1,-14,-27,-40)]=rejection
+IC_10.5 = na.omit(IC_10.5)
+labs = c('Na','Ca','Cl','SO4')
+#level_order = c('Sodium','Calcium','Chloride','Sulphate')
+ggplot(IC_10.5%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
+  labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
+  ggtitle("Ion concentration Multisalt pH 10.5")
+
+
+tid=c(3.5,4,5,6,7,8)
+na = rejection[1:6]
+cl =rejection[7:12]
+So4=rejection[13:18]
+ca=rejection[19:24]
+reje=data.frame(tid,na,cl,So4,ca)
+reje = reje%>%gather(key,value, na,cl,So4,ca)
+ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
+  labs(x="Time [h]",y="Rejection", color="")+
+  ggtitle("Multisalt pH 10.5")
 ```
 
 ```{r Estimation of Sulphate concentration, eval=FALSE, include=FALSE}

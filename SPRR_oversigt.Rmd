@@ -344,7 +344,7 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_6 = dat_6 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-dat_6$time = dmy_hms(nr_6$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+tid = dat_6$time = dmy_hms(nr_6$TimeStamp) #Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
 flow_boolean = dat_6$flow0501>16&dat_6$flow0501<25
 start_tid = min(which(flow_boolean))
 dat_6=dat_6[-c(1:start_tid),]
@@ -361,6 +361,11 @@ dat_6 = dat_6%>%
 ```
 
 ```{r no. 6 plot, echo=FALSE, message=FALSE, warning=FALSE}
+ex = exists("sek")
+if  (ex == F){
+  sek = tid
+}
+  
 dat_6 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
   mutate(R = (1-(con0501/con0301))*100) %>%
