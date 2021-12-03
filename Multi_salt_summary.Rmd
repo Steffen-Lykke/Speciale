@@ -164,7 +164,7 @@ pH10_IC_data <- pH10_IC_data[c(1:15),] #IC data
 
 pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
 pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
-   
+pH10_Feed$Time = as.numeric(pH10_Feed$Time) 
 
 #pH10_rej_Cl <- (1-(pH10_Permeate$Chloride/(pH10_Feed$Chloride[-1])))*100
 #pH10_rej_Na <- (1-(pH10_Permeate$Sodium/(pH10_Feed$Sodium[-1])))*100
@@ -219,7 +219,7 @@ pH10.5_IC_data <- pH10.5_IC_data[c(1:15),] #IC data
 
 pH10.5_Permeate <- filter(pH10.5_IC_data, Stream=="Permeate")
 pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
-   
+pH10.5_Feed$Time = as.numeric(pH10.5_Feed$Time)    
 
 #pH10.5_rej_Cl <- (1-(pH10.5_Permeate$Chloride/(pH10.5_Feed$Chloride[-1])))*10.50
 #pH10.5_rej_Na <- (1-(pH10.5_Permeate$Sodium/(pH10.5_Feed$Sodium[-1])))*10.50
@@ -458,33 +458,137 @@ Genereally the bicarboatne content increase despite pH.
 FINISH WHEN pH 10.5 DATA IS AVALIABLE.
 
 ```{R Bicarbonate Feed,  echo=FALSE, message=FALSE}
+hline <- function(y = 0, color = "black") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color)
+  )
+}
 
-
+pH9.2_bi_data$Sodium = as.numeric(pH9.2_bi_data$Sodium)
+pH10_bi_data$Sodium = as.numeric(pH10_bi_data$Sodium)
+pH10.5_bi_data$Sodium = as.numeric(pH10.5_bi_data$Sodium)
 
   plot_ly(x=~pH9.2_bi_data$Time,
           y=~pH9.2_bi_data$Sodium,
-          name="Bicarboante pH 9.2",
+          name="pH 9.2",
           type='scatter',
-          mode='marker',
-          marker=list(color='#00CC96'))%>%
-  add_markers(x=~pH10_bi_data$Time,
+          mode='lines+markers')%>%
+  add_trace(x=~pH10_bi_data$Time,
           y=~pH10_bi_data$Sodium,
-          name='Bicarboante pH 10',
+          name='pH 10',
           type='scatter',
-          mode='marker',
-          marker=list(color='#636EFA'))%>%
- #add_markers(x=~pH10.5_bi_data$Time,
- #         y=~pH10.5_bi_data$Sodium,
- #         name="Bicarboante pH 10.5",
- #        type='scatter',
- #        mode='marker',
- #     marker=list(color='#EF553B'))%>%
+          mode='lines+markers')%>%
+ add_trace(x=~pH10.5_bi_data$Time,
+         y=~pH10.5_bi_data$Sodium,
+         name="pH 10.5",
+         type='scatter',
+         mode='lines+markers')%>%
   layout(title="Concentration of bicarbonate feed",
-         legend=list(x=0.7,y=0.5),
-         yaxis=list(title="Concentration Bicarboante [mg/L]"),
-         xaxis=list(title="Time [h]")) #Her plottet TMP
+         legend=list(x=0.9,y=0.2),
+         yaxis=list(title="Concentration Bicarboante [mg/L]",
+                    range=c(0,1300)),
+         xaxis=list(title="Time [h]"))%>%
+  layout(shapes = list(hline(1220)))
+
+    
 
 
+
+
+```
+
+```{R Bicarbonate with Silica,  echo=FALSE, message=FALSE}
+hline <- function(y = 0, color = "black") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color)
+  )
+}
+
+pH9.2_bi_data$Sodium = as.numeric(pH9.2_bi_data$Sodium)
+pH10_bi_data$Sodium = as.numeric(pH10_bi_data$Sodium)
+pH10.5_bi_data$Sodium = as.numeric(pH10.5_bi_data$Sodium)
+
+pH9.2_silica = cbind(pH9.2_IC_data%>%filter(Stream == "Feed")%>%select(1),pH9.2_IC_data%>%filter(Stream == "Feed")%>%select(8))
+pH9.2_silica$Time[1]=0
+pH10_silica = cbind(pH10_IC_data%>%filter(Stream == "Feed")%>%select(1),pH10_IC_data%>%filter(Stream == "Feed")%>%select(8))
+pH10.5_silica = cbind(pH10.5_IC_data%>%filter(Stream == "Feed")%>%select(1),pH10.5_IC_data%>%filter(Stream == "Feed")%>%select(8))
+ay <- list(
+      tickfont = list(color = "red"),
+      overlaying = "y",
+      side = "right",
+      title = "Silica concentration")
+
+fig= plot_ly(x=~pH9.2_bi_data$Time,
+        y=~pH9.2_bi_data$Sodium,
+        name="pH 9.2",
+        type='scatter',
+        mode='lines+markers')%>%
+  add_trace(x=~pH10_bi_data$Time,
+            y=~pH10_bi_data$Sodium,
+            name='pH 10',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10.5_bi_data$Time,
+            y=~pH10.5_bi_data$Sodium,
+            name="pH 10.5",
+            type='scatter',
+            mode='lines+markers')
+
+fig = fig%>%
+  add_trace(x=~pH9.2_silica$Time,
+            y=~pH9.2_silica$Silica,
+            yaxis = "y2",
+            name='pH 9.2 Silica',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10_silica$Time,
+            y=~pH10_silica$Silica,
+            yaxis = "y2",
+            name='pH 10 Silica',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10.5_silica$Time,
+        y=~pH10.5_silica$Silica,
+        yaxis = "y2",
+        name='pH 10.5 Silica',
+        type='scatter',
+        mode='lines+markers')
+  
+fig <- fig %>% layout(
+  title = "Concentration of bicarbonate feed",
+  yaxis2 = ay,
+  xaxis = list(title = "Time [h]"),
+  yaxis = list(title = "Concentration Bicarboante [mg/L]",range=c(0,1300)),
+  legend=list(x=0,y=1)
+) %>%
+  layout(
+    plot_bgcolor = '#e5ecf6',
+    xaxis = list(
+      zerolinecolor = '#ffff',
+      zerolinewidth = 2,
+      gridcolor = 'ffff'
+    ),
+    yaxis = list(
+      zerolinecolor = '#ffff',
+      zerolinewidth = 2,
+      gridcolor = 'ffff'
+    )
+  )
+
+          
+fig
 
 
 ```
@@ -527,25 +631,22 @@ inducating that the pH influence other ions differently.
 
   plot_ly(x=~pH9.2_Feed$Time[-1],
           y=~pH9.2_rej_SiO2,
-          name="SiO2 rejection pH 9.2",
+          name="pH 9.2",
           type='scatter',
-          mode='marker',
-          marker=list(color='#00CC96'))%>%
-  add_markers(x=~pH10_Feed$Time[-1],
+          mode='lines+markers')%>%
+  add_trace(x=~pH10_Feed$Time[-1],
           y=~pH10_rej_SiO2,
-          name='SiO2 rejection pH 10',
+          name='pH 10',
           type='scatter',
-          mode='marker',
-          marker=list(color='#636EFA'))%>%
- add_markers(x=~pH10.5_Feed$Time[-1],
+          mode='lines+markers')%>%
+ add_trace(x=~pH10.5_Feed$Time[-1],
           y=~pH10.5_rej_SiO2,
-          name='SiO2 rejection pH 10.5',
+          name='pH 10.5',
          type='scatter',
-          mode='marker',
-       marker=list(color='#EF553B'))%>%
+          mode='lines+markers')%>%
   layout(title="Rejection of Silica ",
          legend=list(x=0.7,y=0.5),
-         yaxis=list(title="Rejection of SiO2[mg/L]"),
+         yaxis=list(title="Rejection of SiO2 [%]"),
          xaxis=list(title="Time [h]")) #Her plottet TMP
 
 
