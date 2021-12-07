@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(include = T)
+knitr::opts_chunk$set(include = FALSE)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -27,7 +27,7 @@ library(zoo)
 library(latex2exp)
 library(fs)
 library(fcuk)
-colorspal = c(
+colors = c(
     '#1f77b4',  # muted blue
     '#ff7f0e',  # safety orange
     '#2ca02c',  # cooked asparagus green
@@ -68,25 +68,33 @@ SPRR_data$Sulphate<- as.numeric(SPRR_data$Sulphate)
 SPRR_data$Silica<- as.numeric(SPRR_data$Silica)
 SPRR_data$Bicarbonate<- as.numeric(SPRR_data$Bicarbonate)
 
-SPRR_data%>%mutate()
+SPRR_data%>%mutate(rej_bicarbonat=())
 
-rejection = SPRR_data%>%filter(No & Stream== "Feed" )
+#minfunktion = function(a,b,c){
+#  res = (a+b)/c
+#  
+#  return(res)
+#}
+
+rejection = SPRR_data%>%filter(No==5 & Stream== "Feed" & Bicarboante)
 rejection$Bicarbonate
-
+  
+  dat_1 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
 
 #plot af bicarbonat
- plot_ly(data=SPRR_data, x=~No,
+
+  plot_ly(data=SPRR_data, x=~No,
           y=~Bicarbonate,
          color=~Stream,
-         colors=c('#1f77b4',  # muted blue
-                  '#ff7f0e'# safety orange
-                    ),
-          type='scatter',mode='markers')%>%
- layout(title="Bicarbonate SPRR",
+          type='scatter',mode='markers',
+          colors=c(colors[1],colors[2]))  %>%
+      layout(title="Bicarbonate SPRR",
          yaxis=list(title="Concentration Bicarboante [mg/L]"),
          xaxis=list(title="Experiment no.")) 
  
- 
+
  
  
 
