@@ -2,5 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+<<<<<<< HEAD
 .pdf
+=======
+.Rdata
+.httr-oauth
+.DS_Store
+>>>>>>> c5161414e7def1d54c773fc13461ab6eb1536246
 .html

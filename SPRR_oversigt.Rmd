@@ -332,9 +332,11 @@ add_lines(x=~(sek),
 Cl 3 Si 3 pH 1
 
 ```{r no. 6 data,include=F}
+t0=693
 nr_6 = read_delim("data/SPRR/nr_6.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
-dat_6 = as.data.frame(nr_6) #Ændrer strukturen af dataen til noget vi kan arbejde med
+dat_6_raw = as.data.frame(nr_6) #Ændrer strukturen af dataen til noget vi kan arbejde med
+dat_6 = dat_6_raw[-(1:t0),]
 old_names=colnames(nr_6) #Vi finder de latterlige navne kolonnerne i dataen har 
 new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p0301","p0302","p0401","flow0401","p0501","con0501",
@@ -344,19 +346,19 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_6 = dat_6 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
-tid = dat_6$time = dmy_hms(nr_6$TimeStamp) #Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
-flow_boolean = dat_6$flow0501>16&dat_6$flow0501<25
-start_tid = min(which(flow_boolean))
-dat_6=dat_6[-c(1:start_tid),]
-flow_boolean_slut = dat_6$flow0501<1
-slut_tid = min(which(flow_boolean_slut))
-dat_6=dat_6[-c(slut_tid:(nrow(dat_6)) ),]
-## Tid i s fra forsøgs start
-dat_6 = dat_6%>%
-   mutate(sek=(
-           as.numeric(as.POSIXct(dat_6$time))-as.numeric(dat_6$time[1], format='%Y-%m-%d %H:%M:%S'))
-                )  
-
+tid = dat_6$time = dmy_hms(nr_6$TimeStamp[t0:length(nr_6$TimeStamp)-t0]) #Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+cut = T
+if (cut==T){
+  flow_boolean = dat_6$flow0501>16&dat_6$flow0501<25
+  start_tid = min(which(flow_boolean))
+  dat_6=dat_6[-c(1:start_tid),]
+  flow_boolean_slut = dat_6$flow0501<1
+  slut_tid = min(which(flow_boolean_slut))
+  dat_6=dat_6[-c(slut_tid:(nrow(dat_6)) ),]
+  ## Tid i s fra forsøgs start
+  sek=(seq(from = 0, to =  nrow(dat_6)-1))
+  dat_6 = dat_6%>%mutate(sek=sek)
+}
 
 ```
 
@@ -365,7 +367,7 @@ ex = exists("sek")
 if  (ex == F){
   sek = tid
 }
-  
+#dat_6_raw$TimeStamp[start_tid] 
 dat_6 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
   mutate(R = (1-(con0501/con0301))*100) %>%
@@ -397,7 +399,7 @@ add_lines(x=~(sek),
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="value ", range=c(NA,NA)),
          xaxis=list(title="Time ",range=c(NA,NA))
-         ) #Her plottet TMP
+         )%>%layout(hovermode = 'compare') #Her plottet TMP
 
 ```
 

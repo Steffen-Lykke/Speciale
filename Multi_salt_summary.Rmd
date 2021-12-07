@@ -1,11 +1,17 @@
 ---
-title: "Multi_salt_summary"
+title: "Summary of Multisalt Experiments"
 date: "22/10/2021"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,warning=F,message=F)
 #Loading af pakker 
 library(dplyr)
 library(tidyr)
@@ -29,34 +35,33 @@ library(fs)
 library(fcuk)
 ```
 
-Summary of Multi salt experiments.
+## Summary of Multi salt experiments. {.tabset}
+
+### Overview
 
 All experiments were performed with:
 
 Flux 20 LMH (permeate flow 17 mL/min)
 
-Crossflow of 0.5 m/s (feed flow 1160 mL/min) 
+Crossflow of 0.5 m/s (feed flow 1160 mL/min)
 
 The concentration of the various salts were selected based on concentration of authentic CT reservior water, see table below.
-It was attempted to mimic the concentration of authentic CT reservoir water, the focus was on species: Na, Cl, SO4, Ca, Sio2 and HCO3. The concentration of the various species was chosen based on possible salt combination and concentration. A bicarbonate-carbonate buffer was used to achieve some buffer effect with range between pH 9.2-10.6. 
-Three different experiment were made with varying pH value of 9.2, 10 and 10.5. This gave varying concentration og HCO3 and Na due to content in buffer species. 
+It was attempted to mimic the concentration of authentic CT reservoir water, the focus was on species: Na, Cl, SO4, Ca, Sio2 and HCO3.
+The concentration of the various species was chosen based on possible salt combination and concentration.
+A bicarbonate-carbonate buffer was used to achieve some buffer effect with range between pH 9.2-10.6.
+Three different experiment were made with varying pH value of 9.2, 10 and 10.5.
+This gave varying concentration og HCO3 and Na due to content in buffer species.
 
+| Ion Species | Authentic CT water | pH 9.2 | pH 10 | pH 10.5 |
+|-------------|--------------------|--------|-------|---------|
+| Na [mM]     | 10.81              | 11.77  | 14.76 | 16.63   |
+| Cl [mM]     | 2.48               | 2.50   | 2.50  | 2.50    |
+| SO4 [mM]    | 0.64               | 0.70   | 0.70  | 0.70    |
+| Ca [mM]     | 0.35               | 0.40   | 0.40  | 0.40    |
+| SiO2 [mM]   | 0.68               | 0.70   | 0.70  | 0.70    |
+| HCO3[mM]    | 7.29               | 6.07   | 3.08  | 1.21    |
 
-Ion Species    |Authentic CT water | pH 9.2      |   pH    10       | pH 10.5
-------------- |--------------  | -------------    | -------------   | -------------  
-Na [mM]        |10.81            |11.77            |  14.76        |16.63    
-Cl [mM]        |2.48            |2.50            |   2.50        |2.50
-SO4 [mM]        |0.64            |0.70            |   0.70        |0.70     
-Ca [mM]        |0.35            |0.40            |  0.40       |0.40     
-SiO2 [mM]        |0.68            |0.70           |   0.70        |0.70    
-HCO3[mM]        |7.29            |6.07           |   3.08        |1.21     
-
-The experiment will investigate the impact of change in pH on ion rejection. 
-
-
-
-
-
+The experiment will investigate the impact of change in pH on ion rejection.
 
 ```{R pH 9.2 import data, echo=FALSE, message=FALSE}
 CWF_Multi_9.2 = read_delim("data/Multi_9.2_19-10-2021_del2.csv",delim = "\t", escape_double = FALSE, 
@@ -113,7 +118,6 @@ pH9.2_rej_SiO2 <- (1-(pH9.2_Permeate$Silica/(pH9.2_Feed$Silica[-1])))*100
 
 ```
 
-
 ```{R pH 10 import data, echo=FALSE, message=FALSE}
 CWF_Multi_10 = read_delim("data/Multi_10_21_10_2021_del2.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
@@ -160,7 +164,7 @@ pH10_IC_data <- pH10_IC_data[c(1:15),] #IC data
 
 pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
 pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
-   
+pH10_Feed$Time = as.numeric(pH10_Feed$Time) 
 
 #pH10_rej_Cl <- (1-(pH10_Permeate$Chloride/(pH10_Feed$Chloride[-1])))*100
 #pH10_rej_Na <- (1-(pH10_Permeate$Sodium/(pH10_Feed$Sodium[-1])))*100
@@ -215,7 +219,7 @@ pH10.5_IC_data <- pH10.5_IC_data[c(1:15),] #IC data
 
 pH10.5_Permeate <- filter(pH10.5_IC_data, Stream=="Permeate")
 pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
-   
+pH10.5_Feed$Time = as.numeric(pH10.5_Feed$Time)    
 
 #pH10.5_rej_Cl <- (1-(pH10.5_Permeate$Chloride/(pH10.5_Feed$Chloride[-1])))*10.50
 #pH10.5_rej_Na <- (1-(pH10.5_Permeate$Sodium/(pH10.5_Feed$Sodium[-1])))*10.50
@@ -224,8 +228,9 @@ pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
 pH10.5_rej_SiO2 <- (1-(pH10.5_Permeate$Silica/(pH10.5_Feed$Silica[-1])))*100
 
 ```
-The pH was monitored in the feed stream with data logging every 1 sec. The pH increase slightly for all filtration but at a similar rate,  giving stable pH for comparison between filtration with different initial pH value. 
 
+The pH was monitored in the feed stream with data logging every 1 sec.
+The pH increase slightly for all filtration but at a similar rate, giving stable pH for comparison between filtration with different initial pH value.
 
 ```{R pH ,  echo=FALSE, message=FALSE}
 
@@ -257,7 +262,6 @@ add_lines(x=~(dat_M_10.5$sek)/3600,
 
 ```
 
-
 ```{R Recovery , include = FALSE, echo=FALSE, message=FALSE}
 #definer start volumen for de respektive forsøg. 
 initial_feed_volume_9.2 <- 10 #uden prøver 10.5.54
@@ -279,24 +283,24 @@ perm_volume_10.5 <- tail(dat_M_10.5$csumflow0501_10.5, n=1)/1000
 ```
 
 The three different filtration have been performed with the same parameters, except that filtration with pH 10 had initial feed volume of 8.5 L which also lead to lower total filtration time at 6.6 hours compared to 8.6 hours for the filtration with pH 9.2 and 8.1 hours for filration with pH 10.5.
-The shorter filtration time leads to lower water recovery. When performing the experiment the feed container was run until nothing was left, and still only a recovery of 88 % was maximum obtained from filtration with pH 9.2. When ending the experiment water exits the system presumably the water which were pushed in the pressure dampeners during filtration it is estimated that this volume is 250 mL. 
-This still leaves about 0.950 L,  1.6 L and 1.5 L from the filtration with pH 9.2, pH 10 and pH 10.5 to be lost. 
+The shorter filtration time leads to lower water recovery.
+When performing the experiment the feed container was run until nothing was left, and still only a recovery of 88 % was maximum obtained from filtration with pH 9.2.
+When ending the experiment water exits the system presumably the water which were pushed in the pressure dampeners during filtration it is estimated that this volume is 250 mL.
+This still leaves about 0.950 L, 1.6 L and 1.5 L from the filtration with pH 9.2, pH 10 and pH 10.5 to be lost.
 
 WHERE DOES THE WATER GO???
 
+| pH of experiment               | 9.2                                               | 10                                              | 10.5                                                |
+|--------------------------------|---------------------------------------------------|-------------------------------------------------|-----------------------------------------------------|
+| Total filtration time [h]      | `r tail(dat_M_9.2$sek, n=1)/3600`                 | `r tail(dat_M_10$sek, n=1)/3600`                | `r tail(dat_M_10.5$sek, n=1)/3600`                  |
+| Average permeate flow [mL/min] | `r mean(dat_M_9.2$flow0501)`                      | `r mean(dat_M_10$flow0501)`                     | `r mean(dat_M_10.5$flow0501)`                       |
+| Total permeate volume [L]      | `r perm_volume_9.2`                               | `r perm_volume_10`                              | `r perm_volume_10.5`                                |
+| Water Recovery %               | `r (perm_volume_9.2/initial_feed_volume_9.2)*100` | `r (perm_volume_10/initial_feed_volume_10)*100` | `r (perm_volume_10.5/initial_feed_volume_10.5)*100` |
+| Water lost for ever            | `r initial_feed_volume_9.2-perm_volume_9.2-0.250` | `r initial_feed_volume_10-perm_volume_10-0.250` | `r initial_feed_volume_10.5-perm_volume_10.5-0.250` |
 
-
-
-pH of experiment    | 9.2               |      10         | 10.5
--------------       | -------------     | -------------   | -------------  
-Total filtration time [h]       | `r tail(dat_M_9.2$sek, n=1)/3600`|`r tail(dat_M_10$sek, n=1)/3600`| `r tail(dat_M_10.5$sek, n=1)/3600` 
-Average permeate flow [mL/min]|`r mean(dat_M_9.2$flow0501)`|`r mean(dat_M_10$flow0501)`| `r mean(dat_M_10.5$flow0501)`   
-Total permeate volume [L]|`r perm_volume_9.2`|`r perm_volume_10`| `r perm_volume_10.5`   
-Water Recovery % |`r (perm_volume_9.2/initial_feed_volume_9.2)*100`|`r (perm_volume_10/initial_feed_volume_10)*100`|`r (perm_volume_10.5/initial_feed_volume_10.5)*100`
-Water lost for ever |`r initial_feed_volume_9.2-perm_volume_9.2-0.250`|`r initial_feed_volume_10-perm_volume_10-0.250`|`r initial_feed_volume_10.5-perm_volume_10.5-0.250`
-
-
-The average permeate flow is the same for all experiments at 17 mL/min, which is what the system is regulated according to. There are larger fluctuations in permeate flow for the experiment with pH 9.2 but after this experiment the regulation value was altered slightly, which is why there is less fluctuations in the remaining filtrations with pH 10 and 10.5. The data has been collected every second and a rooling average have been calculated over 1 min.
+The average permeate flow is the same for all experiments at 17 mL/min, which is what the system is regulated according to.
+There are larger fluctuations in permeate flow for the experiment with pH 9.2 but after this experiment the regulation value was altered slightly, which is why there is less fluctuations in the remaining filtrations with pH 10 and 10.5.
+The data has been collected every second and a rooling average have been calculated over 1 min.
 
 ```{R Permeate flow ,  echo=FALSE, message=FALSE}
 
@@ -336,19 +340,20 @@ dat_M_9.2 %>%
 
 ```
 
-<h3> Pressure </h3>
+<h3>
 
-NORMALISER I FORHOLD OSMOTISK TRYK. 
+Pressure
 
+</h3>
+
+NORMALISER I FORHOLD OSMOTISK TRYK.
 
 The data has been collected every second.
 For filtration with pH 9.2 the pressure started at 2.5 bar where it increased to about 2.8 bar over the course of the experiment.
-The filtration with pH of 10 had further increase in pressure for a shorter time frame, increasing to about 3 bar. 
+The filtration with pH of 10 had further increase in pressure for a shorter time frame, increasing to about 3 bar.
 The filtration with pH of 10.5 the pressure increased further to about max of 3.5 bar.
-This increase in pressure could indicate higher ion content on the feed side and thus increase in pressure due to osmotic pressure or fouling. This higher pH give higher rejection. 
-
-
-
+This increase in pressure could indicate higher ion content on the feed side and thus increase in pressure due to osmotic pressure or fouling.
+This higher pH give higher rejection.
 
 ```{R Pressure, echo=FALSE, message=FALSE}
 
@@ -388,14 +393,19 @@ dat_M_9.2 %>%
          xaxis=list(title="Time [h]")) #Her plottet TMP
 
 
-``` 
-<h3> Conductivity Rejection  </h3>
+```
 
-The rejection for filtration with pH 9.2 fluctuate with decrease from 56 % to 52% and increase back to 54 %. 
-The rejection of filtration with pH 10 slightly increase from 65 % - 70% rejection. 
-The rejection of filtration with pH 10.h slightly increase from 75 % - 78% rejection. 
+<h3>
 
-When comparing the rejection of conductivity between the filtration it correlates with data for pressure with higher rejection and higher increase in pressure of filtration with higher pH. 
+Conductivity Rejection
+
+</h3>
+
+The rejection for filtration with pH 9.2 fluctuate with decrease from 56 % to 52% and increase back to 54 %.
+The rejection of filtration with pH 10 slightly increase from 65 % - 70% rejection.
+The rejection of filtration with pH 10.h slightly increase from 75 % - 78% rejection.
+
+When comparing the rejection of conductivity between the filtration it correlates with data for pressure with higher rejection and higher increase in pressure of filtration with higher pH.
 
 ```{R Rejection of Conductivity ,  echo=FALSE, message=FALSE}
 
@@ -439,90 +449,156 @@ dat_M_9.2 %>%
 
 
 ```
-<h3> Rejection of Silica </h3>
 
-The rejection of silica correlate with rejection of over all conductivity where higher pH lead to higher rejection of silica. 
-Filtration with pH 9.2 have rejection of 21 % increasing to 27 %, with a presumed outlier at 6 h.
-Filtration with pH 10 have significantly higher rejection of 49 % increasing to 58 %. 
-The rejectino of filtration with pH 10.5 so only slighly higher with rejection of 65 % increasing to 72 %. 
-Overall the silica rejetion is lower than the genereal conductivity rejection. inducating that the pH influence other ions differently. 
+### Bicarbonate
 
-```{R Rejection of Silica ,  echo=FALSE, message=FALSE}
-
-
-
-  plot_ly(x=~pH9.2_Feed$Time[-1],
-          y=~pH9.2_rej_SiO2,
-          name="SiO2 rejection pH 9.2",
-          type='scatter',
-          mode='marker',
-          marker=list(color='#00CC96'))%>%
-  add_markers(x=~pH10_Feed$Time[-1],
-          y=~pH10_rej_SiO2,
-          name='SiO2 rejection pH 10',
-          type='scatter',
-          mode='marker',
-          marker=list(color='#636EFA'))%>%
- add_markers(x=~pH10.5_Feed$Time[-1],
-          y=~pH10.5_rej_SiO2,
-          name='SiO2 rejection pH 10.5',
-         type='scatter',
-          mode='marker',
-       marker=list(color='#EF553B'))%>%
-  layout(title="Rejection of Silica ",
-         legend=list(x=0.7,y=0.5),
-         yaxis=list(title="Rejection of SiO2[mg/L]"),
-         xaxis=list(title="Time [h]")) #Her plottet TMP
-
-
-
-
-```
-
-<h3> Bicarboante </h3>
-
-Bicarboante was only measured in the feed stream, at start finish and once in the middle of the filtrations. 
+Bicarboante was only measured in the feed stream, at start finish and once in the middle of the filtrations.
 Genereally the bicarboatne content increase despite pH.
 
-FINISH WHEN pH 10.5 DATA IS AVALIABLE. 
+FINISH WHEN pH 10.5 DATA IS AVALIABLE.
 
 ```{R Bicarbonate Feed,  echo=FALSE, message=FALSE}
+hline <- function(y = 0, color = "black") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color)
+  )
+}
 
-
+pH9.2_bi_data$Sodium = as.numeric(pH9.2_bi_data$Sodium)
+pH10_bi_data$Sodium = as.numeric(pH10_bi_data$Sodium)
+pH10.5_bi_data$Sodium = as.numeric(pH10.5_bi_data$Sodium)
 
   plot_ly(x=~pH9.2_bi_data$Time,
           y=~pH9.2_bi_data$Sodium,
-          name="Bicarboante pH 9.2",
+          name="pH 9.2",
           type='scatter',
-          mode='marker',
-          marker=list(color='#00CC96'))%>%
-  add_markers(x=~pH10_bi_data$Time,
+          mode='lines+markers')%>%
+  add_trace(x=~pH10_bi_data$Time,
           y=~pH10_bi_data$Sodium,
-          name='Bicarboante pH 10',
+          name='pH 10',
           type='scatter',
-          mode='marker',
-          marker=list(color='#636EFA'))%>%
- #add_markers(x=~pH10.5_bi_data$Time,
- #         y=~pH10.5_bi_data$Sodium,
- #         name="Bicarboante pH 10.5",
- #        type='scatter',
- #        mode='marker',
- #     marker=list(color='#EF553B'))%>%
+          mode='lines+markers')%>%
+ add_trace(x=~pH10.5_bi_data$Time,
+         y=~pH10.5_bi_data$Sodium,
+         name="pH 10.5",
+         type='scatter',
+         mode='lines+markers')%>%
   layout(title="Concentration of bicarbonate feed",
-         legend=list(x=0.7,y=0.5),
-         yaxis=list(title="Concentration Bicarboante [mg/L]"),
-         xaxis=list(title="Time [h]")) #Her plottet TMP
+         legend=list(x=0.9,y=0.2),
+         yaxis=list(title="Concentration Bicarboante [mg/L]",
+                    range=c(0,1300)),
+         xaxis=list(title="Time [h]"))%>%
+  layout(shapes = list(hline(1220)))
+
+    
 
 
 
 
 ```
-<h3> Chloride DIT-M </h3>
+
+```{R Bicarbonate with Silica,  echo=FALSE, message=FALSE}
+hline <- function(y = 0, color = "black") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color)
+  )
+}
+
+pH9.2_bi_data$Sodium = as.numeric(pH9.2_bi_data$Sodium)
+pH10_bi_data$Sodium = as.numeric(pH10_bi_data$Sodium)
+pH10.5_bi_data$Sodium = as.numeric(pH10.5_bi_data$Sodium)
+
+pH9.2_silica = cbind(pH9.2_IC_data%>%filter(Stream == "Feed")%>%select(1),pH9.2_IC_data%>%filter(Stream == "Feed")%>%select(8))
+pH9.2_silica$Time[1]=0
+pH10_silica = cbind(pH10_IC_data%>%filter(Stream == "Feed")%>%select(1),pH10_IC_data%>%filter(Stream == "Feed")%>%select(8))
+pH10.5_silica = cbind(pH10.5_IC_data%>%filter(Stream == "Feed")%>%select(1),pH10.5_IC_data%>%filter(Stream == "Feed")%>%select(8))
+ay <- list(
+      tickfont = list(color = "red"),
+      overlaying = "y",
+      side = "right",
+      title = "Silica concentration")
+
+fig= plot_ly(x=~pH9.2_bi_data$Time,
+        y=~pH9.2_bi_data$Sodium,
+        name="pH 9.2",
+        type='scatter',
+        mode='lines+markers')%>%
+  add_trace(x=~pH10_bi_data$Time,
+            y=~pH10_bi_data$Sodium,
+            name='pH 10',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10.5_bi_data$Time,
+            y=~pH10.5_bi_data$Sodium,
+            name="pH 10.5",
+            type='scatter',
+            mode='lines+markers')
+
+fig = fig%>%
+  add_trace(x=~pH9.2_silica$Time,
+            y=~pH9.2_silica$Silica,
+            yaxis = "y2",
+            name='pH 9.2 Silica',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10_silica$Time,
+            y=~pH10_silica$Silica,
+            yaxis = "y2",
+            name='pH 10 Silica',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10.5_silica$Time,
+        y=~pH10.5_silica$Silica,
+        yaxis = "y2",
+        name='pH 10.5 Silica',
+        type='scatter',
+        mode='lines+markers')
+  
+fig <- fig %>% layout(
+  title = "Concentration of bicarbonate feed",
+  yaxis2 = ay,
+  xaxis = list(title = "Time [h]"),
+  yaxis = list(title = "Concentration Bicarboante [mg/L]",range=c(0,1300)),
+  legend=list(x=0,y=1)
+) %>%
+  layout(
+    plot_bgcolor = '#e5ecf6',
+    xaxis = list(
+      zerolinecolor = '#ffff',
+      zerolinewidth = 2,
+      gridcolor = 'ffff'
+    ),
+    yaxis = list(
+      zerolinecolor = '#ffff',
+      zerolinewidth = 2,
+      gridcolor = 'ffff'
+    )
+  )
+
+          
+fig
+
+
+```
+
+### Chloride DIT-M
 
 From the results achieved with DIT-M photometer nothing can be concluded regarding trends due to very high error bars.
-The errorbars are so high it cannot be distinguesed between different samples. The high errorbars is the results of very high dilution factor at 25 as well as uncertainty of the instrument of 3 mg/L. 
-Furthermore all measured samples are much higher than the theroretical calcuclated initial feed value at 88 mg/L (included as horizontal dashed line). 
-
+The errorbars are so high it cannot be distinguesed between different samples.
+The high errorbars is the results of very high dilution factor at 25 as well as uncertainty of the instrument of 3 mg/L.
+Furthermore all measured samples are much higher than the theroretical calcuclated initial feed value at 88 mg/L (included as horizontal dashed line).
 
 ```{R Chloride with DIT-M ,  echo=FALSE, message=FALSE}
 pH9.2_IC_data[ pH9.2_IC_data == 0] <-NA
@@ -538,7 +614,51 @@ ggplot()+
 
 ```
 
-```{r Ions 9.2}
+### Ion Rejections
+
+#### Rejection of Silica
+
+The rejection of silica correlate with rejection of over all conductivity where higher pH lead to higher rejection of silica.
+Filtration with pH 9.2 have rejection of 21 % increasing to 27 %, with a presumed outlier at 6 h.
+Filtration with pH 10 have significantly higher rejection of 49 % increasing to 58 %.
+The rejectino of filtration with pH 10.5 so only slighly higher with rejection of 65 % increasing to 72 %.
+Overall the silica rejetion is lower than the genereal conductivity rejection.
+inducating that the pH influence other ions differently.
+
+```{R Rejection of Silica ,  echo=FALSE, message=FALSE}
+
+
+
+  plot_ly(x=~pH9.2_Feed$Time[-1],
+          y=~pH9.2_rej_SiO2,
+          name="pH 9.2",
+          type='scatter',
+          mode='lines+markers')%>%
+  add_trace(x=~pH10_Feed$Time[-1],
+          y=~pH10_rej_SiO2,
+          name='pH 10',
+          type='scatter',
+          mode='lines+markers')%>%
+ add_trace(x=~pH10.5_Feed$Time[-1],
+          y=~pH10.5_rej_SiO2,
+          name='pH 10.5',
+         type='scatter',
+          mode='lines+markers')%>%
+  layout(title="Rejection of Silica ",
+         legend=list(x=0.7,y=0.5),
+         yaxis=list(title="Rejection of SiO2 [%]"),
+         xaxis=list(title="Time [h]")) #Her plottet TMP
+
+
+
+
+```
+
+#### IC results
+
+Measurements taken at various times from IC data
+##### pH 9.2
+```{r Ions 9.2, echo=FALSE}
 IC_9.2_raw = as.data.frame(pH9.2_IC_data)
 IC_9.2 = IC_9.2_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
 IC_9.2$value = as.double(IC_9.2$value)
@@ -546,8 +666,12 @@ IC_9.2$value = as.double(IC_9.2$value)
 A=IC_9.2%>%filter(Stream == "Feed"& Time != 0)
 B=IC_9.2%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-IC_9.2$rej=NA
-IC_9.2$rej[c(-1,-14,-27,-40)]=rejection
+C=data.frame(matrix(ncol=3,nrow=length(rejection)))
+colnames(C)=c('time','key','value')
+C$time=A$Time
+C$key=A$key
+C$value=rejection
+
 IC_9.2 = na.omit(IC_9.2)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
@@ -557,30 +681,29 @@ ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_po
   ggtitle("Ion concentration Multisalt pH 9.2")
 
 
-tid=c(3.5,5,6,7,8,8.7)
-na = rejection[1:6]
-cl =rejection[7:12]
-So4=rejection[13:18]
-ca=rejection[19:24]
-reje=data.frame(tid,na,cl,So4,ca)
-reje = reje%>%gather(key,value, na,cl,So4,ca)
-ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+
+ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
-  labs(x="Time [h]",y="Rejection", color="")+
+  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("Multisalt pH 9.2")
 ```
-
-
-```{r Ions 10}
+##### pH 10
+```{r Ions 10, echo=FALSE}
 IC_10_raw = as.data.frame(pH10_IC_data)
 IC_10 = IC_10_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_10 = subset(IC_10,select=-5)
 IC_10$value = as.double(IC_10$value)
+IC_10$Time = as.double(IC_10$Time)
 #IC_10 = IC_10%>%mutate(Rej = )
 A=IC_10%>%filter(Stream == "Feed"& Time != 0)
 B=IC_10%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-IC_10$rej=NA
-IC_10$rej[c(-1,-14,-27,-40)]=rejection
+C=data.frame(matrix(ncol=3,nrow=length(rejection)))
+colnames(C)=c('time','key','value')
+C$time=A$Time
+C$key=A$key
+C$value=rejection
+
 IC_10 = na.omit(IC_10)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
@@ -590,30 +713,29 @@ ggplot(IC_10%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_poi
   ggtitle("Ion concentration Multisalt pH 10")
 
 
-tid=c(1.25,3,4,5,5.5,6,6.5)
-na = rejection[1:7]
-cl =rejection[8:14]
-So4=rejection[15:21]
-ca=rejection[22:28]
-reje=data.frame(tid,na,cl,So4,ca)
-reje = reje%>%gather(key,value, na,cl,So4,ca)
-ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+
+ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
-  labs(x="Time [h]",y="Rejection", color="")+
+  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("Multisalt pH 10")
 ```
-
-
-```{r Ions 10.5}
+##### pH 10.5
+```{r Ions 10.5, echo=FALSE}
 IC_10.5_raw = as.data.frame(pH10.5_IC_data)
 IC_10.5 = IC_10.5_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_10.5 = subset(IC_10.5,select=-c(5,6,7))
 IC_10.5$value = as.double(IC_10.5$value)
+IC_10.5$Time = as.double(IC_10.5$Time)
 #IC_10.5 = IC_10.5%>%mutate(Rej = )
 A=IC_10.5%>%filter(Stream == "Feed"& Time != 0)
 B=IC_10.5%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-IC_10.5$rej=NA
-IC_10.5$rej[c(-1,-14,-27,-40)]=rejection
+C=data.frame(matrix(ncol=3,nrow=length(rejection)))
+colnames(C)=c('time','key','value')
+C$time=A$Time
+C$key=A$key
+C$value=rejection
+
 IC_10.5 = na.omit(IC_10.5)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
@@ -623,16 +745,10 @@ ggplot(IC_10.5%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_p
   ggtitle("Ion concentration Multisalt pH 10.5")
 
 
-tid=c(3.5,4,5,6,7,8)
-na = rejection[1:6]
-cl =rejection[7:12]
-So4=rejection[13:18]
-ca=rejection[19:24]
-reje=data.frame(tid,na,cl,So4,ca)
-reje = reje%>%gather(key,value, na,cl,So4,ca)
-ggplot(reje, aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+
+ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
-  labs(x="Time [h]",y="Rejection", color="")+
+  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("Multisalt pH 10.5")
 ```
 
@@ -660,7 +776,6 @@ med_sul = IC_9.2 %>% filter(!is.na(Sulphate))
 med_sul %>% mutate(con = (Sodium*ion_values[1,2]+Chloride*ion_values[2,2]+Sulphate*ion_values[3,2]+Calcium*ion_values[4,2])) %>%mutate(dCOn = Conductivity-con)
 ```
 
-
-```{R Stop knit ,  echo=FALSE, message=FALSE}
-knitr::knit_exit()
-```
+<!-- ```{R Stop knit ,  echo=FALSE, message=FALSE} -->
+<!-- knitr::knit_exit() -->
+<!-- ``` -->
