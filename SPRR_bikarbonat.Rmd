@@ -49,26 +49,16 @@ Bicarbonate analyzed at lab øst 3.
 
 ```{R SPRR_DATA, eval=FALSE, message=FALSE, include=FALSE}
 
+
+
 SPRR_data <- read_excel("data/SPRR/SPRR_analysesvar_samlet.xlsx")
 
 old_names_SPRR=colnames(SPRR_data) #Vi finder de latterlige navne kolonnerne i dataen har 
 new_names_SPRR=c("No","Stream","Calcium","Sodium","Chloride","Sulphate","Silica","Bicarbonate") #Vi finder på nogle lidt bedre nogle
 SPRR_data = SPRR_data %>% rename_at(vars(old_names_SPRR),~new_names_SPRR) #Vi ændrer navnene til de nye
-SPRR_data <- as.data.frame(SPRR_data[-1,])
-#Jeg kunne ikke få denne function til at virke der skulle converetere fra character til numeric :(
-#i <- c(1, 3, 4, 5, 6, 7, 8) #columns i want to change to numeric
-#SPRR_data[ , i] <- apply(data[ , i], 2, # Specify own function within apply
-#                    function(x) as.numeric(as.character(x)))
-#brute force convertering fra character til numeric.  
-SPRR_data$No<- as.numeric(SPRR_data$No)
-SPRR_data$Calcium<- as.numeric(SPRR_data$Calcium)
-SPRR_data$Sodium<- as.numeric(SPRR_data$Sodium)
-SPRR_data$Chloride<- as.numeric(SPRR_data$Chloride)
-SPRR_data$Sulphate<- as.numeric(SPRR_data$Sulphate)
-SPRR_data$Silica<- as.numeric(SPRR_data$Silica)
-SPRR_data$Bicarbonate<- as.numeric(SPRR_data$Bicarbonate)
 
-SPRR_data%>%mutate(rej_bicarbonat=())
+
+#SPRR_data%>%mutate(rej_bicarbonat=())
 
 #minfunktion = function(a,b,c){
 #  res = (a+b)/c
@@ -85,8 +75,8 @@ rejection$Bicarbonate
 
 #plot af bicarbonat
 
-  plot_ly(data=SPRR_data, x=~No,
-          y=~Bicarbonate,
+  plot_ly(data=SPRR_data, x=SPRR_data[1,],
+          y=SPRR_data[7,]),
          color=~Stream,
           type='scatter',mode='markers',
           colors=c(colors[1],colors[2]))  %>%
@@ -103,27 +93,60 @@ rejection$Bicarbonate
 
 ```{R SPRR_DATA, echo=FALSE, message=FALSE}
 
-SPRR_data <- read_excel("data/SPRR/SPRR_analysesvar_samlet.xlsx",2)
+SPRR_data_type=c()
+SPRR_data <- read_excel("data/SPRR/SPRR_analysesvar_samlet.xlsx",2,
+                        col_types="numeric")
+                        #row_types=c("character","numeric","numeric","numeric","numeric","numeric","numeric"))
+SPRR_data <- as.data.frame(SPRR_data[-1,-1])
 
-old_names_SPRR=colnames(SPRR_data) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names_SPRR=c("No","Stream","Calcium","Sodium","Chloride","Sulphate","Silica","Bicarbonate") #Vi finder på nogle lidt bedre nogle
-SPRR_data = SPRR_data %>% rename_at(vars(old_names_SPRR),~new_names_SPRR) #Vi ændrer navnene til de nye
-SPRR_data <- as.data.frame(SPRR_data[-1,])
-#Jeg kunne ikke få denne function til at virke der skulle converetere fra character til numeric :(
-#i <- c(1, 3, 4, 5, 6, 7, 8) #columns i want to change to numeric
-#SPRR_data[ , i] <- apply(data[ , i], 2, # Specify own function within apply
-#                    function(x) as.numeric(as.character(x)))
-#brute force convertering fra character til numeric.  
-SPRR_data$No<- as.numeric(SPRR_data$No)
-SPRR_data$Calcium<- as.numeric(SPRR_data$Calcium)
-SPRR_data$Sodium<- as.numeric(SPRR_data$Sodium)
-SPRR_data$Chloride<- as.numeric(SPRR_data$Chloride)
-SPRR_data$Sulphate<- as.numeric(SPRR_data$Sulphate)
-SPRR_data$Silica<- as.numeric(SPRR_data$Silica)
-SPRR_data$Bicarbonate<- as.numeric(SPRR_data$Bicarbonate)
+row.names(SPRR_data) <- c("Calcium","Sodium","Chloride","Sulphate","Silica","Bicarbonate")
+colnames(SPRR_data) <- c("Feed_1","Permeate_1",
+                 "Feed_2","Permeate_2",
+                 "Feed_3","Permeate_3",
+                 "Feed_4","Permeate_4",
+                 "Feed_5","Permeate_5",
+                 "Feed_6","Permeate_6",
+                 "Feed_7","Permeate_7",
+                 "Feed_8","Permeate_8",
+                 "Feed_9","Permeate_9",
+                 "Feed_10","Permeate_10",
+                 "Feed_11","Permeate_11",
+                 "Feed_12","Permeate_12",
+                 "Feed_13","Permeate_13",
+                 "Feed_14","Permeate_14",
+                 "Feed_15","Permeate_15",
+                 "Feed_16","Permeate_16",
+                 "Feed_17","Permeate_17",
+                 "Feed_18","Permeate_18")
+                 
 
-SPRR_data%>%mutate(rej_bicarbonat=())
+SPRR_data%>%mutate(Rej_1=((1-(Feed_1/Permeate_1)*100))
+                   
+SPRR_rection=SPRR_data%>%mutate(Rej_5=((1-(Feed_5/Permeate_5)*100)))
+               
 
+Rej_function = function(feed,permeate){
+  res = (1-(permeate/feed))*100
+    return(res)
+} 
+Rej_function(2,4)
+
+
+Rej_SPPR_data <- data.frame(NA_col=rep(NA,7))
+
+for(i in 1:18){
+ Rej_i<-Rej_function(SPRR_data[i],SPRR_data[i+1])
+ print(Rej_i)
+}
+
+print(Rej_i)
+  
+  Rej_1=Rej_function(SPRR_data$Feed_1,SPRR_data$Permeate_1)
+  
+  Rej_5=Rej_function(SPRR_data$Feed_5,SPRR_data$Permeate_5)
+  
+                   
+                   
 #minfunktion = function(a,b,c){
 #  res = (a+b)/c
 #  

@@ -55,7 +55,7 @@ Summary of SPRR experiments which actually reached steady state during the run
 <!-- From conductivity it does not look like SS was reached :( -->
 
 ```{r no. 1 data, eval=FALSE, include=FALSE}
-nr_1 = read_delim("data/SPRR/nr_1.csv",delim = "\t", escape_double = FALSE, 
+nr_1 = read_delim("data/SPRR/gammel skrald/nr_1.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 dat_1 = as.data.frame(nr_1) #Ændrer strukturen af dataen til noget vi kan arbejde med
 old_names=colnames(nr_1) #Vi finder de latterlige navne kolonnerne i dataen har 
@@ -823,8 +823,8 @@ add_lines(x=~(sek/60),
 
 Cl 3 Si 1 pH 1
 
-```{r no. 13 data, eval=FALSE, include=FALSE}
-nr_13 = read_delim("data/SPRR/nr_13.csv",delim = "\t", escape_double = FALSE, 
+```{r no. 13 data, include=FALSE}
+nr_13 = read_delim("data/SPRR/gammel skrald/nr_13.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
 dat_13 = as.data.frame(nr_13) #Ændrer strukturen af dataen til noget vi kan arbejde med
 old_names=colnames(nr_13) #Vi finder de latterlige navne kolonnerne i dataen har 
@@ -852,34 +852,40 @@ dat_13 = dat_13%>%
 
 ```
 
-```{r no. 13 plot, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r no. 13 plot, echo=FALSE, message=FALSE, warning=FALSE}
 dat_13 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
   mutate(R = (1-(con0501/con0301))*100) %>%
-  plot_ly(x=~(sek),
+  plot_ly(x=~(sek/60),
           y=~pH0201,
           name="pH",
           type='scatter',
           mode='line',
           line=list(color= colors[1]))%>%
-  add_lines(x=~(sek),
+  add_lines(x=~(sek/60),
           y=~TMP,
           name='TMP',
           type='scatter',
           mode='line',
           line=list(color= colors[2]))%>%
-add_lines(x=~(sek),
+add_lines(x=~(sek/60),
           y=~con0501,
           name='Permeate con',
           type='scatter',
           mode='line',
           line=list(color= colors[3]))%>%
-  add_lines(x=~(sek),
+  add_lines(x=~(sek/60),
           y=~R,
           name='Rejection',
           type='scatter',
           mode='line',
           line=list(color= colors[4]))%>%
+   add_lines(x=~(sek/60),
+          y=~con0301,
+          name='Feed con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[5]))%>%
   layout(title="Run no. 13",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="value ", range=c(NA,NA)),
