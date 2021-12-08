@@ -1043,14 +1043,18 @@ add_lines(x=~(sek/60),
 
 ```
 
- ## Run no. 17 no SS 
+## Run no. 17 no SS 
 
  Cl 3 Si 1 pH 1 
 
-```{r no. 17 data, eval=FALSE, include=FALSE}
-nr_17 = read_delim("data/SPRR/nr_17.csv",delim = "\t", escape_double = FALSE, 
+```{r no. 17 data, include=FALSE}
+nr_17_a = read_delim("data/SPRR/nr_17_a.csv",delim = "\t", escape_double = FALSE, 
                   trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
-dat_17 = as.data.frame(nr_17) #Ændrer strukturen af dataen til noget vi kan arbejde med
+nr_17_b = read_delim("data/SPRR/nr_17_b.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+nr_17=rbind(nr_17_a,nr_17_b)
+
+dat_17 = rbind(as.data.frame(nr_17_a),as.data.frame(nr_17_b))
 old_names=colnames(nr_17) #Vi finder de latterlige navne kolonnerne i dataen har 
 new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "p0301","p0302","p0401","flow0401","p0501","con0501",
@@ -1061,9 +1065,9 @@ new_names=c("time","level","con0201","pH0201","con0301","flow0301",
             "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
 dat_17 = dat_17 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
 dat_17$time = dmy_hms(nr_17$TimeStamp)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
-#flow_boolean = dat_17$flow0501>10&dat_17$flow0501<25
-#start_tid = min(which(flow_boolean))
-#dat_17=dat_17[-c(1:start_tid),]
+flow_boolean = dat_17$flow0501>10&dat_17$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_17=dat_17[-c(1:start_tid),]
 #flow_boolean_slut = dat_17$flow0501<1
 #slut_tid = min(which(flow_boolean_slut))
 #dat_17=dat_17[-c(slut_tid:(nrow(dat_17)) ),]
@@ -1076,38 +1080,44 @@ dat_17 = dat_17%>%
 
 ```
 
-```{r no. 17 plot, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+```{r no. 17 plot, echo=FALSE, message=FALSE, warning=FALSE}
 dat_17 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
   mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
   mutate(R = (1-(con0501/con0301))*100) %>%
-  plot_ly(x=~(sek),
+  plot_ly(x=~(sek/60/60),
           y=~pH0201,
           name="pH",
           type='scatter',
           mode='line',
           line=list(color= colors[1]))%>%
-  add_lines(x=~(sek),
+  add_lines(x=~(sek/60/60),
           y=~TMP,
           name='TMP',
           type='scatter',
           mode='line',
           line=list(color= colors[2]))%>%
-add_lines(x=~(sek),
+add_lines(x=~(sek/60/60),
           y=~con0501,
           name='Permeate con',
           type='scatter',
           mode='line',
           line=list(color= colors[3]))%>%
-  add_lines(x=~(sek),
+  add_lines(x=~(sek/60/60),
           y=~R,
           name='Rejection',
           type='scatter',
           mode='line',
           line=list(color= colors[4]))%>%
+  add_lines(x=~(sek/60/60),
+          y=~con0301,
+          name='Feed con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[5]))%>%
   layout(title="Run no. 17",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="value ", range=c(NA,NA)),
-         xaxis=list(title="Time ",range=c(NA,NA))
+         xaxis=list(title="Time [Hours]",range=c(NA,NA))
          ) #Her plottet TMP
 
 ```
