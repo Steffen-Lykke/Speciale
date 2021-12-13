@@ -473,7 +473,7 @@ fig_SiO2
 
 ```
 
-```{R Plot af Silica subplots_3, echo=FALSE, message=FALSE}
+```{R Plot af Silica subplots_4, echo=FALSE, message=FALSE}
 
 
 fig_1 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="75")%>%
@@ -569,5 +569,320 @@ SPRR_data %>% filter(Stream=="Rejection")%>%
              legend=list(title=list(text='<b> Silica content </b>')),
          yaxis=list(title="Rejection of Calcium % ",range=c(1,100)),
          xaxis=list(title="Experiment no.",tickvals=x_tick)) 
+
+```
+
+## Calcium 
+
+```{R Plot af Calcium subplots, echo=FALSE, message=FALSE}
+
+
+fig_1 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="75")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Ca,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Calcium",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+fig_2 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="125")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Ca,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Calcium",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+
+fig_Ca <- subplot(fig_1,fig_2,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+  
+# Update title
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = "Silica 75 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = "Silica 125 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+
+fig_Ca <- fig_Ca %>%layout(annotations = annotations) 
+
+
+fig_Ca
+
+#mere inspo
+#https://plotly.com/r/subplots/
+
+```
+
+## Sodium
+
+```{R Plot af Sodium subplots, echo=FALSE, message=FALSE}
+
+
+fig_1 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="75")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Na,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Sodium",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+fig_2 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="125")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Na,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Sodium",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+
+fig_Na <- subplot(fig_1,fig_2,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+  
+# Update title
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = "Silica 75 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = "Silica 125 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+
+fig_Na <- fig_Na %>%layout(annotations = annotations) 
+
+
+fig_Na
+
+#mere inspo
+#https://plotly.com/r/subplots/
+
+```
+
+## Chloride
+
+```{R Plot af Chloride subplots, echo=FALSE, message=FALSE}
+
+
+fig_1 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="75")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Cl,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Chloride",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+fig_2 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="125")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Cl,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Chloride",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+
+fig_Cl <- subplot(fig_1,fig_2,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+  
+# Update title
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = "Silica 75 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = "Silica 125 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+
+fig_Cl <- fig_Cl %>%layout(annotations = annotations) 
+
+
+fig_Cl
+
+#mere inspo
+#https://plotly.com/r/subplots/
+
+```
+
+## Sulphate
+
+```{R Plot af Sulphate subplots, echo=FALSE, message=FALSE}
+
+
+fig_1 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="75")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~SO4,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Sulphate",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+fig_2 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="125")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~SO4,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Sulphate",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+
+fig_SO4 <- subplot(fig_1,fig_2,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+  
+# Update title
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = "Silica 75 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = "Silica 125 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+
+fig_SO4 <- fig_SO4 %>%layout(annotations = annotations) 
+
+
+fig_SO4
+
+#mere inspo
+#https://plotly.com/r/subplots/
+
+```
+
+## Bicarbonate
+
+```{R Plot af Bicarbonate subplots, echo=FALSE, message=FALSE}
+
+
+fig_1 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="75")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~HCO3,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Bicarbonate",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+fig_2 <- SPRR_data %>% filter(Stream=="Rejection",Silica_content=="125")%>%
+  plot_ly(x=~Cl_ratio,
+          y=~HCO3,
+          color =~pH,
+          colors=c(colors[1],colors[2],colors[3]),
+          type='scatter',mode='markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection Bicarbonate",range=c(0,100)),
+        xaxis=list(title="Chloride content %") )
+
+
+fig_HCO3 <- subplot(fig_1,fig_2,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+  
+# Update title
+annotations = list( 
+  list( 
+    x = 0.2,  
+    y = 1.0,  
+    text = "Silica 75 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.8,  
+    y = 1,  
+    text = "Silica 125 mg/L",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+
+fig_HCO3 <- fig_HCO3 %>%layout(annotations = annotations) 
+
+
+fig_HCO3
+
+#mere inspo
+#https://plotly.com/r/subplots/
 
 ```
