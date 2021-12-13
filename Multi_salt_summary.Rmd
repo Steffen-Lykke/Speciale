@@ -452,11 +452,13 @@ dat_M_9.2 %>%
 
 ### Bicarbonate
 
-Bicarboante was only measured in the feed stream, at start finish and once in the middle of the filtrations.
-Genereally the bicarboatne content increase despite pH.
+Bicarboante was analysed as total alkalinity.
+Samples were only taken from feed stream and were taken at the start and end of teh filtration along with one sample takne in the middle of the experiments.
+Generally the bicarboatne content increase despite pH.
+The Bicarbonate content also increases almost linearly as the concentration of silica increases which  could indicate that the silica concentration affects the alkalinity analysis instead of a greater concentration of bicarbonate.
 
-FINISH WHEN pH 10.5 DATA IS AVALIABLE.
 
+Here are the bicarbonate results as given by alkalinity, note the limit of ~1200 of the analysis
 ```{R Bicarbonate Feed,  echo=FALSE, message=FALSE}
 hline <- function(y = 0, color = "black") {
   list(
@@ -503,6 +505,7 @@ pH10.5_bi_data$Sodium = as.numeric(pH10.5_bi_data$Sodium)
 
 ```
 
+Plotting all silica and bicarbonate concentrations are 1. very difficult to look at and 2. shows a trend of increasing bicarb content when silica increases
 ```{R Bicarbonate with Silica,  echo=FALSE, message=FALSE}
 hline <- function(y = 0, color = "black") {
   list(
@@ -592,6 +595,58 @@ fig
 
 
 ```
+Plotting the bicarbonate concentration as a function of silica shows linear relation for each of the experiments 8last 3 plots).
+For the overall relations (plottet right below) the specific trend is more difficult to grasp
+```{R Bicarbonate with Silica 2,  echo=FALSE, message=FALSE}
+hline <- function(y = 0, color = "black") {
+  list(
+    type = "line", 
+    x0 = 0, 
+    x1 = 1, 
+    xref = "paper",
+    y0 = y, 
+    y1 = y, 
+    line = list(color = color)
+  )
+}
+
+pH9.2_bi_data$bicarb = as.numeric(pH9.2_bi_data$Sodium)
+pH10_bi_data$bicarb = as.numeric(pH10_bi_data$Sodium)
+pH10.5_bi_data$bicarb = as.numeric(pH10.5_bi_data$Sodium)
+
+pH9.2_silica = cbind(pH9.2_IC_data%>%filter(Stream == "Feed")%>%select(1),pH9.2_IC_data%>%filter(Stream == "Feed")%>%select(8))
+pH9.2_silica$Time[1]=0
+pH10_silica = cbind(pH10_IC_data%>%filter(Stream == "Feed")%>%select(1),pH10_IC_data%>%filter(Stream == "Feed")%>%select(8))
+pH10.5_silica = cbind(pH10.5_IC_data%>%filter(Stream == "Feed")%>%select(1),pH10.5_IC_data%>%filter(Stream == "Feed")%>%select(8))
+
+pH9.2_si_bi=data.frame(pH9.2_silica$Silica[c(1,4,7)],
+                       pH9.2_bi_data$bicarb,
+                       "pH9.2")
+
+pH10_si_bi=data.frame(pH10_silica$Silica[c(1,4,8)],
+                       pH10_bi_data$bicarb,
+                      "pH10")
+
+pH10.5_si_bi=data.frame(pH10.5_silica$Silica[c(1,5,7)],
+                       pH10.5_bi_data$bicarb,
+                       "pH10.5")
+colnames(pH9.2_si_bi) = c("Silica", "bicarb","origin")
+colnames(pH10_si_bi) = c("Silica", "bicarb","origin")
+colnames(pH10.5_si_bi) = c("Silica", "bicarb","origin")
+
+si_bi=rbind(pH9.2_si_bi,pH10_si_bi,pH10.5_si_bi)
+model = lm(Silica ~ bicarb, data = si_bi)
+
+pred.int <- predict(model, interval = "prediction")
+si_bi <- cbind(si_bi, pred.int)
+si_bi_long = si_bi %>% gather("silica","bicarb",origin)
+ggplot(data = si_bi, aes(x=Silica,y=bicarb))+geom_point(aes(x=Silica,y=bicarb,color=origin))+geom_smooth(method=glm,formula = y~x)
+
+
+ggplot(data = pH9.2_si_bi, aes(x=Silica,y=bicarb))+geom_point()+geom_smooth(method=glm,formula = y~x)
+ggplot(data = pH10_si_bi, aes(x=Silica,y=bicarb))+geom_point()+geom_smooth(method=glm,formula = y~x)
+ggplot(data = pH10.5_si_bi, aes(x=Silica,y=bicarb))+geom_point()+geom_smooth(method=glm,formula = y~x)
+```
 
 ### Chloride DIT-M
 
@@ -618,7 +673,7 @@ ggplot()+
 
 #### Rejection of Silica
 
-The rejection of silica correlate with rejection of over all conductivity where higher pH lead to higher rejection of silica.
+The rejection of silica correlates with rejection of over all conductivity where higher pH lead to higher rejection of silica.
 Filtration with pH 9.2 have rejection of 21 % increasing to 27 %, with a presumed outlier at 6 h.
 Filtration with pH 10 have significantly higher rejection of 49 % increasing to 58 %.
 The rejectino of filtration with pH 10.5 so only slighly higher with rejection of 65 % increasing to 72 %.
@@ -655,8 +710,9 @@ inducating that the pH influence other ions differently.
 ```
 
 #### IC results
+The ion results were obtained by IC analysis of samples taken at various times from feed and permeate streams for each experiment.
 
-Measurements taken at various times from IC data
+
 ##### pH 9.2
 ```{r Ions 9.2, echo=FALSE}
 IC_9.2_raw = as.data.frame(pH9.2_IC_data)
@@ -675,17 +731,18 @@ C$value=rejection
 IC_9.2 = na.omit(IC_9.2)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
-ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
+conc_9.2 = ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
   labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
   ggtitle("Ion concentration Multisalt pH 9.2")
+conc_9.2
 
 
-
-ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
+rej_9.2=ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
-  ggtitle("Multisalt pH 9.2")
+  ggtitle("pH 9.2")
+rej_9.2
 ```
 ##### pH 10
 ```{r Ions 10, echo=FALSE}
@@ -707,17 +764,18 @@ C$value=rejection
 IC_10 = na.omit(IC_10)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
-ggplot(IC_10%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
+conc_10 = ggplot(IC_10%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
   labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
   ggtitle("Ion concentration Multisalt pH 10")
+conc_10
 
 
-
-ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
+rej_10=ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
-  ggtitle("Multisalt pH 10")
+  ggtitle("pH 10")
+rej_10
 ```
 ##### pH 10.5
 ```{r Ions 10.5, echo=FALSE}
@@ -739,17 +797,25 @@ C$value=rejection
 IC_10.5 = na.omit(IC_10.5)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
-ggplot(IC_10.5%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
+conc_10.5= ggplot(IC_10.5%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
   labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
   ggtitle("Ion concentration Multisalt pH 10.5")
+conc_10.5
 
 
-
-ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(NA,NA))+
+rejec_10.5=ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
-  ggtitle("Multisalt pH 10.5")
+  ggtitle("pH 10.5")
+rejec_10.5
+```
+```{r plot next to each other, echo=FALSE}
+require(gridExtra)
+require(ggpubr)
+
+#grid.arrange(rej_9.2,rej_10,rejec_10.5,ncol=3)
+ggarrange(rej_9.2,rej_10,rejec_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
 ```
 
 ```{r Estimation of Sulphate concentration, eval=FALSE, include=FALSE}
