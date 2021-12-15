@@ -715,18 +715,20 @@ The ion results were obtained by IC analysis of samples taken at various times f
 
 ##### pH 9.2
 ```{r Ions 9.2, echo=FALSE}
-IC_9.2_raw = as.data.frame(pH9.2_IC_data)
-IC_9.2 = IC_9.2_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_9.2_raw = IC_9.2= as.data.frame(pH9.2_IC_data)
+IC_9.2$Sulphate = replace_na(IC_9.2_raw$Sulphate,5)
+IC_9.2 = IC_9.2%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+
 IC_9.2$value = as.double(IC_9.2$value)
 #IC_9.2 = IC_9.2%>%mutate(Rej = )
 A=IC_9.2%>%filter(Stream == "Feed"& Time != 0)
 B=IC_9.2%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-C=data.frame(matrix(ncol=3,nrow=length(rejection)))
-colnames(C)=c('time','key','value')
-C$time=A$Time
-C$key=A$key
-C$value=rejection
+C_9.2=data.frame(matrix(ncol=3,nrow=length(rejection)))
+colnames(C_9.2)=c('time','key','value')
+C_9.2$time=A$Time
+C_9.2$key=A$key
+C_9.2$value=rejection
 
 IC_9.2 = na.omit(IC_9.2)
 labs = c('Na','Ca','Cl','SO4')
@@ -738,7 +740,7 @@ conc_9.2 = ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= ke
 conc_9.2
 
 
-rej_9.2=ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+rej_9.2=ggplot(C_9.2, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("pH 9.2")
@@ -746,8 +748,11 @@ rej_9.2
 ```
 ##### pH 10
 ```{r Ions 10, echo=FALSE}
-IC_10_raw = as.data.frame(pH10_IC_data)
-IC_10 = IC_10_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_10_raw =IC_10= as.data.frame(pH10_IC_data)
+IC_10 = slice(IC_10,-c(2,3))
+IC_10$Sulphate = replace_na(IC_10$Sulphate,5)
+IC_10 = IC_10%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+
 IC_10 = subset(IC_10,select=-5)
 IC_10$value = as.double(IC_10$value)
 IC_10$Time = as.double(IC_10$Time)
@@ -755,11 +760,11 @@ IC_10$Time = as.double(IC_10$Time)
 A=IC_10%>%filter(Stream == "Feed"& Time != 0)
 B=IC_10%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-C=data.frame(matrix(ncol=3,nrow=length(rejection)))
-colnames(C)=c('time','key','value')
-C$time=A$Time
-C$key=A$key
-C$value=rejection
+C_10=data.frame(matrix(ncol=3,nrow=length(rejection)))
+colnames(C_10)=c('time','key','value')
+C_10$time=A$Time
+C_10$key=A$key
+C_10$value=rejection
 
 IC_10 = na.omit(IC_10)
 labs = c('Na','Ca','Cl','SO4')
@@ -771,7 +776,7 @@ conc_10 = ggplot(IC_10%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key)
 conc_10
 
 
-rej_10=ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+rej_10=ggplot(C_10, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("pH 10")
@@ -779,8 +784,11 @@ rej_10
 ```
 ##### pH 10.5
 ```{r Ions 10.5, echo=FALSE}
-IC_10.5_raw = as.data.frame(pH10.5_IC_data)
-IC_10.5 = IC_10.5_raw%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+IC_10.5_raw = IC_10.5 = as.data.frame(pH10.5_IC_data)
+IC_10.5 = slice(IC_10.5,-c(14,15))
+IC_10.5$Sulphate = replace_na(IC_10.5$Sulphate,5)
+IC_10.5 = IC_10.5%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
+
 IC_10.5 = subset(IC_10.5,select=-c(5,6,7))
 IC_10.5$value = as.double(IC_10.5$value)
 IC_10.5$Time = as.double(IC_10.5$Time)
@@ -788,11 +796,11 @@ IC_10.5$Time = as.double(IC_10.5$Time)
 A=IC_10.5%>%filter(Stream == "Feed"& Time != 0)
 B=IC_10.5%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-C=data.frame(matrix(ncol=3,nrow=length(rejection)))
-colnames(C)=c('time','key','value')
-C$time=A$Time
-C$key=A$key
-C$value=rejection
+C_10.5=data.frame(matrix(ncol=3,nrow=length(rejection)))
+colnames(C_10.5)=c('time','key','value')
+C_10.5$time=A$Time
+C_10.5$key=A$key
+C_10.5$value=rejection
 
 IC_10.5 = na.omit(IC_10.5)
 labs = c('Na','Ca','Cl','SO4')
@@ -804,7 +812,7 @@ conc_10.5= ggplot(IC_10.5%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= k
 conc_10.5
 
 
-rejec_10.5=ggplot(C, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+rejec_10.5=ggplot(C_10.5, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("pH 10.5")
@@ -816,6 +824,36 @@ require(ggpubr)
 
 #grid.arrange(rej_9.2,rej_10,rejec_10.5,ncol=3)
 ggarrange(rej_9.2,rej_10,rejec_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
+```
+```{r Ions + Silica}
+sil_9.2 = data.frame(c(3.5,5,6,7,8,8.7),"Silica",pH9.2_rej_SiO2/100)
+sil_10 = data.frame(c(1.25,3,4,5,5.5,6,6.5),"Silica",pH10_rej_SiO2/100)
+sil_10.5 = data.frame(c(2.5,4,5,6,7,8,8.17),"Silica",pH10.5_rej_SiO2/100)
+colnames(sil_9.2)=colnames(sil_10)=colnames(sil_10.5)=c('time','key','value')
+
+all_ion_9.2 = rbind(C_9.2,sil_9.2)
+all_ion_10 = rbind(C_10,sil_10)
+all_ion_10.5 = rbind(C_10.5,sil_10.5)
+
+
+all_rejec_9.2=ggplot(all_ion_9.2, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
+  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
+  ggtitle("pH 10.5")
+
+
+all_rejec_10=ggplot(all_ion_10, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
+  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
+  ggtitle("pH 10.5")
+
+all_rejec_10.5=ggplot(all_ion_10.5, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
+  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
+  ggtitle("pH 10.5")
+
+
+ggarrange(all_rejec_9.2,all_rejec_10,all_rejec_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
 ```
 
 ```{r Estimation of Sulphate concentration, eval=FALSE, include=FALSE}
