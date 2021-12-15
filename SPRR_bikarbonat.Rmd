@@ -3,7 +3,9 @@ title: "SPRR_Bikarbonat"
 author: "Lærke"
 date: "1/12/2021"
 output: html_document
-   
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
