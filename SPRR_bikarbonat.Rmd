@@ -10,8 +10,6 @@ editor_options:
 
 ```{r setup, include=FALSE}
 
-
-
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -1051,6 +1049,24 @@ fig_18 <- SPRR_data %>% filter(Stream == "Rejection", Experiment_no=="18")%>%
         xaxis=list(title="Species") )
 fig_18
 
+
+
+```
+
+
+## noget med effect.
+
+```{R 3D plot, echo=FALSE, message=FALSE}
+
+SPRR_rejection <- (SPRR_data%>%filter(Stream == "Rejection"))
+
+fig_1 <- SPRR_rejection%>%
+  plot_ly(x=~Cl_ratio,
+          y=~Silica_content,
+          z=~SiO2,
+          color =~pH)
+fig_1 <- fig_1%>% add_lines()
+fig_1
 
 
 ```
