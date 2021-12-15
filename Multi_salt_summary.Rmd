@@ -734,17 +734,17 @@ IC_9.2 = na.omit(IC_9.2)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
 conc_9.2 = ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,1200))+
   labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
   ggtitle("Ion concentration Multisalt pH 9.2")
-conc_9.2
+p_conc_9.2 =  ggplotly(conc_9.2) %>% layout(showlegend = FALSE)
 
 
 rej_9.2=ggplot(C_9.2, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("pH 9.2")
-rej_9.2
+ggplotly(rej_9.2)
 ```
 ##### pH 10
 ```{r Ions 10, echo=FALSE}
@@ -770,17 +770,17 @@ IC_10 = na.omit(IC_10)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
 conc_10 = ggplot(IC_10%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,1200))+
   labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
   ggtitle("Ion concentration Multisalt pH 10")
-conc_10
+p_conc_10 =  ggplotly(conc_10) %>% layout(showlegend = FALSE)
 
 
 rej_10=ggplot(C_10, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("pH 10")
-rej_10
+ggplotly(rej_10)
 ```
 ##### pH 10.5
 ```{r Ions 10.5, echo=FALSE}
@@ -806,18 +806,23 @@ IC_10.5 = na.omit(IC_10.5)
 labs = c('Na','Ca','Cl','SO4')
 #level_order = c('Sodium','Calcium','Chloride','Sulphate')
 conc_10.5= ggplot(IC_10.5%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,NA))+
+  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,1200))+
   labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
   ggtitle("Ion concentration Multisalt pH 10.5")
-conc_10.5
+p_conc_10.5 =  ggplotly(conc_10.5) %>% layout(showlegend = T)
+
 
 
 rejec_10.5=ggplot(C_10.5, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
   ggtitle("pH 10.5")
-rejec_10.5
+p_rejec_10.5 <- rejec_10.5 %>% style(hovertemplate = paste('Rejection: %{y}',
+                                                         '<br>Time: %{x} h'))
+p_rejec_10.5
 ```
+
+
 ```{r plot next to each other, echo=FALSE}
 require(gridExtra)
 require(ggpubr)
@@ -825,7 +830,13 @@ require(ggpubr)
 #grid.arrange(rej_9.2,rej_10,rejec_10.5,ncol=3)
 ggarrange(rej_9.2,rej_10,rejec_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
 ```
-```{r Ions + Silica}
+
+```{r}
+subplot(p_conc_9.2,p_conc_10,p_conc_10.5,nrows = 1)
+```
+
+
+```{r Ions + Silica, echo=FALSE}
 sil_9.2 = data.frame(c(3.5,5,6,7,8,8.7),"Silica",pH9.2_rej_SiO2/100)
 sil_10 = data.frame(c(1.25,3,4,5,5.5,6,6.5),"Silica",pH10_rej_SiO2/100)
 sil_10.5 = data.frame(c(2.5,4,5,6,7,8,8.17),"Silica",pH10.5_rej_SiO2/100)
@@ -839,13 +850,13 @@ all_ion_10.5 = rbind(C_10.5,sil_10.5)
 all_rejec_9.2=ggplot(all_ion_9.2, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
-  ggtitle("pH 10.5")
+  ggtitle("pH 9.2")
 
 
 all_rejec_10=ggplot(all_ion_10, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
   labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
-  ggtitle("pH 10.5")
+  ggtitle("pH 10")
 
 all_rejec_10.5=ggplot(all_ion_10.5, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
@@ -854,6 +865,7 @@ all_rejec_10.5=ggplot(all_ion_10.5, aes(x=time, y=value,color= key))+geom_point(
 
 
 ggarrange(all_rejec_9.2,all_rejec_10,all_rejec_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
+#subplot(ggplotly(all_rejec_9.2),ggplotly(all_rejec_10),ggplotly(all_rejec_10.5),nrows = 1)
 ```
 
 ```{r Estimation of Sulphate concentration, eval=FALSE, include=FALSE}
