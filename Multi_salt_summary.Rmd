@@ -33,6 +33,7 @@ library(zoo)
 library(latex2exp)
 library(fs)
 library(fcuk)
+library(xtable)
 ```
 
 ## Summary of Multi salt experiments. {.tabset}
@@ -916,10 +917,22 @@ IC_10.5_B = IC_10.5_B %>% mutate(Cl = Chloride_mol/(Chloride_mol+Sulphate_mol)*1
 
 ratios = data.frame()
 IC_9.2_C =data.frame(IC_9.2_B$Time,IC_9.2_B$Na,IC_9.2_B$Cl)
-IC_10_C = cbind(IC_10_B$Time,IC_10_B$Na,IC_10_B$Cl)
-IC_10.5_C = cbind(IC_10.5_B$Time,IC_10.5_B$Na,IC_10.5_B$Cl)
+IC_10_C =data.frame(IC_9.2_B$Time,IC_9.2_B$Na,IC_9.2_B$Cl)
+IC_10.5_C =data.frame(IC_10.5_B$Time,IC_10.5_B$Na,IC_10.5_B$Cl)
 
-print(xtable(IC_10.5_C))
+
+IC_9.2_C$cl_rejection[2:7] = all_ion_9.2%>%filter(key=="Chloride")%>%select(3)
+IC_10_C$cl_rejection = rbind(0,all_ion_10%>%filter(key=="Chloride")%>%select(3))
+IC_10.5_C$cl_rejection = rbind(NA,all_ion_10.5%>%filter(key=="Chloride")%>%select(3))
+
+IC_9.2_C$`Cl Rejection` = as.numeric(IC_9.2_C$`Cl Rejection`)
+IC_9.2_C = na.omit(IC_9.2_C)
+colnames(IC_9.2_C) = colnames(IC_10_C) = colnames(IC_10.5_C) = c("time","% Na","% Cl","Cl Rejection")
+
+
+IC_9.2_D = na.omit(IC_9.2_C)%>%gather(key = key, value = value,"Cl Rejection")
+ggplot(IC_9.2_D, x = time, y = value, color = key )+geom_point()
+
 ```
 
 
