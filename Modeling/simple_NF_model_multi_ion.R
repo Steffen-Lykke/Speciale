@@ -20,23 +20,23 @@ library(latex2exp)
 library(zoo)
 library(ggthemes)
 
-
+NF = function(A,V,dt,rec,J,conc){
 ############# Operational Parameters ###############
 R = 0.08314
 Temp = 25
-flux_LMH = 20 #
+flux_LMH = J #
 
-membrane_area = 0.05 #m^2
-Q_feed_mL_min = 1160 #mL/min
+membrane_area = A #m^2
+Q_feed_mL_min = 3000000/60 #mL/min
 
-feed_tank_volume = 10 #L
-permeate_tank_volume = 0 #L
+initial_feed_tank_volume = feed_tank_volume = V #L
+initial_permeate_tank_volume = permeate_tank_volume = 0 #L
 
 ion_values = data.frame(
   ions = c("Na", "Cl", "SO4", "SiO2"),
-  feed = c( 13 , 2.5 ,  0.7 , 1.66),#Initial concentration [mM]
+  feed = conc,#Initial concentration [mM]
   molar_con = c(50.1, 76.4, 160, NA),# Molær konduktivitet[S*cm^2*mol^-1]
-  R = c(0.7,  0.3,  0.3,  0.5)
+  R = c(0.8,  0.1,  0.95,  0.4)
   )
 rejection = ion_values[,4]
 initial_feed_conc = ion_values[,2]
@@ -60,6 +60,7 @@ df = data.frame(
   con_f=double(),
   con_p=double(),
   os=double(),
+  rec=double(),
   stringsAsFactors = FALSE
 )
 
@@ -82,20 +83,23 @@ nf_p=nf_f
 cf_p=cf_f
 #Preallocate and fill in initial values
 df[1:(n_time_step+1),]=NA
-cf_p[1:(n_time_step+1),]=0
+cf_p[1:(n_time_step+1),]=NA
 cf_f=nf_f=nf_p=cf_p
 
-df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con_f,NA,os_ini)
+df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con_f,NA,os_ini,0)
 
 cf_f[1,]=initial_feed_conc # i mM
 nf_f[1,]=cf_f[1,]*feed_tank_volume # i mmol
 
+nf_p[1,]=0 # i mmol
 
+rec = 0
+i=2
 #cf_p
 #nf_p
 
 ############ Model #####################
-for (i in 2:(n_time_step+1)) {
+while (rec<95) {
   #Volume flow
   Q_permeate = membrane_area*flux*dt
   Q_retentate = Q_feed- Q_permeate
@@ -133,15 +137,18 @@ for (i in 2:(n_time_step+1)) {
   
   
   df$tid[i] = df$tid[i-1] + dt 
+  rec = df$rec[i] = df$permeate_tank_volume[i]/initial_feed_tank_volume*100
+  i=i+1
 }
-df$con_f=rowSums(data.frame(mapply(`*`,cf_f[,1:3],ion_values$molar_con)),na.rm=T)
-df$con_p=rowSums(data.frame(mapply(`*`,cf_p[,1:3],ion_values$molar_con)),na.rm=T)
+df$con_f=rowSums(data.frame(mapply(`*`,cf_f[,1:3],ion_values$molar_con[1:3])),na.rm=T)
+df$con_p=rowSums(data.frame(mapply(`*`,cf_p[,1:3],ion_values$molar_con[1:3])),na.rm=T)
 rm(tid)
 cf_f$tid = cf_p$tid = df$tid
 cf_p[1,]=NA
 df$con_p[1]=NA
 #rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,permeate_tank_mass,permeate_tank_conc)
-
+return(df)
+}
 ########## plot #############
 cf_f.long = cf_f %>% 
   gather(key,value, Na,Cl,SO4,SiO2)
@@ -166,4 +173,4 @@ ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
 
 ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1",labels=c("Feed Conductivity","Permeate Conductivity","Feed Volume","Permeate volume"))+
-  theme_bw()+labs( y = "Volume [L]", x = "Time [h]", color = "")+ylim(c(0,10))
+  theme_bw()+labs( y = "Value", x = "Time [h]", color = "")#+ylim(c(NA,NA))
