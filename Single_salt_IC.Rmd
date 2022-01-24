@@ -1,0 +1,320 @@
+---
+title: "Single_salt:IC"
+author: "lærke"
+date: "14/01/2022"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Loading af pakker 
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
+
+```
+
+```{R NaCl plot IC data, echo=FALSE, message=FALSE}
+
+NaCl_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx")
+str(NaCl_IC_data)
+
+
+old_names_IC=colnames(NaCl_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Sodium","Chloride","Stream") #Vi finder på nogle lidt bedre nogle
+NaCl_IC_data = NaCl_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+NaCl_IC_data <- as.data.frame(NaCl_IC_data)
+
+
+NaCl_Permeate <- filter(NaCl_IC_data, Stream=="Permeate")
+NaCl_Feed <- filter(NaCl_IC_data, Stream=="Feed")
+NaCl_Concentrate <- filter(NaCl_IC_data, Stream=="Concentrate")   
+
+NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Concentrate$Chloride)/2)))*100
+NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentrate$Sodium)/2)))*100
+
+fig_NaCl_Cl <- plot_ly(data=NaCl_IC_data[2:15,], x=~time,
+          y=~Chloride,
+         color=~Stream,
+          type='scatter',mode='lines+markers',
+          colors=c(colors[1],colors[2],colors[3]),
+         showlegend=FALSE)  %>%
+      layout(
+         yaxis=list(title="Concentration Chloride [mg/L]"),
+         xaxis=list(title="Time [h]")) 
+
+fig_NaCl_Na <- plot_ly(data=NaCl_IC_data[2:15,], x=~time,
+          y=~Sodium,
+         color=~Stream,
+          type='scatter',mode='lines+markers',
+          colors=c(colors[1],colors[2],colors[3]))  %>%
+      layout(
+         yaxis=list(title="Concentration Sodium [mg/L]"),
+         xaxis=list(title="Time")) 
+
+fig_NaCl_conc <- subplot(fig_NaCl_Cl, fig_NaCl_Na, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+fig_NaCl_conc
+
+
+fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1],
+          y=~NaCl_rej_Na,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "NaCl Na")  %>%
+  add_trace(x=~NaCl_Feed$time[-1],
+          y=~NaCl_rej_Cl,
+        type='scatter',mode='lines+markers',
+          colors=colors[2], name = "NaCl Cl")  %>%
+     layout(
+       #title="Rejection NaCl",
+         yaxis=list(title="Rejection %",range=c(0,100)),
+         xaxis=list(title="Time [h]")) 
+fig_NaCl
+
+
+
+```
+
+```{R CaCl2 plot IC data, echo=FALSE, message=FALSE}
+
+CaCl2_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx",2)
+str(CaCl2_IC_data)
+
+
+old_names_IC_CaCl2=colnames(CaCl2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC_CaCl2=c("time","Calcium","Chloride","Stream") #Vi finder på nogle lidt bedre nogle
+CaCl2_IC_data = CaCl2_IC_data %>% rename_at(vars(old_names_IC_CaCl2),~new_names_IC_CaCl2) #Vi ændrer navnene til de nye
+CaCl2_IC_data <- as.data.frame(CaCl2_IC_data)
+
+CaCl2_Permeate <- filter(CaCl2_IC_data, Stream=="Permeate")
+CaCl2_Feed <- filter(CaCl2_IC_data, Stream=="Feed")
+CaCl2_Concentrate <- filter(CaCl2_IC_data, Stream=="Concentrate")   
+
+CaCl2_rej_Cl <- (1-(CaCl2_Permeate$Chloride[-6]/((CaCl2_Feed$Chloride[-1]+CaCl2_Concentrate$Chloride)/2)))*100
+
+CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Concentrate$Calcium)/2)))*100
+
+fig_CaCl2_Cl <- plot_ly(data=CaCl2_IC_data[2:15,], x=~time,
+          y=~Chloride,
+         color=~Stream,
+          type='scatter',mode='lines+markers',
+          colors=c(colors[1],colors[2],colors[3]),
+         showlegend=FALSE)  %>%
+      layout(yaxis=list(title="Concentration Chloride [mg/L]"),
+         xaxis=list(title="Time [h]")) 
+
+fig_CaCl2_Ca <- plot_ly(data=CaCl2_IC_data[2:15,], x=~time,
+          y=~Calcium,
+         color=~Stream,
+          type='scatter',mode='lines+markers',
+          colors=c(colors[1],colors[2],colors[3]))  %>%
+      layout(
+         yaxis=list(title="Concentration Calcium [mg/L]"),
+         xaxis=list(title="Time")) 
+
+fig_CaCl2_conc <- subplot(fig_CaCl2_Cl, fig_CaCl2_Ca, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+fig_CaCl2_conc
+
+fig_CaCL2 <- plot_ly(x=~CaCl2_Feed$time[-1],
+          y=~CaCl2_rej_Ca,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "CaCl2 Ca")  %>%
+  add_trace(x=~CaCl2_Feed$time[-1],
+          y=~CaCl2_rej_Cl,
+        type='scatter',mode='lines+markers',
+          colors=colors[2], name = "CaCl2 Cl")  %>%
+     layout(
+       #title="Rejection CaCl2",
+         yaxis=list(title="Rejection %",range=c(0,100)),
+         xaxis=list(title="Time [h]")) 
+fig_CaCL2
+
+```
+
+```{R SIO2 plot IC data, echo=FALSE, message=FALSE}
+
+SiO2_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx",3)
+str(SiO2_IC_data)
+
+
+old_names_IC_SiO2=colnames(SiO2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC_SiO2=c("time","Silica","Sodium","Stream") #Vi finder på nogle lidt bedre nogle
+SiO2_IC_data = SiO2_IC_data %>% rename_at(vars(old_names_IC_SiO2),~new_names_IC_SiO2) #Vi ændrer navnene til de nye
+SiO2_IC_data <- as.data.frame(SiO2_IC_data)
+
+SiO2_Permeate <- filter(SiO2_IC_data, Stream=="Permeate")
+SiO2_Feed <- filter(SiO2_IC_data, Stream=="Feed")
+SiO2_Concentrate <- filter(SiO2_IC_data, Stream=="Concentrate")   
+
+SiO2_rej_Si<- (1-(SiO2_Permeate$Silica[-6]/((SiO2_Feed$Silica[-1]+SiO2_Concentrate$Silica)/2)))*100
+
+SiO2_rej_Na <- (1-(SiO2_Permeate$Sodium[-6]/((SiO2_Feed$Sodium[-1]+SiO2_Concentrate$Sodium)/2)))*100
+
+fig_SiO2_Si <- plot_ly(data=SiO2_IC_data[2:15,], x=~time,
+          y=~Silica,
+         color=~Stream,
+          type='scatter',mode='lines+markers',
+          colors=c(colors[1],colors[2],colors[3]),
+         showlegend=FALSE)  %>%
+      layout(yaxis=list(title="Concentration Silica [mg/L]"),
+         xaxis=list(title="Time [h]")) 
+
+fig_SiO2_Na <- plot_ly(data=SiO2_IC_data[2:15,], x=~time,
+          y=~Sodium,
+         color=~Stream,
+          type='scatter',mode='lines+markers',
+          colors=c(colors[1],colors[2],colors[3]))  %>%
+      layout(
+         yaxis=list(title="Concentration Sodium [mg/L]"),
+         xaxis=list(title="Time")) 
+
+fig_SiO2_conc <- subplot(fig_SiO2_Si, fig_SiO2_Na, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+fig_SiO2_conc
+
+
+fig_SiO2 <- plot_ly(x=~SiO2_Feed$time[-1],
+          y=~SiO2_rej_Na,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "SiO2 Na")  %>%
+  add_trace(x=~SiO2_Feed$time[-1],
+          y=~SiO2_rej_Si,
+        type='scatter',mode='lines+markers',
+          colors=colors[2], name = "SiO2")  %>%
+     layout(
+       #title="Rejection Na2OSIO2",
+         yaxis=list(title="Rejection %",range=c(0,100)),
+         xaxis=list(title="Time [h]")) 
+
+fig_SiO2
+
+```
+
+```{R Summary Rjection, echo=FALSE, message=FALSE}
+
+fig_cations <- plot_ly(x=~NaCl_Feed$time[-1],
+          y=~NaCl_rej_Na,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "NaCl Na") %>%
+      add_trace(x=~CaCl2_Feed$time[-1],
+          y=~CaCl2_rej_Ca,
+          type='scatter',mode='lines+markers',
+          colors=colors[2], name = "CaCl2 Ca") %>%
+      add_trace(x=~SiO2_Feed$time[-1],
+          y=~SiO2_rej_Na,
+          type='scatter',mode='lines+markers',
+          colors=colors[3], name = "SiO2 Na") %>%
+    layout( yaxis=list(title="Rejection Cations %",range=c(0,100)),
+         xaxis=list(title="Time [h]"))
+fig_cations  
+
+plot_ly(x=~CaCl2_Feed$time[-1],
+          y=~CaCl2_rej_Ca,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "CaCl2 Ca")  %>%
+  add_trace(x=~CaCl2_Feed$time[-1],
+          y=~CaCl2_rej_Cl,
+        type='scatter',mode='lines+markers',
+          colors=colors[2], name = "CaCl2 Cl")  %>%
+     layout(title="Rejection CaCl2",
+         yaxis=list(title="Rejection %",range=c(0,100)),
+         xaxis=list(title="Time [h]")) 
+
+      
+fig_anions <- plot_ly(x=~NaCl_Feed$time[-1],
+          y=~NaCl_rej_Cl,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "NaCl Cl") %>%
+      add_trace(x=~CaCl2_Feed$time[-1],
+          y=~CaCl2_rej_Cl,
+          type='scatter',mode='lines+markers',
+          colors=colors[2], name = "CaCl2 Cl") %>%
+      add_trace(x=~SiO2_Feed$time[-1],
+          y=~SiO2_rej_Si,
+          type='scatter',mode='lines+markers',
+          colors=colors[3], name = "SiO2 Si") %>%
+    layout( yaxis=list(title="Rejection Anions%",range=c(0,100)),
+         xaxis=list(title="Time [h]"))
+fig_anions      
+
+
+fig <- subplot(fig_cations,fig_anions,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+  
+
+fig_2 <- subplot(fig_NaCl,fig_CaCL2, fig_SiO2
+              ,nrows=1,titleY=TRUE,titleX=TRUE)
+# Update title
+annotations = list( 
+  list( 
+    x = 0.15,  
+    y = 1.0,  
+    text = "NaCl",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.5,  
+    y = 1,  
+    text = "CaCl2",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.85,  
+    y = 1,  
+    text = "SiO2",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
+  
+
+fig_2 <- fig_2 %>%layout(annotations = annotations) 
+
+
+
+fig_2
+
+
+```
+

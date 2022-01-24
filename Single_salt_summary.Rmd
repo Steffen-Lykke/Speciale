@@ -27,6 +27,20 @@ require(readr)
 library(zoo)
 library(latex2exp)
 library(fs)
+
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
+
 ```
 
 Summary of single salt experiments.
@@ -185,7 +199,48 @@ ggplot()+
   ggtitle("Concentration, Dot = Cl, Triangle = Na")
 
 
+
 ```
+
+```{R NaCl plot IC data rejection, echo=FALSE, message=FALSE}
+
+NaCl_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx")
+str(NaCl_IC_data)
+
+
+old_names_IC=colnames(NaCl_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Sodium","Chloride","Stream") #Vi finder på nogle lidt bedre nogle
+NaCl_IC_data = NaCl_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+NaCl_IC_data <- as.data.frame(NaCl_IC_data)
+
+NaCl_Permeate <- filter(NaCl_IC_data, Stream=="Permeate")
+NaCl_Feed <- filter(NaCl_IC_data, Stream=="Feed")
+NaCl_Concentrate <- filter(NaCl_IC_data, Stream=="Concentrate")   
+
+NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Concentrate$Chloride)/2)))*100
+
+NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentrate$Sodium)/2)))*100
+
+ggplot()+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
+  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))
+
+
+
+ggplot()+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Chloride, col=Stream), shape= 16)+
+  #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl))+
+  geom_point(data=NaCl_IC_data, aes(x=time, y=Sodium, col=Stream), shape= 17)+
+  #geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na))+
+  labs(x="Time [h]",y=" concentration [mg/L]")+
+  ylim(0,135)+
+  ggtitle("Concentration, Dot = Cl, Triangle = Na")
+
+
+
+```
+
+
 ```{R NaCl plot temp, include=FALSE, echo=FALSE, message=FALSE}
 
 
@@ -578,25 +633,7 @@ ggplot()+
   ylim(0,100)+
   ggtitle("Rejection Singlesalt")
 
-mean_CaCl2_rej_Ca <- mean(CaCl2_rej_Ca)
-mean_CaCl2_rej_Cl <- mean(CaCl2_rej_Cl)
-mean_NaCl_rej_Na <- mean(NaCl_rej_Na)
-mean_NaCl_rej_Cl <- mean(NaCl_rej_Cl)
-mean_SiO2_rej_Na <- mean(SiO2_rej_Na)
-mean_SiO2_rej_Si <- mean(SiO2_rej_Si)
 
-rejection_data <- data.frame(
-  ion=c("CaCl2_Ca", "CaCl2_Cl","NaCl_Na", "NaCl_Cl","SiO2_Na", "SiO2_Si" ), 
-  rej=c(mean_CaCl2_rej_Ca, mean_CaCl2_rej_Cl, mean_NaCl_rej_Na, mean_NaCl_rej_Cl, mean_SiO2_rej_Na, mean_SiO2_rej_Si))
-
-
-ggplot(data=rejection_data, aes(x=ion, y=rej))+
-  geom_bar(stat="identity")+
-  geom_text(aes(label=scales::percent(rej/100,accuracy = 0.1)),vjust=-0.3, size=3.5)+
-  ylim(0,100)+labs(y="Rejection  %", x="Species")
-
-
-rejection_data[1:2,]
 ```
 
 <h3> Bicarboante </h3>
