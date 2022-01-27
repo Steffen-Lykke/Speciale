@@ -821,6 +821,7 @@ rejec_10.5=ggplot(C_10.5, aes(x=time, y=value,color= key))+geom_point()+geom_lin
 p_rejec_10.5 <- rejec_10.5 %>% style(hovertemplate = paste('Rejection: %{y}',
                                                          '<br>Time: %{x} h'))
 p_rejec_10.5
+p_conc_10.5
 ```
 ### Comparison of results
 
@@ -879,6 +880,7 @@ IC_9.2_B = IC_9.2_B %>% mutate(Sulphate_mol = Sulphate/(96.06*10^3))
 IC_9.2_B = IC_9.2_B %>% mutate(Sodium_mol = Sodium/(22.98*10^3))
 IC_9.2_B = IC_9.2_B %>% mutate(Chloride_mol = Chloride/(35.453*10^3))
 IC_9.2_B = IC_9.2_B %>% mutate(Calcium_mol = Calcium/(40*10^3))
+IC_9.2_B = IC_9.2_B %>% mutate(Silica_mol = Silica/(60*10^3))
 
 
 IC_9.2_B = IC_9.2_B %>% mutate(Na = Sodium_mol/(Sodium_mol+Calcium_mol)*100)
@@ -895,10 +897,12 @@ IC_10_B = IC_10_B %>% mutate(Sulphate_mol = Sulphate/(96.06*10^3))
 IC_10_B = IC_10_B %>% mutate(Sodium_mol = Sodium/(22.98*10^3))
 IC_10_B = IC_10_B %>% mutate(Chloride_mol = Chloride/(35.453*10^3))
 IC_10_B = IC_10_B %>% mutate(Calcium_mol = Calcium/(40*10^3))
-
+IC_10_B = IC_10_B %>% mutate(Silica_mol = Silica/(60*10^3))
 
 IC_10_B = IC_10_B %>% mutate(Na = Sodium_mol/(Sodium_mol+Calcium_mol)*100)
 IC_10_B = IC_10_B %>% mutate(Cl = Chloride_mol/(Chloride_mol+Sulphate_mol)*100)
+
+
 
 
 
@@ -910,28 +914,44 @@ IC_10.5_B = IC_10.5_B %>% mutate(Sulphate_mol = Sulphate/(96.06*10^3))
 IC_10.5_B = IC_10.5_B %>% mutate(Sodium_mol = Sodium/(22.98*10^3))
 IC_10.5_B = IC_10.5_B %>% mutate(Chloride_mol = Chloride/(35.453*10^3))
 IC_10.5_B = IC_10.5_B %>% mutate(Calcium_mol = Calcium/(40*10^3))
-
+IC_10.5_B = IC_10.5_B %>% mutate(Silica_mol = Silica/(60*10^3))
 
 IC_10.5_B = IC_10.5_B %>% mutate(Na = Sodium_mol/(Sodium_mol+Calcium_mol)*100)
 IC_10.5_B = IC_10.5_B %>% mutate(Cl = Chloride_mol/(Chloride_mol+Sulphate_mol)*100)
 
 ratios = data.frame()
-IC_9.2_C =data.frame(IC_9.2_B$Time,IC_9.2_B$Na,IC_9.2_B$Cl)
-IC_10_C =data.frame(IC_9.2_B$Time,IC_9.2_B$Na,IC_9.2_B$Cl)
-IC_10.5_C =data.frame(IC_10.5_B$Time,IC_10.5_B$Na,IC_10.5_B$Cl)
+IC_9.2_C =data.frame(IC_9.2_B$Time,IC_9.2_B$Na,IC_9.2_B$Cl,IC_9.2_B$Silica)
+IC_10_C =data.frame(IC_9.2_B$Time,IC_9.2_B$Na,IC_9.2_B$Cl,IC_10_B$Silica)
+IC_10.5_C =data.frame(IC_10.5_B$Time,IC_10.5_B$Na,IC_10.5_B$Cl,IC_10.5_B$Silica)
 
 
-IC_9.2_C$cl_rejection[2:7] = all_ion_9.2%>%filter(key=="Chloride")%>%select(3)
-IC_10_C$cl_rejection = rbind(0,all_ion_10%>%filter(key=="Chloride")%>%select(3))
-IC_10.5_C$cl_rejection = rbind(NA,all_ion_10.5%>%filter(key=="Chloride")%>%select(3))
+#IC_9.2_C$cl_rejection = rbind(NA,all_ion_9.2%>%filter(key=="Chloride")%>%select(3))
+#IC_10_C$cl_rejection = rbind(0,all_ion_10%>%filter(key=="Chloride")%>%select(3))
+#IC_10.5_C$cl_rejection = rbind(NA,all_ion_10.5%>%filter(key=="Chloride")%>%select(3
+IC_9.2_C=cbind(IC_9.2_C,rbind(NA,all_ion_9.2%>%filter(key=="Chloride")%>%select(3)))
+IC_10_C=cbind(IC_10_C,rbind(NA,all_ion_10%>%filter(key=="Chloride")%>%select(3)))
+IC_10.5_C=cbind(IC_10.5_C,rbind(NA,all_ion_10.5%>%filter(key=="Chloride")%>%select(3)))
+
 
 IC_9.2_C$`Cl Rejection` = as.numeric(IC_9.2_C$`Cl Rejection`)
 IC_9.2_C = na.omit(IC_9.2_C)
-colnames(IC_9.2_C) = colnames(IC_10_C) = colnames(IC_10.5_C) = c("time","% Na","% Cl","Cl Rejection")
+colnames(IC_9.2_C) = colnames(IC_10_C) = colnames(IC_10.5_C) = c("time","% Na","% Cl","Silica","Cl Rejection")
 
 
-IC_9.2_D = na.omit(IC_9.2_C)%>%gather(key = key, value = value,"Cl Rejection")
-ggplot(IC_9.2_D, x = time, y = value, color = key )+geom_point()
+IC_9.2_D = na.omit(IC_9.2_C)%>%gather(key = key, value = value,"% Na","% Cl","Cl Rejection","Silica")
+ion_comp_9.2 = ggplot(IC_9.2_D, aes(x = time, y = value) )+geom_point(aes(x = time, y = value,color = key))
+p_ion_comp_9.2 = ggplotly(ion_comp_9.2)
+
+IC_10_D = na.omit(IC_10_C)%>%gather(key = key, value = value,"% Na","% Cl","Cl Rejection","Silica")
+ion_comp_10 = ggplot(IC_10_D, aes(x = time, y = value) )+geom_point(aes(x = time, y = value,color = key))
+p_ion_comp_10 = ggplotly(ion_comp_10)
+
+IC_10.5_D = na.omit(IC_10.5_C)%>%gather(key = key, value = value,"% Na","% Cl","Cl Rejection","Silica")
+ion_comp_10.5 = ggplot(IC_10.5_D, aes(x = time, y = value) )+geom_point(aes(x = time, y = value,color = key))
+p_ion_comp_10.5 = ggplotly(ion_comp_10.5)
+
+subplot(ion_comp_9.2,ion_comp_10,ion_comp_10.5,nrows = 1)
+ggarrange(ion_comp_9.2,ion_comp_10,ion_comp_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
 
 ```
 

@@ -1,5 +1,5 @@
 #Der skal ske noget syg programmering her
-#CT model med diskontinuert blowdown
+#CT model med diskontinuert blowdown som filtreres og returneres til tårnet
 
 
 
@@ -125,6 +125,7 @@ while(i < n_time_step){
   while(con < con_lim){
     if (toggle == T) {
       #her skal der være noget smart kode der får permeate fra NF ind i CT
+      
     }
     ##Volume flow
     Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
@@ -145,6 +146,7 @@ while(i < n_time_step){
     
     df$tid[i]=df$tid[i-1]+dt
     i=i+1
+    g=1
   }
   nf[i,2:5] = nf[i-1,2:5]*(1-0.1667)+1*c_makeup
   cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
@@ -155,7 +157,7 @@ while(i < n_time_step){
   i=i+1
    toggle = T
   
-  NF(A,V,dt,rec,J,conc)
+  vec_perm = NF(A,V,dt,rec,J,conc) #funktionen 'NF' med de rigtige argumenter returnerer en vektor af værdier for permeatet af en NF filtrering, som så skal smide tilbage i køletånet
 }
 nf$tid=df$tid
 cf$tid=df$tid
