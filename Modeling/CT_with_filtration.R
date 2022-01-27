@@ -68,16 +68,17 @@ para = function(x){
   x1=x/run_time
   y=(x1+Q_vap/dt)/x1
   paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
-}
-##### Model Parameters #####
-dt=10 #minutes
-dt=dt/1440 #minutter i dage
-run_time = 60 #days
-max_time = run_time*60*24 #i minutter
-n_time_step = run_time/dt+1
-tid = 0
-drift = 0
+} # En funktion der fortæller hvad COC var for CT 
 
+##### Model Parameters #####
+dt=10 #tidsstep i minutter
+dt=dt/1440 #minutter i dage
+run_time = 60 #Total operating time i dage
+max_time = run_time*60*24 #i minutter
+n_time_step = run_time/dt+1 #antal tidsskridt 
+tid = 0 # start tid?
+drift = 0 #en drift factor der har noget med om ioner kommer med evaporation
+recovery_factor_volume = 0.05 #Hvor meget makeup skal CT tage ind når der laves BD til batch  
 
 #df=mat.or.vec(n_time_step,2)
 #nf=mat.or.vec(n_time_step,5)
@@ -116,13 +117,13 @@ cf[1,]=c(tid,c_makeup)
 nf[1,]=cf[1,]*df$V_CT[1]
 num_bd=0
 i=2
-
+toggle = F
 
 Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt
 #Q_blowdown=(Q_vap/(-1+COC))
 ###### CT Model ######
 while(i < n_time_step){
-  while(con < con_lim){
+  while(con < con_lim){ ##### CT OPERATION #######
     if (toggle == T) {
       #her skal der være noget smart kode der får permeate fra NF ind i CT
       
@@ -131,6 +132,7 @@ while(i < n_time_step){
     Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
     Q = Q_makeup-Q_blowdown-Q_vap
     df$V_CT=df$V_CT[1]
+    
     ## mass flow ##
     n_mu = Q_makeup*c_makeup
     n_bd = Q_blowdown*cf[i-1,2:5]
@@ -147,8 +149,8 @@ while(i < n_time_step){
     df$tid[i]=df$tid[i-1]+dt
     i=i+1
     g=1
-  }
-  nf[i,2:5] = nf[i-1,2:5]*(1-0.1667)+1*c_makeup
+  } ##### FILTRERING #####
+  nf[i,2:5] = nf[i-1,2:5]*(1-((V_CT-V)/V_CT))+V*recovery_factor*c_makeup
   cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
   con=sum(cf[i,2:5]*ion_values[,3],na.rm=T)
   df$con[i] = con
@@ -156,8 +158,9 @@ while(i < n_time_step){
   df$tid[i]=df$tid[i-1]+dt
   i=i+1
    toggle = T
-  
   vec_perm = NF(A,V,dt,rec,J,conc) #funktionen 'NF' med de rigtige argumenter returnerer en vektor af værdier for permeatet af en NF filtrering, som så skal smide tilbage i køletånet
+  g=1
+  NF(A,V,dt,rec,J,conc)
 }
 nf$tid=df$tid
 cf$tid=df$tid

@@ -62,28 +62,28 @@ NaCl_IC_data <- as.data.frame(NaCl_IC_data)
 
 NaCl_Permeate <- filter(NaCl_IC_data, Stream=="Permeate")
 NaCl_Feed <- filter(NaCl_IC_data, Stream=="Feed")
-NaCl_Concentrate <- filter(NaCl_IC_data, Stream=="Concentrate")   
+NaCl_Retentate <- filter(NaCl_IC_data, Stream=="Retentate")   
 
-NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Concentrate$Chloride)/2)))*100
-NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentrate$Sodium)/2)))*100
+NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Retentate$Chloride)/2)))*100
+NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Retentate$Sodium)/2)))*100
 
-fig_NaCl_Cl <- plot_ly(data=NaCl_IC_data[2:15,], x=~time,
-          y=~Chloride,
+fig_NaCl_Cl <- plot_ly(data=NaCl_IC_data[1:16,], x=~time,
+          y=~(Chloride/35.45),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]),
          showlegend=FALSE)  %>%
       layout(
-         yaxis=list(title="Concentration Chloride [mg/L]"),
+         yaxis=list(title="Concentration Chloride [mM]", range=c(0,4)),
          xaxis=list(title="Time [h]")) 
 
-fig_NaCl_Na <- plot_ly(data=NaCl_IC_data[2:15,], x=~time,
-          y=~Sodium,
+fig_NaCl_Na <- plot_ly(data=NaCl_IC_data[1:16,], x=~time,
+          y=~(Sodium/22.99),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]))  %>%
       layout(
-         yaxis=list(title="Concentration Sodium [mg/L]"),
+         yaxis=list(title="Concentration Sodium [mM]",range=c(0,4)),
          xaxis=list(title="Time")) 
 
 fig_NaCl_conc <- subplot(fig_NaCl_Cl, fig_NaCl_Na, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
@@ -121,28 +121,28 @@ CaCl2_IC_data <- as.data.frame(CaCl2_IC_data)
 
 CaCl2_Permeate <- filter(CaCl2_IC_data, Stream=="Permeate")
 CaCl2_Feed <- filter(CaCl2_IC_data, Stream=="Feed")
-CaCl2_Concentrate <- filter(CaCl2_IC_data, Stream=="Concentrate")   
+CaCl2_Retentate <- filter(CaCl2_IC_data, Stream=="Retentate")   
 
-CaCl2_rej_Cl <- (1-(CaCl2_Permeate$Chloride[-6]/((CaCl2_Feed$Chloride[-1]+CaCl2_Concentrate$Chloride)/2)))*100
+CaCl2_rej_Cl <- (1-(CaCl2_Permeate$Chloride[-6]/((CaCl2_Feed$Chloride[-1]+CaCl2_Retentate$Chloride)/2)))*100
 
-CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Concentrate$Calcium)/2)))*100
+CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Retentate$Calcium)/2)))*100
 
-fig_CaCl2_Cl <- plot_ly(data=CaCl2_IC_data[2:15,], x=~time,
-          y=~Chloride,
+fig_CaCl2_Cl <- plot_ly(data=CaCl2_IC_data[1:16,], x=~time,
+          y=~(Chloride/35.45),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]),
          showlegend=FALSE)  %>%
-      layout(yaxis=list(title="Concentration Chloride [mg/L]"),
+      layout(yaxis=list(title="Concentration Chloride [mM]", range=c(0,10)),
          xaxis=list(title="Time [h]")) 
 
-fig_CaCl2_Ca <- plot_ly(data=CaCl2_IC_data[2:15,], x=~time,
-          y=~Calcium,
+fig_CaCl2_Ca <- plot_ly(data=CaCl2_IC_data[1:16,], x=~time,
+          y=~(Calcium/40.078),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]))  %>%
       layout(
-         yaxis=list(title="Concentration Calcium [mg/L]"),
+         yaxis=list(title="Concentration Calcium [mM]",range=c(0,10)),
          xaxis=list(title="Time")) 
 
 fig_CaCl2_conc <- subplot(fig_CaCl2_Cl, fig_CaCl2_Ca, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
@@ -177,28 +177,28 @@ SiO2_IC_data <- as.data.frame(SiO2_IC_data)
 
 SiO2_Permeate <- filter(SiO2_IC_data, Stream=="Permeate")
 SiO2_Feed <- filter(SiO2_IC_data, Stream=="Feed")
-SiO2_Concentrate <- filter(SiO2_IC_data, Stream=="Concentrate")   
+SiO2_Retentate <- filter(SiO2_IC_data, Stream=="Retentate")   
 
-SiO2_rej_Si<- (1-(SiO2_Permeate$Silica[-6]/((SiO2_Feed$Silica[-1]+SiO2_Concentrate$Silica)/2)))*100
+SiO2_rej_Si<- (1-(SiO2_Permeate$Silica[-6]/((SiO2_Feed$Silica[-1]+SiO2_Retentate$Silica)/2)))*100
 
-SiO2_rej_Na <- (1-(SiO2_Permeate$Sodium[-6]/((SiO2_Feed$Sodium[-1]+SiO2_Concentrate$Sodium)/2)))*100
+SiO2_rej_Na <- (1-(SiO2_Permeate$Sodium[-6]/((SiO2_Feed$Sodium[-1]+SiO2_Retentate$Sodium)/2)))*100
 
-fig_SiO2_Si <- plot_ly(data=SiO2_IC_data[2:15,], x=~time,
-          y=~Silica,
+fig_SiO2_Si <- plot_ly(data=SiO2_IC_data[1:16,], x=~time,
+          y=~(Silica/60.08),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]),
          showlegend=FALSE)  %>%
-      layout(yaxis=list(title="Concentration Silica [mg/L]"),
+      layout(yaxis=list(title="Concentration Silica [mM]",range=c(0,3)),
          xaxis=list(title="Time [h]")) 
 
-fig_SiO2_Na <- plot_ly(data=SiO2_IC_data[2:15,], x=~time,
-          y=~Sodium,
+fig_SiO2_Na <- plot_ly(data=SiO2_IC_data[1:16,], x=~time,
+          y=~(Sodium/22.99),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]))  %>%
       layout(
-         yaxis=list(title="Concentration Sodium [mg/L]"),
+         yaxis=list(title="Concentration Sodium [mM]",range=c(0,3)),
          xaxis=list(title="Time")) 
 
 fig_SiO2_conc <- subplot(fig_SiO2_Si, fig_SiO2_Na, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
