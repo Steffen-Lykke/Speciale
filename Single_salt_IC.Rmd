@@ -26,6 +26,7 @@ library(ggiraphExtra)
 library(coronavirus)
 library(lubridate)
 library(plotly)
+
 library(readxl)
 require(readr)
 library(zoo)
@@ -102,11 +103,57 @@ fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1],
        #title="Rejection NaCl",
          yaxis=list(title="Rejection %",range=c(0,100)),
          xaxis=list(title="Time [h]")) 
-fig_NaCl
+#fig_NaCl
 
 
 
 ```
+```{R NaCl osmotisk tryk, echo=FALSE, message=FALSE}
+
+plot_ly(data=dat_NaCl, x=~sek/3600, y=~temp0501)%>%
+  layout(yaxis=list(title="Temperature", range=c(0,27)),
+         xaxis=list(title="Time [h]")) 
+#temperaturen ved prøve udtagning. er det vand eller luft?
+dat_NaCl$temp0501[sek=1*60*60]
+dat_NaCl$temp0501[sek=2*60*60]
+dat_NaCl$temp0501[sek=3*60*60]
+dat_NaCl$temp0501[sek=3.5*60*60]
+dat_NaCl$temp0501[sek=4*60*60]
+
+#constants
+R=0.08314 #(L*bar)/(mol*K)
+Temp=(23+272)
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SiO2=60.08
+#antaget ideal solutions og i sat til antal ioner. silica er tricky
+NaCl_IC_data <- NaCl_IC_data %>% mutate(os_tryk_bar=(2*(((Chloride/1000)/Mw_Cl)+((Sodium/1000)/Mw_Na))*R*Temp))
+CaCl2_IC_data <- CaCl2_IC_data %>% mutate(os_tryk_bar=(3*(((Chloride/1000)/Mw_Cl)+((Calcium/1000)/Mw_Ca))*R*Temp))
+SiO2_IC_data <- SiO2_IC_data %>% mutate(os_tryk_bar=(3*(((Silica/1000)/Mw_SiO2)+((Sodium/1000)/Mw_Na))*R*Temp))
+
+
+fig_os_tryk <- NaCl_IC_data %>% filter(Stream=="Feed")%>%
+plot_ly(x=~time,
+          y=~os_tryk_bar,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "NaCl")%>%
+add_trace(data=CaCl2_IC_data %>% filter(Stream=="Feed"),x=~time,
+          y=~os_tryk_bar,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "CaCl2") %>%
+add_trace(data=SiO2_IC_data %>% filter(Stream=="Feed"),x=~time,
+          y=~os_tryk_bar,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "Na2OSiO2") %>%
+  layout( yaxis=list(title="osmotic pressure [bar]",range=c(0,1)),
+         xaxis=list(title="Time [h]")) 
+  
+  fig_os_tryk
+  
+ 
+
+``` 
 
 ```{R CaCl2 plot IC data, echo=FALSE, message=FALSE}
 
@@ -160,7 +207,7 @@ fig_CaCL2 <- plot_ly(x=~CaCl2_Feed$time[-1],
        #title="Rejection CaCl2",
          yaxis=list(title="Rejection %",range=c(0,100)),
          xaxis=list(title="Time [h]")) 
-fig_CaCL2
+#fig_CaCL2
 
 ```
 
@@ -218,7 +265,7 @@ fig_SiO2 <- plot_ly(x=~SiO2_Feed$time[-1],
          yaxis=list(title="Rejection %",range=c(0,100)),
          xaxis=list(title="Time [h]")) 
 
-fig_SiO2
+#fig_SiO2
 
 ```
 
@@ -238,19 +285,9 @@ fig_cations <- plot_ly(x=~NaCl_Feed$time[-1],
           colors=colors[3], name = "SiO2 Na") %>%
     layout( yaxis=list(title="Rejection Cations %",range=c(0,100)),
          xaxis=list(title="Time [h]"))
-fig_cations  
+#fig_cations  
 
-plot_ly(x=~CaCl2_Feed$time[-1],
-          y=~CaCl2_rej_Ca,
-          type='scatter',mode='lines+markers',
-          colors=colors[1], name = "CaCl2 Ca")  %>%
-  add_trace(x=~CaCl2_Feed$time[-1],
-          y=~CaCl2_rej_Cl,
-        type='scatter',mode='lines+markers',
-          colors=colors[2], name = "CaCl2 Cl")  %>%
-     layout(title="Rejection CaCl2",
-         yaxis=list(title="Rejection %",range=c(0,100)),
-         xaxis=list(title="Time [h]")) 
+ 
 
       
 fig_anions <- plot_ly(x=~NaCl_Feed$time[-1],
@@ -267,11 +304,12 @@ fig_anions <- plot_ly(x=~NaCl_Feed$time[-1],
           colors=colors[3], name = "SiO2 Si") %>%
     layout( yaxis=list(title="Rejection Anions%",range=c(0,100)),
          xaxis=list(title="Time [h]"))
-fig_anions      
+#fig_anions      
 
 
 fig <- subplot(fig_cations,fig_anions,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
-  
+
+fig
 
 fig_2 <- subplot(fig_NaCl,fig_CaCL2, fig_SiO2
               ,nrows=1,titleY=TRUE,titleX=TRUE)
@@ -317,4 +355,237 @@ fig_2
 
 
 ```
+
+```{R import PCL data NaCl, echo=FALSE, message=FALSE}
+### NaCl 3 mM
+CWF_NaCl = read_delim("data/singlesalt_NaCl3mM_14-09-2021.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_NaCl = as.data.frame(CWF_NaCl) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_NaCl) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_NaCl = dat_NaCl %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_NaCl$time = dmy_hms(dat_NaCl$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+
+#tid_sec <- as.numeric(as.POSIXct(dat_NaCl$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow rammer 17 ml/min. 
+#dat_NaCl <- data.frame(dat_NaCl,tid_sec) #tilføjer tid til data.frame
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_NaCl$flow0501>16&dat_NaCl$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_NaCl=dat_NaCl[-c(1:start_tid),]
+flow_boolean_slut = dat_NaCl$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_NaCl=dat_NaCl[-c(slut_tid:(nrow(dat_NaCl)) ),]
+### Tid i s fra forsøgs start
+dat_NaCl = dat_NaCl%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_NaCl$time))-as.numeric(dat_NaCl$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+dat_NaCl %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~(sek)/3600,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="NaCl Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]"),
+         xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
+
+
+
+
+
+```
+
+```{R import PCL data CaCl2 , echo=FALSE, message=FALSE}
+###CaCl2 3 mM 
+CWF_CaCl2 = read_delim("data/singlesalt_CaCl2_3mM_15-09-2021.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_CaCl2 = as.data.frame(CWF_CaCl2) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_CaCl2) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_CaCl2 = dat_CaCl2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_CaCl2$time = dmy_hms(dat_CaCl2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+
+#tid_sec <- as.numeric(as.POSIXct(dat_CaCl2$time))-as.numeric(as.POSIXct("2021-09-14 11:16:26", #format='%Y-%m-%d %H:%M:%S')) #den regner 2 timer for meget, tag højde for det manuelt checket hvornår flow #rammer 17 ml/min. 
+#dat_CaCl2 <- data.frame(dat_CaCl2,tid_sec) #tilføjer tid til data.frame
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_CaCl2$flow0501>16&dat_CaCl2$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_CaCl2=dat_CaCl2[-c(1:start_tid),]
+flow_boolean_slut = dat_CaCl2$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_CaCl2=dat_CaCl2[-c(slut_tid:(nrow(dat_CaCl2)) ),]
+### Tid i s fra forsøgs start
+dat_CaCl2 = dat_CaCl2%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_CaCl2$time))-as.numeric(dat_CaCl2$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+dat_CaCl2 %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~sek/3600,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="CaCl2 Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]", range=c(0,3.5)),
+         xaxis=list(title="Time [h]", range=c(0,4)))#Her plottet de to tryk på feed siden plus et TMP
+
+```
+
+```{R import data PLC Na2OSiO2, echo=FALSE, message=FALSE}
+###Na2OSiO2 1 mM 
+CWF <- read_delim("data/singlesalt_Na2OSiO2_1mM_22-09-2021.csv", 
+                    delim = "\t", escape_double = FALSE, 
+                    trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_SiO2 = as.data.frame(CWF) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_SiO2 = dat_SiO2 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_SiO2$time = dmy_hms(dat_SiO2$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean_SiO2 = dat_SiO2$flow0501>16&dat_SiO2$flow0501<25
+start_tid_SiO2 = min(which(flow_boolean_SiO2))
+dat_SiO2=dat_SiO2[-c(1:start_tid_SiO2),]
+flow_boolean_slut_SiO2 = dat_SiO2$flow0501<5
+slut_tid_SiO2 = min(which(flow_boolean_slut_SiO2))
+dat_SiO2=dat_SiO2[-c(slut_tid_SiO2:(nrow(dat_SiO2)) ),]
+### Tid i s fra forsøgs start
+dat_SiO2 = dat_SiO2%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_SiO2$time))-as.numeric(dat_SiO2$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+dat_SiO2 %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~sek/3600,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="SiO2 Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]", range=c(0,3.5)),
+         xaxis=list(title="Time [h]", range=c(0,4)))#Her plottet de to tryk på feed siden plus et TMP
+
+```
+```{R pH, echo=FALSE, message=FALSE}
+
+
+fig_pH <- plot_ly(data=dat_NaCl,x=~sek/3600,
+          y=~pH0201,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "pH NaCl") %>%
+      add_trace(data=dat_CaCl2,x=~sek/3600,
+          y=~pH0201,
+          type='scatter',mode='lines+markers',
+          colors=colors[2], name = "pH CaCl2") %>%
+      add_trace(data=dat_SiO2,x=~sek/3600,
+          y=~pH0201,
+          type='scatter',mode='lines+markers',
+          colors=colors[3], name = "pH Na2OSiO2") %>%
+    layout( yaxis=list(title="pH",range=c(7,9)),
+         xaxis=list(title="Time [h]"))
+fig_pH  
+
+```
+
+```{r Summary bicarbonat, echo=FALSE, message=FALSE}
+
+
+B_NaCl <- c(8.4,NA,31,42,43)
+B_CaCl2 <- c(6,NA,15,18,20)
+B_Na2OSiO2 <- c(128,141,157,196,205)
+
+tid <- (c(0,1,2,3.5,4))
+
+
+SingleSalt <- data.frame(tid,B_NaCl, B_CaCl2,B_Na2OSiO2)
+#SingleSalt = SingleSalt%>%gather(key,value,B_NaCl,B_CaCl2,B_Na2OSiO2)
+SS = na.omit(SingleSalt)
+
+
+fig_B <- plot_ly(data=SingleSalt,x=~tid[-2],
+          y=~B_NaCl[-2],
+          #color=~key,
+          type='scatter',mode='lines+markers',
+          colors=colors[1],name="NaCl") %>%
+      add_trace(data=SingleSalt,x=~tid[-2],
+          y=~B_CaCl2[-2],
+          #color=~key,
+          type='scatter',mode='lines+markers',
+          colors=colors[2],name="CaCl2") %>%
+      add_trace(data=SingleSalt,x=~tid,
+          y=~B_Na2OSiO2,
+          #color=~key,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "Na2OSiO2") %>%
+    layout( yaxis=list(title="Bicarbonate [mg/L]"),
+         xaxis=list(title="Time [h]"))
+fig_B  
+
+
+
+```
+
+
+
 
