@@ -1,0 +1,168 @@
+---
+title: "ICR"
+author: "lærke"
+date: "11/02/2022"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Loading af pakker 
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
+
+```
+
+
+
+```{R import af data, echo=FALSE, message=FALSE}
+
+Cl_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx")
+
+old_names_IC=colnames(Cl_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","Cl_1_mg/L","Cl_2_mg/L") #Vi finder på nogle lidt bedre nogle
+Cl_IC_data = Cl_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Cl_IC_data <- as.data.frame(Cl_IC_data)
+#noget med gennemsnit. 
+
+Cl_IC_data <-Cl_IC_data%>%mutate(avg_mgL=(rowMeans(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE))))
+
+
+SO4_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",2)
+
+old_names_IC=colnames(SO4_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","SO4_1_mg/L","SO4_2_mg/L") #Vi finder på nogle lidt bedre nogle
+SO4_IC_data = SO4_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SO4_IC_data <- as.data.frame(SO4_IC_data)
+#noget med gennemsnit. 
+
+SO4_IC_data <-SO4_IC_data%>%mutate(avg_mgL=(rowMeans(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))
+SO4_IC_data <- SO4_IC_data[c(1:35),]
+
+
+Na_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",3)
+
+old_names_IC=colnames(Na_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","Na_1_mg/L","Na_2_mg/L") #Vi finder på nogle lidt bedre nogle
+Na_IC_data = Na_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Na_IC_data <- as.data.frame(Na_IC_data)
+#noget med gennemsnit. 
+
+Na_IC_data <-Na_IC_data%>%mutate(avg_mgL=(rowMeans(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE))))
+
+Ca_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",4)
+
+old_names_IC=colnames(Ca_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","Ca_1_mg/L","Ca_2_mg/L") #Vi finder på nogle lidt bedre nogle
+Ca_IC_data = Ca_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Ca_IC_data <- as.data.frame(Ca_IC_data)
+#noget med gennemsnit. 
+
+Ca_IC_data <-Ca_IC_data%>%mutate(avg_mgL=(rowMeans(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE))))
+
+
+#data fra MgSO4 forsøg ikke ICR. 
+
+Mg_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",5)
+
+old_names_IC=colnames(Mg_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","Mg_1_mg/L","Mg_2_mg/L") #Vi finder på nogle lidt bedre nogle
+Mg_IC_data = Mg_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Mg_IC_data <- as.data.frame(Mg_IC_data)
+#noget med gennemsnit. 
+
+Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE))))
+
+
+```
+
+```{R plot af conc , echo=FALSE, message=FALSE}
+
+
+
+plot_ly(x=~Cl_IC_data$time/60,
+          y=~Cl_IC_data$avg_mgL,
+          color = ~Cl_IC_data$Stream)%>%
+  layout( yaxis=list(title=" Cl mg/L"),
+         xaxis=list(title="Time [h]"))
+
+plot_ly(x=~SO4_IC_data$time/60,
+          y=~SO4_IC_data$avg_mgL,
+          color = ~SO4_IC_data$Stream)%>%
+  layout( yaxis=list(title=" SO4 mg/L"),
+         xaxis=list(title="Time [h]"))
+
+plot_ly(x=~Na_IC_data$time/60,
+          y=~Na_IC_data$avg_mgL,
+          color = ~Na_IC_data$Stream)%>%
+  layout( yaxis=list(title=" Na mg/L"),
+         xaxis=list(title="Time [h]"))
+
+plot_ly(x=~Ca_IC_data$time/60,
+          y=~Ca_IC_data$avg_mgL,
+          color = ~Ca_IC_data$Stream)%>%
+  layout( yaxis=list(title=" Ca mg/L"),
+         xaxis=list(title="Time [h]"))
+
+
+
+      
+
+```
+
+```{R rejection , echo=FALSE, message=FALSE}
+Rej_function = function(feed,permeate){
+  res = (1-(permeate/feed))*100
+    return(res)}
+
+rej_1=Rej_function(2,2)
+
+#Cl
+Cl_feed <- Cl_IC_data%>%filter(Stream=="feed")
+
+
+
+
+```

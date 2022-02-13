@@ -108,52 +108,7 @@ fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1],
 
 
 ```
-```{R NaCl osmotisk tryk, echo=FALSE, message=FALSE}
 
-plot_ly(data=dat_NaCl, x=~sek/3600, y=~temp0501)%>%
-  layout(yaxis=list(title="Temperature", range=c(0,27)),
-         xaxis=list(title="Time [h]")) 
-#temperaturen ved prøve udtagning. er det vand eller luft?
-dat_NaCl$temp0501[sek=1*60*60]
-dat_NaCl$temp0501[sek=2*60*60]
-dat_NaCl$temp0501[sek=3*60*60]
-dat_NaCl$temp0501[sek=3.5*60*60]
-dat_NaCl$temp0501[sek=4*60*60]
-
-#constants
-R=0.08314 #(L*bar)/(mol*K)
-Temp=(23+272)
-Mw_Cl=35.45
-Mw_Na=22.99
-Mw_Ca=40.078
-Mw_SiO2=60.08
-#antaget ideal solutions og i sat til antal ioner. silica er tricky
-NaCl_IC_data <- NaCl_IC_data %>% mutate(os_tryk_bar=(2*(((Chloride/1000)/Mw_Cl)+((Sodium/1000)/Mw_Na))*R*Temp))
-CaCl2_IC_data <- CaCl2_IC_data %>% mutate(os_tryk_bar=(3*(((Chloride/1000)/Mw_Cl)+((Calcium/1000)/Mw_Ca))*R*Temp))
-SiO2_IC_data <- SiO2_IC_data %>% mutate(os_tryk_bar=(3*(((Silica/1000)/Mw_SiO2)+((Sodium/1000)/Mw_Na))*R*Temp))
-
-
-fig_os_tryk <- NaCl_IC_data %>% filter(Stream=="Feed")%>%
-plot_ly(x=~time,
-          y=~os_tryk_bar,
-          type='scatter',mode='lines+markers',
-          colors=colors[1], name = "NaCl")%>%
-add_trace(data=CaCl2_IC_data %>% filter(Stream=="Feed"),x=~time,
-          y=~os_tryk_bar,
-          type='scatter',mode='lines+markers',
-          colors=colors[1], name = "CaCl2") %>%
-add_trace(data=SiO2_IC_data %>% filter(Stream=="Feed"),x=~time,
-          y=~os_tryk_bar,
-          type='scatter',mode='lines+markers',
-          colors=colors[1], name = "Na2OSiO2") %>%
-  layout( yaxis=list(title="osmotic pressure [bar]",range=c(0,1)),
-         xaxis=list(title="Time [h]")) 
-  
-  fig_os_tryk
-  
- 
-
-``` 
 
 ```{R CaCl2 plot IC data, echo=FALSE, message=FALSE}
 
@@ -304,7 +259,16 @@ fig_anions <- plot_ly(x=~NaCl_Feed$time[-1],
           colors=colors[3], name = "SiO2 Si") %>%
     layout( yaxis=list(title="Rejection Anions%",range=c(0,100)),
          xaxis=list(title="Time [h]"))
-#fig_anions      
+#fig_anions     
+
+
+  plot_ly(x=~"time",
+          y=~"avg_mg/L",
+          type='scatter',mode='lines+markers') %>%
+      layout(
+        #title="silica, pH 9.25, silica 75 mg/L",
+         yaxis=list(title="Rejection silica",range=c(0,50)),
+        xaxis=list(title="Chloride content %") )
 
 
 fig <- subplot(fig_cations,fig_anions,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
@@ -527,6 +491,54 @@ dat_SiO2 %>%#dplyr arbejder indenfor 'dat' data framen
          xaxis=list(title="Time [h]", range=c(0,4)))#Her plottet de to tryk på feed siden plus et TMP
 
 ```
+```{R NaCl osmotisk tryk, echo=FALSE, message=FALSE}
+
+plot_ly(data=dat_NaCl, x=~sek/3600, y=~temp0501)%>%
+  layout(yaxis=list(title="Temperature", range=c(0,27)),
+         xaxis=list(title="Time [h]")) 
+#temperaturen ved prøve udtagning. er det vand eller luft?
+dat_NaCl$temp0501[sek=1*60*60]
+dat_NaCl$temp0501[sek=2*60*60]
+dat_NaCl$temp0501[sek=3*60*60]
+dat_NaCl$temp0501[sek=3.5*60*60]
+dat_NaCl$temp0501[sek=4*60*60]
+
+#constants
+R=0.08314 #(L*bar)/(mol*K)
+Temp=(23+272)
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SiO2=60.08
+#antaget ideal solutions og i sat til antal ioner. silica er tricky
+NaCl_IC_data <- NaCl_IC_data %>% mutate(os_tryk_bar=(2*(((Chloride/1000)/Mw_Cl)+((Sodium/1000)/Mw_Na))*R*Temp))
+CaCl2_IC_data <- CaCl2_IC_data %>% mutate(os_tryk_bar=(3*(((Chloride/1000)/Mw_Cl)+((Calcium/1000)/Mw_Ca))*R*Temp))
+SiO2_IC_data <- SiO2_IC_data %>% mutate(os_tryk_bar=(3*(((Silica/1000)/Mw_SiO2)+((Sodium/1000)/Mw_Na))*R*Temp))
+
+
+fig_os_tryk <- NaCl_IC_data %>% filter(Stream=="Feed")%>%
+plot_ly(x=~time,
+          y=~os_tryk_bar,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "NaCl")%>%
+add_trace(data=CaCl2_IC_data %>% filter(Stream=="Feed"),x=~time,
+          y=~os_tryk_bar,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "CaCl2") %>%
+add_trace(data=SiO2_IC_data %>% filter(Stream=="Feed"),x=~time,
+          y=~os_tryk_bar,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "Na2OSiO2") %>%
+  layout( yaxis=list(title="osmotic pressure [bar]",range=c(0,1)),
+         xaxis=list(title="Time [h]")) 
+  
+  fig_os_tryk
+  
+  #evt. normaliser i forhold til start værdien. 
+ 
+
+``` 
+
 ```{R pH, echo=FALSE, message=FALSE}
 
 
@@ -564,21 +576,21 @@ SS = na.omit(SingleSalt)
 
 
 fig_B <- plot_ly(data=SingleSalt,x=~tid[-2],
-          y=~B_NaCl[-2],
+          y=~B_NaCl[-2]/61.0618,
           #color=~key,
           type='scatter',mode='lines+markers',
           colors=colors[1],name="NaCl") %>%
       add_trace(data=SingleSalt,x=~tid[-2],
-          y=~B_CaCl2[-2],
+          y=~B_CaCl2[-2]/61.0618,
           #color=~key,
           type='scatter',mode='lines+markers',
           colors=colors[2],name="CaCl2") %>%
       add_trace(data=SingleSalt,x=~tid,
-          y=~B_Na2OSiO2,
+          y=~B_Na2OSiO2/61.0618,
           #color=~key,
           type='scatter',mode='lines+markers',
           colors=colors[1], name = "Na2OSiO2") %>%
-    layout( yaxis=list(title="Bicarbonate [mg/L]"),
+    layout( yaxis=list(title="Bicarbonate [mM]"),
          xaxis=list(title="Time [h]"))
 fig_B  
 
