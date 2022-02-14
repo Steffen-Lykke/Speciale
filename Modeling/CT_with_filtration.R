@@ -119,7 +119,7 @@ num_bd=0
 i=2
 toggle = F
 
-Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt
+Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt !FIX!
 #Q_blowdown=(Q_vap/(-1+COC))
 ###### CT Model ######
 while(i < n_time_step){
@@ -160,7 +160,8 @@ while(i < n_time_step){
    toggle = T
   vec_perm = NF(A,V,dt,rec,J,conc) #funktionen 'NF' med de rigtige argumenter returnerer en vektor af værdier for permeatet af en NF filtrering, som så skal smide tilbage i køletånet
   g=1
-  NF(A,V,dt,rec,J,conc)
+  
+
 }
 nf$tid=df$tid
 cf$tid=df$tid

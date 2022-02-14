@@ -27,16 +27,17 @@ Temp = 25
 flux_LMH = J #
 
 membrane_area = A #m^2
-Q_feed_mL_min = 3000000/60 #mL/min
+
+Q_feed_mL_min = 1160 #mL/min
 
 initial_feed_tank_volume = feed_tank_volume = V #L
 initial_permeate_tank_volume = permeate_tank_volume = 0 #L
 
 ion_values = data.frame(
-  ions = c("Na", "Cl", "SO4", "SiO2"),
+  ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
   feed = conc,#Initial concentration [mM]
-  molar_con = c(50.1, 76.4, 160, NA),# Molær konduktivitet[S*cm^2*mol^-1]
-  R = c(0.8,  0.1,  0.95,  0.4)
+  molar_con = c(50.1, 76.4, 160, NA,NA),# Molær konduktivitet[S*cm^2*mol^-1]
+  R = c(0.8,  -0.1,  0.95,0.7,0.8)
   )
 rejection = ion_values[,4]
 initial_feed_conc = ion_values[,2]
@@ -44,14 +45,14 @@ initial_con = sum(initial_feed_conc*ion_values[,3],na.rm = T)
 con_f = initial_con
 os_ini = sum(initial_feed_conc)*10^-3*R*(Temp+273)
 ############# model parameters #############
-dt=60 #s
+dt=dt #s
 run_time = 8 #hours
 max_time = run_time*3600
 n_time_step = max_time/dt
 tid = 0
 flux = flux_LMH/3600 #L m^-2 s^-1 
-Q_feed_L_h = Q_feed_mL_min/1000/60#omregning til L/s
-Q_feed = Q_feed_L_h*dt
+Q_feed_L_s = Q_feed_mL_min/1000/60#omregning til L/s
+Q_feed = Q_feed_L_s*dt
 ###### Dataframes ######
 df = data.frame(
   tid=double(),  
@@ -68,22 +69,24 @@ nf_f = data.frame(
   Na=double(),
   Cl=double(),
   SO4=double(),
-  SiO2=double()
+  SiO2=double(),
+  Ca=double()
 )#Dataframe med masse (mol) flow i feed tank [mol]
 
 cf_f = data.frame(
   Na=double(),
   Cl=double(),
   SO4=double(),
-  SiO2=double()
+  SiO2=double(),
+  Ca=double()
 )#Dataframe med concentrationer i feed tank [mM]
 
 #Nu de samme data frames for permeate tank
 nf_p=nf_f
 cf_p=cf_f
 #Preallocate and fill in initial values
-df[1:(n_time_step+1),]=NA
-cf_p[1:(n_time_step+1),]=NA
+df[1:(n_time_step+100),]=NA
+cf_p[1:(n_time_step+100),]=NA
 cf_f=nf_f=nf_p=cf_p
 
 df[1,]=c(0,feed_tank_volume,permeate_tank_volume,con_f,NA,os_ini,0)
@@ -93,13 +96,13 @@ nf_f[1,]=cf_f[1,]*feed_tank_volume # i mmol
 
 nf_p[1,]=0 # i mmol
 
-rec = 0
+current_rec = 0
 i=2
 #cf_p
 #nf_p
 
 ############ Model #####################
-while (rec<95) {
+while (current_rec < rec) {
   #Volume flow
   Q_permeate = membrane_area*flux*dt
   Q_retentate = Q_feed- Q_permeate
@@ -137,7 +140,7 @@ while (rec<95) {
   
   
   df$tid[i] = df$tid[i-1] + dt 
-  rec = df$rec[i] = df$permeate_tank_volume[i]/initial_feed_tank_volume*100
+  current_rec = df$rec[i] = df$permeate_tank_volume[i]/initial_feed_tank_volume*100
   i=i+1
 }
 df$con_f=rowSums(data.frame(mapply(`*`,cf_f[,1:3],ion_values$molar_con[1:3])),na.rm=T)
@@ -149,28 +152,43 @@ df$con_p[1]=NA
 #rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,permeate_tank_mass,permeate_tank_conc)
 return(df)
 }
+
+##### TEST ENVIRONMENT #####
+A=0.05
+V=10
+dt=60
+rec=80
+conc=c(17,3.4,0.7,0.7,0.09)
+J=20
+test = NF(0.05,10,60,95,20,c(10,10,5,5))
 ########## plot #############
-cf_f.long = cf_f %>% 
-  gather(key,value, Na,Cl,SO4,SiO2)
-cf_p.long = cf_p %>% 
-  gather(key,value, Na,Cl,SO4,SiO2)
-df.long = df %>% 
+cf_f.long = cf_f %>%
+  gather(key,value, Na,Cl,SO4,SiO2,Ca)
+cf_p.long = cf_p %>%
+  gather(key,value, Na,Cl,SO4,SiO2,Ca)
+df.long = df %>%
   gather(key,value, feed_tank_volume,permeate_tank_volume,con_f,con_p)
 
-level_order = c('Na','Cl','SO4','SiO2')
+level_order = c('Na','Cl','SO4','SiO2','Ca')
 
-ggplot(cf_f.long,aes(x=tid/3600,y=value,color=factor(key,level=level_order)))+geom_line()+
+fig1=
+  ggplot(cf_f.long,aes(x=tid/3600,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1",labels=level_order)+
   theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
-  
-ggplot(cf_p.long,aes(x=tid/3600,y=value,color=factor(key,level=level_order)))+geom_line()+
+
+fig2=
+  ggplot(cf_p.long,aes(x=tid/3600,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1")+
     theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
 
-ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
+fig3=
+  ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1",labels=c("Feed Conductivity","Permeate Conductivity","Feed Volume","Permeate volume"))+
   theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
 
-ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
+fig4=
+  ggplot(df.long,aes(x=tid/3600,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1",labels=c("Feed Conductivity","Permeate Conductivity","Feed Volume","Permeate volume"))+
   theme_bw()+labs( y = "Value", x = "Time [h]", color = "")#+ylim(c(NA,NA))
+
+ggplotly(fig1)

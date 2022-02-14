@@ -132,8 +132,20 @@ row.names(Rej_total) <- c("Calcium","Sodium","Chloride","Sulphate","Silica","Bic
 
 
 SPRR_data <- read_excel("data/SPRR/SPRR_analysesvar_samlet.xlsx",3,col_names = T,
-                        col_types=c("numeric","text","text","text","text","numeric","numeric","numeric","numeric","numeric","numeric"))
+                        col_types=c("numeric","text","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+SPRR_data_raw=SPRR_data 
 
+```
+
+```{r kigger på feed koncentrationer}
+new_ratios_feed = SPRR_data %>% filter(Stream=="Feed")
+new_ratios_feed =new_ratios_feed %>% mutate(acutal_cl_ratio = (Cl/35)/((SO4/96)+(Cl/35)))
+new_ratios_feed = new_ratios_feed %>% mutate(acutal_na_ratio = (Na/23)/((Ca/40)+(Na/23)))
+SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Feed",new_ratios_feed$acutal_cl_ratio)) 
+SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Rejection",new_ratios_feed$acutal_cl_ratio))
+SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Permeat",new_ratios_feed$acutal_cl_ratio))
+SPRR_data = SPRR_data %>% mutate(Cl_ratio=Cl_ratio*100)
+#A=SPRR_data %>% filter(Stream=="Feed"& (!is.na(Cl))&Experiment_no >1)
 ```
 
 ```{R plot af experiment no., eval=FALSE, message=FALSE, include=FALSE}
@@ -421,6 +433,8 @@ fig_SiO2
 #https://plotly.com/r/subplots/
 
 ```
+
+
 ```{R Plot af Silica subplots_3, echo=FALSE, message=FALSE}
 
 

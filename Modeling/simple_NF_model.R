@@ -20,7 +20,7 @@ library(zoo)
 library(ggthemes)
 
 ############# Operational Parameters ###############
-c_nacl_initial = 3*10^-3 #mol/L
+c_nacl_initial = (187/35)*10^-3 #mol/L
 flux_LMH = 20 #
 flux = flux_LMH/3600 #L m^-2 s^-1 
 
@@ -28,8 +28,8 @@ flux = flux_LMH/3600 #L m^-2 s^-1
 ############### System Parameters #################
 ## Membrane properties ##
 membrane_area = 0.05 #m^2
-R_na = 0.7 #Rejection Na+
-R_cl=0.5 #Rejection Cl-
+R_na = 0.2 #Rejection Na+
+R_cl=0.2 #Rejection Cl-
 
 ## Feed values ##
 feed_tank_volume = 10 #L
@@ -86,6 +86,7 @@ for (i in 2:n_time_step+1) {
   df$permeate_tank_conc[i] = df$permeate_tank_mass[i-1]/df$permeate_tank_volume[i-1]
   
   df$tid[i] = df$tid[i-1] + dt 
+  i=i+1
 }
 rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,
    permeate_tank_mass,permeate_tank_conc)
@@ -93,8 +94,9 @@ rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,
 df.long = df %>% 
   gather(key,value, feed_tank_conc,permeate_tank_conc)
   
-ggplot(df.long,aes(x=tid/3600,y=value*10^3,color=key))+geom_line()+
+fig=ggplot(df.long,aes(x=tid/3600,y=value*10^3,color=key))+geom_line()+
   scale_color_brewer(palette="Set1",labels = c("Feed Tank", "Permeate Tank"))+
-  theme_bw()+labs( y = "Na+ Concentration [mM?]", x = "Time [h]", color = "")
+  theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
 
 
+ggplotly(fig)
