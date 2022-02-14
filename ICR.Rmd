@@ -124,25 +124,33 @@ Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg
 
 plot_ly(x=~Cl_IC_data$time/60,
           y=~Cl_IC_data$avg_mgL,
-          color = ~Cl_IC_data$Stream)%>%
-  layout( yaxis=list(title=" Cl mg/L"),
+          color = ~Cl_IC_data$Stream,
+        type='scatter',mode='lines+markers',
+  error_y = list(value=~Cl_IC_data$std_mgL))%>%
+layout( yaxis=list(title=" Cl mg/L",range=c(0,220)),
          xaxis=list(title="Time [h]"))
 
 plot_ly(x=~SO4_IC_data$time/60,
           y=~SO4_IC_data$avg_mgL,
-          color = ~SO4_IC_data$Stream)%>%
+          color = ~SO4_IC_data$Stream,
+        type='scatter',mode='lines+markers',
+  error_y = list(value=~SO4_IC_data$std_mgL))%>%
   layout( yaxis=list(title=" SO4 mg/L"),
          xaxis=list(title="Time [h]"))
 
 plot_ly(x=~Na_IC_data$time/60,
           y=~Na_IC_data$avg_mgL,
-          color = ~Na_IC_data$Stream)%>%
+          color = ~Na_IC_data$Stream,
+        type='scatter',mode='lines+markers',
+  error_y = list(value=~Na_IC_data$std_mgL))%>%
   layout( yaxis=list(title=" Na mg/L"),
          xaxis=list(title="Time [h]"))
 
 plot_ly(x=~Ca_IC_data$time/60,
           y=~Ca_IC_data$avg_mgL,
-          color = ~Ca_IC_data$Stream)%>%
+          color = ~Ca_IC_data$Stream,
+        type='scatter',mode='lines+markers',
+  error_y = list(value=~Na_IC_data$std_mgL))%>%
   layout( yaxis=list(title=" Ca mg/L"),
          xaxis=list(title="Time [h]"))
 
@@ -153,15 +161,46 @@ plot_ly(x=~Ca_IC_data$time/60,
 ```
 
 ```{R rejection , echo=FALSE, message=FALSE}
-Rej_function = function(feed,permeate){
-  res = (1-(permeate/feed))*100
-    return(res)}
 
-rej_1=Rej_function(2,2)
 
 #Cl
 Cl_feed <- Cl_IC_data%>%filter(Stream=="feed")
+Cl_perm <- Cl_IC_data%>%filter(Stream=="Permeat")
+Cl_rej <- (1-(Cl_perm$avg_mgL/Cl_feed$avg_mgL[c(2:16)]))*100
 
+#SO4
+SO4_feed <- SO4_IC_data%>%filter(Stream=="feed")
+SO4_perm <- SO4_IC_data%>%filter(Stream=="Permeat")
+SO4_rej <- (1-(SO4_perm$avg_mgL/SO4_feed$avg_mgL[c(2:16)]))*100
+
+#Na
+Na_feed <- Na_IC_data%>%filter(Stream=="feed")
+Na_perm <- Na_IC_data%>%filter(Stream=="Permeat")
+Na_rej <- (1-(Na_perm$avg_mgL/Na_feed$avg_mgL[c(2:16)]))*100
+
+#Ca
+Ca_feed <- Ca_IC_data%>%filter(Stream=="feed")
+Ca_perm <- Ca_IC_data%>%filter(Stream=="Permeat")
+Ca_rej <- (1-(Ca_perm$avg_mgL/Ca_feed$avg_mgL[c(2:16)]))*100
+
+plot_ly(x=~Cl_perm$time/60,
+          y=~Cl_rej,
+        type='scatter',mode='lines+markers',
+          colors=colors[1], name = "Cl")%>%
+  add_trace(x=~SO4_perm$time/60,
+          y=~SO4_rej,
+        type='scatter',mode='lines+markers',
+          colors=colors[2], name = "SO4")%>%
+add_trace(x=~Na_perm$time/60,
+          y=~Na_rej,
+        type='scatter',mode='lines+markers',
+          colors=colors[3], name = "Na")%>%
+add_trace(x=~Ca_perm$time/60,
+          y=~Ca_rej,
+        type='scatter',mode='lines+markers',
+          colors=colors[4], name = "Ca")%>%
+  layout( yaxis=list(title=" Rejection"),
+         xaxis=list(title="Time [h]"))
 
 
 
