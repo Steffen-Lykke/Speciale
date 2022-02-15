@@ -150,7 +150,13 @@ cf_f$tid = cf_p$tid = df$tid
 cf_p[1,]=NA
 df$con_p[1]=NA
 #rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,permeate_tank_mass,permeate_tank_conc)
-return(df)
+my_list = list()
+my_list[[1]] = df
+my_list[[2]] = cf_f
+my_list[[3]] = nf_f
+my_list[[4]] = cf_p
+my_list[[5]] = nf_p
+return(my_list)
 }
 
 ##### TEST ENVIRONMENT #####

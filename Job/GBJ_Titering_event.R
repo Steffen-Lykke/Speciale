@@ -9,8 +9,6 @@ setwd(here("Job","IWR titrering"))
 columnnames <- c("mL","pH", "sec","dpHdml")
 
 #load af forskellige filer
-#alle test er k?rt med 0,1M NaOH 
-#Test 1 : r? spildevand d. 25/10-21
 T2_11 <- import("11_nov_tank2_NaOH_0.1M_50mL.csv",";", skip=1, header=F,stringsAsFactors = FALSE,col.names = columnnames) %>%
   mutate(mL = as.numeric(mL),pH = as.numeric(pH),sec = as.numeric(sec),dpHdml = as.numeric(dpHdml))
 T3_11 <- import("11_nov_tank2_NaOH_0.2M_50mL.csv",";", skip=1, header=F,stringsAsFactors = FALSE,col.names = columnnames) %>%
