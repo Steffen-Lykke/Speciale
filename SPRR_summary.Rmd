@@ -123,8 +123,9 @@ row.names(Rej_total) <- c("Calcium","Sodium","Chloride","Sulphate","Silica","Bic
 
 ```
 
+## Databehandling Multisalt {.tabset}
 
-## Overview data against Experiment no. 
+
 
 
 
@@ -134,10 +135,7 @@ row.names(Rej_total) <- c("Calcium","Sodium","Chloride","Sulphate","Silica","Bic
 SPRR_data <- read_excel("data/SPRR/SPRR_analysesvar_samlet.xlsx",3,col_names = T,
                         col_types=c("numeric","text","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
 SPRR_data_raw=SPRR_data 
-
-```
-
-```{r kigger på feed koncentrationer}
+#Fuck med de rigtige Cl ratios
 new_ratios_feed = SPRR_data %>% filter(Stream=="Feed")
 new_ratios_feed =new_ratios_feed %>% mutate(acutal_cl_ratio = (Cl/35)/((SO4/96)+(Cl/35)))
 new_ratios_feed = new_ratios_feed %>% mutate(acutal_na_ratio = (Na/23)/((Ca/40)+(Na/23)))
@@ -145,6 +143,7 @@ SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Feed",new_ra
 SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Rejection",new_ratios_feed$acutal_cl_ratio))
 SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Permeat",new_ratios_feed$acutal_cl_ratio))
 SPRR_data = SPRR_data %>% mutate(Cl_ratio=Cl_ratio*100)
+SPRR_data$HCO3[1:3] = 0
 #A=SPRR_data %>% filter(Stream=="Feed"& (!is.na(Cl))&Experiment_no >1)
 ```
 
@@ -211,7 +210,8 @@ str(SPRR_data)
 
 
 ```
-## Silica analyse
+### 2D representation of data
+#### Silica analyse
 
 ```{R Plot af Silica subplots, eval=FALSE, message=FALSE, include=FALSE}
 
@@ -609,7 +609,7 @@ SPRR_data %>% filter(Stream=="Rejection")%>%
 
 ```
 
-## Calcium 
+#### Calcium 
 
 ```{R Plot af Calcium subplots, echo=FALSE, message=FALSE}
 
@@ -683,7 +683,7 @@ fig_Ca
 
 ```
 
-## Sodium
+#### Sodium
 
 ```{R Plot af Sodium subplots, echo=FALSE, message=FALSE}
 
@@ -757,7 +757,7 @@ fig_Na
 
 ```
 
-## Chloride
+#### Chloride
 
 ```{R Plot af Chloride subplots, echo=FALSE, message=FALSE}
 
@@ -830,7 +830,7 @@ fig_Cl
 
 ```
 
-## Sulphate
+#### Sulphate
 
 ```{R Plot af Sulphate subplots, echo=FALSE, message=FALSE}
 
@@ -904,7 +904,7 @@ fig_SO4
 
 ```
 
-## Bicarbonate
+#### Bicarbonate
 
 ```{R Plot af Bicarbonate subplots, echo=FALSE, message=FALSE}
 
@@ -977,7 +977,7 @@ fig_HCO3
 
 ```
 
-## ions in each experiment
+#### ions in each experiment
 
 ```{R plot of ions experiment, eval=FALSE, message=FALSE, include=FALSE}
 
@@ -1068,73 +1068,26 @@ fig_18
 ```
 
 
-## noget med effect.
+### 3D Representation of Data
 
-```{R 3D plot, eval = FALSE, echo=FALSE, message=FALSE}
+```{R 3D plot alle pH, echo=FALSE, message=FALSE, warning=FALSE, , echo=FALSE}
 
 SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
-
-x=SPRR_rejection$Cl_ratio
-y=SPRR_rejection$Silica_content
-z=SPRR_rejection$Cl
-
- points = data.frame(x,y,z)
-# c(ux, uy, uz) = u = c(x[2]-x[1], y[2]-y[1], z[2]-z[1])
-# c(vx, vy, vz) = v = c(x[3]-x[1], y[3]-y[1], z[3]-z[1])
-# 
-# 
-# u_cross_v = c(u[2]*v[3]-u[3]*v[2], u[3]*v[1]-u[1]*v[3], u[1]*v[2]-u[2]*v[1])
-# 
-# point  = points[1,]
-# normal = u_cross_v
-# 
-# d = sum(-point * normal)
-# 
-# xx, yy = np.meshgrid(range(10), range(10))
-# 
-# z = (-normal[0] * A$X - normal[1] * A$Y - d) * 1. / normal[2]
-# 
-# fig_1 <- SPRR_rejection%>%
-#   plot_ly(x=~Cl_ratio,
-#           y=~Silica_content,
-#           z=~SiO2,
-#           color =~pH)
-# fig_1 <- fig_1%>% add_lines()
-# fig_1
-
-# Compute the linear regression (z = ax + by + d)
-fit <- lm(z ~ x + y)
-# predict values on regular xy grid
-grid.lines = 26
-x.pred <- seq(min(x), max(x), length.out = grid.lines)
-y.pred <- seq(min(y), max(y), length.out = grid.lines)
-xy <- expand.grid( x = x.pred, y = y.pred)
-z.pred <- matrix(predict(fit, newdata = xy), 
-                 nrow = grid.lines, ncol = grid.lines)
-# fitted points for droplines to surface
-fitpoints <- predict(fit)
-# scatter plot with regression plane
-scatter3D(x, y, z, pch = 18, cex = 2, 
-    theta = 200, phi = 20, ticktype = "detailed",
-    xlab = "Cl Ratio", ylab = "Silica Content", zlab = "Cl Rejection",  
-    surf = list(x = x.pred, y = y.pred, z = z.pred,  
-    facets = NA, fit = fitpoints), main = "Lorte plot")
-
-```
-
-```{r Øve sig på 3D plot}
 library(reshape2)
 x=SPRR_rejection$Cl_ratio
 y=SPRR_rejection$Silica_content
 z=SPRR_rejection$Cl
+pH=SPRR_rejection$pH
 
-points = data.frame(SPRR_rejection$Cl_ratio,SPRR_rejection$Silica_content,SPRR_rejection$Cl)
-colnames(points) = c("Cl.ratio","SiO2.content","Cl.rejection")
+SPRR_3d_plot_data_9.25 = SPRR_rejection %>%select(c(3,4,5,8))%>%relocate(pH, .after = Cl)
+#points = data.frame(SPRR_rejection$Cl_ratio,SPRR_rejection$Silica_content,SPRR_rejection$Cl,SPRR_rejection$pH)
+points =SPRR_3d_plot_data_9.25
+colnames(points) = c("Cl.ratio","SiO2.content","Cl.rejection","pH")
 my_df <- points
 #Vores linear model:
 Rejection_lm <- lm(Cl.rejection ~ Cl.ratio + SiO2.content,data=my_df)
 #Graph Resolution (more important for more complex shapes)
-graph_reso <- 0.05
+graph_reso <- 0.5
 
 #Setup Axis
 axis_x <- seq(min(my_df$Cl.ratio), max(my_df$Cl.ratio), by = graph_reso)
@@ -1146,22 +1099,218 @@ Rejection_lm_surface$Cl.rejection <- predict.lm(Rejection_lm, newdata = Rejectio
 Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2.content ~ Cl.ratio, value.var = "Cl.rejection") #y ~ x
 
 
+R_plot <- plot_ly(
+  my_df,
+  x = ~ Cl.ratio,
+  y = ~ SiO2.content,
+  z = ~ Cl.rejection,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ pH,
+    colorscale = 'magma'
+    )
+)%>%layout(title = 'All pH')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> Cl ratio: %{x}',
+                                                '<br> SiO2 concentration: %{y} mg/L'
+                                                )
+                          )
 
-R_plot <- plot_ly(my_df, 
-                     x = ~Cl.ratio, 
-                     y = ~SiO2.content, 
-                     z = ~Cl.rejection,
-                     type = "scatter3d", 
-                     mode = "markers")
-
-
-R_plot <- add_trace(p = R_plot,
-                       z = Rejection_lm_surface,
-                       x = axis_x,
-                       y = axis_y,
-                       type = "surface")
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'magma'
+)
 
 R_plot
 
 ```
+
+```{r 3D plot 9.25, echo=FALSE, warning=FALSE}
+SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
+library(reshape2)
+x=SPRR_rejection$Cl_ratio
+y=SPRR_rejection$Silica_content
+z=SPRR_rejection$Cl
+pH=SPRR_rejection$pH
+
+SPRR_3d_plot_data_9.25 = SPRR_rejection %>% filter(pH==9.25)%>%select(c(3,4,5,8))%>%relocate(pH, .after = Cl)
+#points = data.frame(SPRR_rejection$Cl_ratio,SPRR_rejection$Silica_content,SPRR_rejection$Cl,SPRR_rejection$pH)
+points =SPRR_3d_plot_data_9.25
+colnames(points) = c("Cl.ratio","SiO2.content","Cl.rejection","pH")
+my_df <- points
+#Vores linear model:
+Rejection_lm <- lm(Cl.rejection ~ Cl.ratio + SiO2.content,data=my_df)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.5
+
+#Setup Axis
+axis_x <- seq(min(my_df$Cl.ratio), max(my_df$Cl.ratio), by = graph_reso)
+axis_y <- seq(min(my_df$SiO2.content), max(my_df$SiO2.content), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(Cl.ratio = axis_x,SiO2.content = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Cl.rejection <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2.content ~ Cl.ratio, value.var = "Cl.rejection") #y ~ x
+
+
+R_plot <- plot_ly(
+  my_df,
+  x = ~ Cl.ratio,
+  y = ~ SiO2.content,
+  z = ~ Cl.rejection,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ pH,
+    colorscale = 'magma'
+    )
+)%>%layout(title = 'pH 9.25')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> Cl ratio: %{x}',
+                                                '<br> SiO2 concentration: %{y} mg/L'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'magma'
+)
+
+R_plot
+
+```
+
+
+```{r 3D plot 9.5, echo=FALSE, warning=FALSE}
+SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
+library(reshape2)
+x=SPRR_rejection$Cl_ratio
+y=SPRR_rejection$Silica_content
+z=SPRR_rejection$Cl
+pH=SPRR_rejection$pH
+
+SPRR_3d_plot_data_9.5 = SPRR_rejection %>% filter(pH==9.5)%>%select(c(3,4,5,8))%>%relocate(pH, .after = Cl)
+#points = data.frame(SPRR_rejection$Cl_ratio,SPRR_rejection$Silica_content,SPRR_rejection$Cl,SPRR_rejection$pH)
+points =SPRR_3d_plot_data_9.5
+colnames(points) = c("Cl.ratio","SiO2.content","Cl.rejection","pH")
+my_df <- points
+#Vores linear model:
+Rejection_lm <- lm(Cl.rejection ~ Cl.ratio + SiO2.content,data=my_df)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.5
+
+#Setup Axis
+axis_x <- seq(min(my_df$Cl.ratio), max(my_df$Cl.ratio), by = graph_reso)
+axis_y <- seq(min(my_df$SiO2.content), max(my_df$SiO2.content), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(Cl.ratio = axis_x,SiO2.content = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Cl.rejection <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2.content ~ Cl.ratio, value.var = "Cl.rejection") #y ~ x
+
+
+R_plot <- plot_ly(
+  my_df,
+  x = ~ Cl.ratio,
+  y = ~ SiO2.content,
+  z = ~ Cl.rejection,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ pH,
+    colorscale = 'purp'
+    )
+)%>%layout(title = 'pH 9.5')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> Cl ratio: %{x}',
+                                                '<br> SiO2 concentration: %{y} mg/L'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'purp'
+)
+
+R_plot
+
+```
+
+
+```{r 3D plot 9.75, echo=FALSE, warning=FALSE}
+SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
+library(reshape2)
+x=SPRR_rejection$Cl_ratio
+y=SPRR_rejection$Silica_content
+z=SPRR_rejection$Cl
+pH=SPRR_rejection$pH
+
+SPRR_3d_plot_data_9.75 = SPRR_rejection %>% filter(pH==9.75)%>%select(c(3,4,5,8))%>%relocate(pH, .after = Cl)
+#points = data.frame(SPRR_rejection$Cl_ratio,SPRR_rejection$Silica_content,SPRR_rejection$Cl,SPRR_rejection$pH)
+points =SPRR_3d_plot_data_9.75
+colnames(points) = c("Cl.ratio","SiO2.content","Cl.rejection","pH")
+my_df <- points
+#Vores linear model:
+Rejection_lm <- lm(Cl.rejection ~ Cl.ratio + SiO2.content,data=my_df)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.5
+
+#Setup Axis
+axis_x <- seq(min(my_df$Cl.ratio), max(my_df$Cl.ratio), by = graph_reso)
+axis_y <- seq(min(my_df$SiO2.content), max(my_df$SiO2.content), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(Cl.ratio = axis_x,SiO2.content = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Cl.rejection <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2.content ~ Cl.ratio, value.var = "Cl.rejection") #y ~ x
+
+
+R_plot <- plot_ly(
+  my_df,
+  x = ~ Cl.ratio,
+  y = ~ SiO2.content,
+  z = ~ Cl.rejection,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ pH,
+    colorscale = 'purp'
+    )
+)%>%layout(title = 'pH 9.75')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> Cl ratio: %{x}',
+                                                '<br> SiO2 concentration: %{y} mg/L'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'purp'
+)
+
+R_plot
+
+```
+
 
