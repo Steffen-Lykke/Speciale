@@ -34,6 +34,8 @@ library(latex2exp)
 library(fs)
 library(plyr)
 library(matrixStats)
+library(haven)
+library(sjmisc)
 
 colors = c(
     '#1f77b4',  # muted blue
@@ -63,7 +65,9 @@ Cl_IC_data <- as.data.frame(Cl_IC_data)
 #noget med gennemsnit. 
 
 Cl_IC_data <-Cl_IC_data%>%mutate(avg_mgL=(rowMeans(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE)))%>%
-                          mutate(std_mgL=(rowSds(as.matrix(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE))))
+                          mutate(std_mgL=(rowSds(as.matrix(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE))))%>%
+                          mutate(Std_p=((std_mgL/avg_mgL)*100))
+
 
 
 SO4_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",2)
@@ -75,7 +79,8 @@ SO4_IC_data <- as.data.frame(SO4_IC_data)
 #noget med gennemsnit. 
 
 SO4_IC_data <-SO4_IC_data%>%mutate(avg_mgL=(rowMeans(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE)))%>%
-                          mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))
+                          mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))%>%
+                          mutate(Std_p=((std_mgL/avg_mgL)*100))
 SO4_IC_data <- SO4_IC_data[c(1:35),]
 
 
@@ -88,7 +93,8 @@ Na_IC_data <- as.data.frame(Na_IC_data)
 #noget med gennemsnit. 
 
 Na_IC_data <-Na_IC_data%>%mutate(avg_mgL=(rowMeans(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE)))%>%
-                          mutate(std_mgL=(rowSds(as.matrix(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE))))
+                          mutate(std_mgL=(rowSds(as.matrix(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE))))%>%
+                          mutate(Std_p=((std_mgL/avg_mgL)*100))
 
 Ca_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",4)
 
@@ -99,7 +105,19 @@ Ca_IC_data <- as.data.frame(Ca_IC_data)
 #noget med gennemsnit. 
 
 Ca_IC_data <-Ca_IC_data%>%mutate(avg_mgL=(rowMeans(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE)))%>%
-                          mutate(std_mgL=(rowSds(as.matrix(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE))))
+                          mutate(std_mgL=(rowSds(as.matrix(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE))))%>%
+                          mutate(Std_p=((std_mgL/avg_mgL)*100))
+
+#data fra SiO2 
+
+SiO2_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",6)
+
+old_names_IC=colnames(SiO2_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","SiO2_mgL") #Vi finder på nogle lidt bedre nogle
+SiO2_IC_data = SiO2_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SiO2_IC_data <- as.data.frame(SiO2_IC_data)
+#noget med gennemsnit. 
+
 
 
 #data fra MgSO4 forsøg ikke ICR. 
@@ -120,41 +138,68 @@ Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg
 
 ```{R plot af conc , echo=FALSE, message=FALSE}
 
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
 
 
-plot_ly(x=~Cl_IC_data$time/60,
-          y=~Cl_IC_data$avg_mgL,
-          color = ~Cl_IC_data$Stream,
-        type='scatter',mode='lines+markers',
-  error_y = list(value=~Cl_IC_data$std_mgL))%>%
-layout( yaxis=list(title=" Cl mg/L",range=c(0,220)),
+fig_Cl <- Cl_IC_data %>% filter(Stream %in% c("Feed","Permeate"))%>%  
+  plot_ly(x=~time/60,
+          y=~avg_mgL/Mw_Cl,
+          error_y = list(array = ~std_mgL/Mw_Cl),
+          color = ~Stream,
+          colors=c(colors[1],colors[2]),
+        type='scatter',mode='lines+markers')%>%
+layout( yaxis=list(title=" Cl mg/L", range=c(0,6)),
          xaxis=list(title="Time [h]"))
+fig_Cl
 
-plot_ly(x=~SO4_IC_data$time/60,
-          y=~SO4_IC_data$avg_mgL,
-          color = ~SO4_IC_data$Stream,
-        type='scatter',mode='lines+markers',
-  error_y = list(value=~SO4_IC_data$std_mgL))%>%
-  layout( yaxis=list(title=" SO4 mg/L"),
+
+fig_SO4 <- SO4_IC_data %>% filter(Stream %in% c("Feed","Permeate"))%>%  
+  plot_ly(x=~time/60,
+          y=~avg_mgL/Mw_SO4,
+          error_y = list(array = ~std_mgL/Mw_SO4),
+          color = ~Stream,
+          colors=c(colors[1],colors[2]),
+        type='scatter',mode='lines+markers')%>%
+layout( yaxis=list(title=" SO4 mg/L", range=c(0,18)),
          xaxis=list(title="Time [h]"))
+fig_SO4
 
-plot_ly(x=~Na_IC_data$time/60,
-          y=~Na_IC_data$avg_mgL,
-          color = ~Na_IC_data$Stream,
-        type='scatter',mode='lines+markers',
-  error_y = list(value=~Na_IC_data$std_mgL))%>%
-  layout( yaxis=list(title=" Na mg/L"),
+fig_Na <- Na_IC_data %>% filter(Stream %in% c("Feed","Permeate"))%>%  
+  plot_ly(x=~time/60,
+          y=~avg_mgL/Mw_Na,
+          error_y = list(array = ~std_mgL/Mw_Na),
+          color = ~Stream,
+          colors=c(colors[1],colors[2]),
+        type='scatter',mode='lines+markers')%>%
+layout( yaxis=list(title=" Na mg/L", range=c(0,60)),
          xaxis=list(title="Time [h]"))
+fig_Na
 
-plot_ly(x=~Ca_IC_data$time/60,
-          y=~Ca_IC_data$avg_mgL,
-          color = ~Ca_IC_data$Stream,
-        type='scatter',mode='lines+markers',
-  error_y = list(value=~Na_IC_data$std_mgL))%>%
-  layout( yaxis=list(title=" Ca mg/L"),
+fig_Ca <- Ca_IC_data %>% filter(Stream %in% c("Feed","Permeate"))%>%  
+  plot_ly(x=~time/60,
+          y=~avg_mgL/Mw_Ca,
+          error_y = list(array = ~std_mgL/Mw_Ca),
+          color = ~Stream,
+          colors=c(colors[1],colors[2]),
+        type='scatter',mode='lines+markers')%>%
+layout( yaxis=list(title=" Ca mg/L", range=c(0,0.6)),
          xaxis=list(title="Time [h]"))
+fig_Ca
 
-
+fig_SiO2 <- SiO2_IC_data %>% filter(Stream %in% c("Feed","Permeate"))%>%  
+        plot_ly(x=~time/60,
+          y=~SiO2_mgL/Mw_SiO2,
+         # error_y = list(array = ~std_mgL/Mw_SiO2),
+          color = ~Stream,
+         colors=c(colors[1],colors[2]),
+        type='scatter',mode='lines+markers')%>%
+layout( yaxis=list(title=" SiO2 mg/L", range=c(0,1.8)),
+         xaxis=list(title="Time [h]"))
+fig_SiO2
 
       
 
@@ -164,44 +209,148 @@ plot_ly(x=~Ca_IC_data$time/60,
 
 
 #Cl
-Cl_feed <- Cl_IC_data%>%filter(Stream=="feed")
-Cl_perm <- Cl_IC_data%>%filter(Stream=="Permeat")
+Cl_feed <- Cl_IC_data%>%filter(Stream=="Feed")
+Cl_perm <- Cl_IC_data%>%filter(Stream=="Permeate")
 Cl_rej <- (1-(Cl_perm$avg_mgL/Cl_feed$avg_mgL[c(2:16)]))*100
+Cl_rej_std_p <- (Cl_perm$Std_p+Cl_feed$Std_p[c(2:16)])/100
+Cl_rej_std <- abs(Cl_rej*Cl_rej_std_p)
 
 #SO4
-SO4_feed <- SO4_IC_data%>%filter(Stream=="feed")
-SO4_perm <- SO4_IC_data%>%filter(Stream=="Permeat")
+SO4_feed <- SO4_IC_data%>%filter(Stream=="Feed")
+SO4_perm <- SO4_IC_data%>%filter(Stream=="Permeate")
 SO4_rej <- (1-(SO4_perm$avg_mgL/SO4_feed$avg_mgL[c(2:16)]))*100
+SO4_rej_std_p <- (SO4_perm$Std_p+SO4_feed$Std_p[c(2:16)])/100
+SO4_rej_std <- abs(SO4_rej_std_p*SO4_rej)
 
 #Na
-Na_feed <- Na_IC_data%>%filter(Stream=="feed")
-Na_perm <- Na_IC_data%>%filter(Stream=="Permeat")
+Na_feed <- Na_IC_data%>%filter(Stream=="Feed")
+Na_perm <- Na_IC_data%>%filter(Stream=="Permeate")
 Na_rej <- (1-(Na_perm$avg_mgL/Na_feed$avg_mgL[c(2:16)]))*100
+Na_rej_std_p <- (Na_perm$Std_p+Na_feed$Std_p[c(2:16)])/100
+Na_rej_std <- abs(Na_rej_std_p*Na_rej)
+
+
 
 #Ca
-Ca_feed <- Ca_IC_data%>%filter(Stream=="feed")
-Ca_perm <- Ca_IC_data%>%filter(Stream=="Permeat")
+Ca_feed <- Ca_IC_data%>%filter(Stream=="Feed")
+Ca_perm <- Ca_IC_data%>%filter(Stream=="Permeate")
 Ca_rej <- (1-(Ca_perm$avg_mgL/Ca_feed$avg_mgL[c(2:16)]))*100
+Ca_rej_std_p <- (Ca_perm$Std_p+Ca_feed$Std_p[c(2:16)])/100
+Ca_rej_std <- abs(Ca_rej_std_p*Ca_rej)
+#Ca_rej <- set_na(Ca_rej,na=c(Ca_rej[10]))
+#Ca_rej_std <- set_na(Ca_rej_std,na=c(Ca_rej_std[10]))
+#Ca_perm <- set_na(Ca_perm$time,na=c(Ca_perm$time[10]))
+
+
+#SIO2
+SiO2_feed <- SiO2_IC_data%>%filter(Stream=="Feed")
+SiO2_perm <- SiO2_IC_data%>%filter(Stream=="Permeate")
+SiO2_rej <- (1-(SiO2_perm$SiO2_mgL/SiO2_feed$SiO2_mgL[c(2:16)]))*100
+SiO2_rej_std <- c(rep(0,15))
 
 plot_ly(x=~Cl_perm$time/60,
           y=~Cl_rej,
+         error_y = list(array = ~Cl_rej_std),
         type='scatter',mode='lines+markers',
           colors=colors[1], name = "Cl")%>%
   add_trace(x=~SO4_perm$time/60,
           y=~SO4_rej,
+          error_y = list(array = ~SO4_rej_std),
         type='scatter',mode='lines+markers',
           colors=colors[2], name = "SO4")%>%
+add_trace(x=~SiO2_perm$time/60,
+          y=~SiO2_rej,
+          error_y = list(array = ~SiO2_rej_std),
+        type='scatter',mode='lines+markers',
+          colors=colors[3], name = "SiO2")%>%
+add_trace(x=~Ca_perm$time[-c(10)]/60,
+          y=~Ca_rej[-c(10)], 
+          type='scatter',mode='lines+markers',
+          error_y = list(array = ~Ca_rej_std[-c(10)]),
+                 colors=colors[4], name = "Ca")%>%
 add_trace(x=~Na_perm$time/60,
           y=~Na_rej,
+          error_y = list(array = ~Na_rej_std),
         type='scatter',mode='lines+markers',
-          colors=colors[3], name = "Na")%>%
-add_trace(x=~Ca_perm$time/60,
-          y=~Ca_rej,
-        type='scatter',mode='lines+markers',
-          colors=colors[4], name = "Ca")%>%
+          colors=colors[5], name = "Na")%>%
   layout( yaxis=list(title=" Rejection"),
          xaxis=list(title="Time [h]"))
 
 
+
+
+```
+sampling every 20 min for the first 4 hours then every 30 mins 1 hour and 2 hours. 
+
+```{R import PCL data , echo=FALSE, message=FALSE}
+
+CWF_ICR_1 = read_delim("data/ICR_1_batch_24_01_22.csv",delim = "\t", escape_double = FALSE, 
+                  trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+#str(CWF)
+dat_ICR_1 = as.data.frame(CWF_ICR_1) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(CWF_ICR_1) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names=c("time","level","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0401","flow0401","p0501","con0501",
+            "temp0501","p0601","temp0601","16","17","18","19","20",
+            "21","pmp0201","pmp0301","pmp0401","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302","p_avg0401","flow_avg0401",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","36","pH0301",
+            "pH0501","con0302","40") #Vi finder på nogle lidt bedre nogle
+dat_ICR_1 = dat_ICR_1 %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+dat_ICR_1$time = dmy_hms(dat_ICR_1$time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+#str(dat)
+
+dat_ICR_1=dat_ICR_1[-c(1:19968),]
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = dat_ICR_1$flow0501>1&dat_ICR_1$flow0501<25
+start_tid = min(which(flow_boolean))
+dat_ICR_1=dat_ICR_1[-c(1:start_tid),]
+flow_boolean_slut = dat_ICR_1$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+dat_ICR_1=dat_ICR_1[-c(slut_tid:(nrow(dat_ICR_1)) ),]
+### Tid i s fra forsøgs start
+dat_ICR_1 = dat_ICR_1%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(dat_ICR_1$time))-as.numeric(dat_ICR_1$time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+dat_ICR_1 %>%#dplyr arbejder indenfor 'dat' data framen
+  mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  plot_ly(x=~(sek)/3600,
+          y=~p_avg0301,
+          name="Pressure before membrane",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~p_avg0302,
+            name='Pressure after membrane',
+            color='#E41317')%>%
+  add_lines(y=~TMP_slid,
+            name='TMP',
+            color='#forestgreen')%>%
+  layout(title="ICR batch 1 Pressure",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Pressure [bar]"),
+         xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
+
+
+
+
+
+```
+
+```{R pH, echo=FALSE, message=FALSE}
+
+
+fig_pH <- plot_ly(data=dat_ICR_1,x=~sek/3600,
+          y=~pH0201,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "pH ") %>%
+    layout( yaxis=list(title="pH",range=c(8.5,10)),
+         xaxis=list(title="Time [h]"))
+fig_pH  
 
 ```
