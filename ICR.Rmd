@@ -368,23 +368,38 @@ pH9.2_IC_data <- as.data.frame(pH9.2_IC_data)
 pH9.2_bi_data <- pH9.2_IC_data[c(17:19),c(1:4)] #bicarbonat data
 pH9.2_IC_data <- pH9.2_IC_data[c(1:13),] #IC data 
 
+pH9.2_IC_data$Sodium<- as.numeric(pH9.2_IC_data$Sodium)  # Convert one variable to numeric
 pH9.2_Permeate <- filter(pH9.2_IC_data, Stream=="Permeate")
 pH9.2_Feed <- filter(pH9.2_IC_data, Stream=="Feed")
 pH9.2_Permeate$Sulphate = c(5,5,5,5,5,5)
-
- 
-
-
 pH9.2_rejection <- ((1-(pH9.2_Permeate[,c(4:8)]/pH9.2_Feed[-c(1),c(4:8)]))*100)
+pH9.2_rejection$Time <- pH9.2_Permeate$Time
 
-(1-(pH9.2_Permeate[1,4]/pH9.2_Feed[2,4]))*100
+fig_pH9.2 <- plot_ly(data=pH9.2_rejection, x=~Time,
+          y=~Chloride,
+        type='scatter',mode='lines+markers',
+          colors=colors[1], name = "Cl pH9.2")%>%
+  add_trace(x=~pH9.2_Permeate$Time,
+          y=~pH9.2_rejection$Sulphate,
+          type='scatter',mode='lines+markers',
+          colors=colors[2], name = "SO4 pH9.2")%>%
+add_trace(x=~pH9.2_Permeate$Time,
+          y=~pH9.2_rejection$Silica,
+        type='scatter',mode='lines+markers',
+          colors=colors[3], name = "SiO2 pH9.2")%>%
+add_trace(x=~pH9.2_Permeate$Time,
+          y=~pH9.2_rejection$Calcium, 
+          type='scatter',mode='lines+markers',
+                 colors=colors[4], name = "Ca pH9.2")%>%
+add_trace(x=~pH9.2_Permeate$Time,
+          y=~pH9.2_rejection$Sodium,
+        type='scatter',mode='lines+markers',
+          colors=colors[5], name = "Na pH9.2")%>%
+  layout( yaxis=list(title=" Rejection",range=c(-35,105)),
+        xaxis=list(title="Time [h]",range=c(0,9)))
 
-str(pH9.2_Permeate)
-str(pH9.2_Feed)
-Cl_rej_std_p <- (Cl_perm$Std_p+Cl_feed$Std_p[c(4:16)])/100
-Cl_rej_std <- abs(Cl_rej*Cl_rej_std_p)
 
-plot_ly(x=~pH9.2_perm$Time,
+fig_ICR <- plot_ly(x=~Cl_perm$time/60,
           y=~Cl_rej,
          error_y = list(array = ~Cl_rej_std),
         type='scatter',mode='lines+markers',
@@ -407,43 +422,134 @@ add_trace(x=~Ca_perm$time[-c(10)]/60,
 add_trace(x=~Na_perm$time/60,
           y=~Na_rej,
           error_y = list(array = ~Na_rej_std),
-        type='scatter',mode='lines+markers',
+        type='scatter',
+        mode='lines+markers',
           colors=colors[5], name = "Na")%>%
-  layout( yaxis=list(title=" Rejection"),
-         xaxis=list(title="Time [h]"))
+  layout( yaxis=list(title=" Rejection",range=c(-35,105)),
+        xaxis=list(title="Time [h]",range=c(0,9)))
+
+
+pH10_IC_data <- read_excel("data/Multi_salt_alle_change_pH.xlsx",2)
+
+old_names_IC=colnames(pH10_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Time","Stream","Name","Sodium","Chloride","Sulphate","Calcium","Silica","DIT_M_Cl") #Vi finder på nogle lidt bedre nogle
+pH10_IC_data = pH10_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+pH10_IC_data <- as.data.frame(pH10_IC_data)
+pH10_bi_data <- pH10_IC_data[c(17:19),c(1:4)] #bicarbonat data
+pH10_IC_data <- pH10_IC_data[c(1:15),] #IC data 
+pH10_IC_data <- pH10_IC_data[-c(2:3),]
+pH10_IC_data$Sodium<- as.numeric(pH10_IC_data$Sodium)  # Convert one variable to numeric
+pH10_IC_data$Time<- as.numeric(pH10_IC_data$Time)
+
+pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
+pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
+pH10_Permeate$Sulphate = c(5,5,5,5,5,5)
+pH10_rejection <- ((1-(pH10_Permeate[,c(4:8)]/pH10_Feed[-c(1),c(4:8)]))*100)
+pH10_rejection$Time <- pH10_Permeate$Time
+
+
+ 
+
+fig_pH10 <- plot_ly(x=~pH10_Permeate$Time,
+          y=~pH10_rejection$Chloride,
+        type='scatter',mode='lines+markers',
+          colors=colors[1], name = "Cl pH10")%>%
+  add_trace(x=~pH10_Permeate$Time,
+          y=~pH10_rejection$Sulphate,
+          type='scatter',mode='lines+markers',
+          colors=colors[2], name = "SO4 pH10")%>%
+add_trace(x=~pH10_Permeate$Time,
+          y=~pH10_rejection$Silica,
+        type='scatter',mode='lines+markers',
+          colors=colors[3], name = "SiO2 pH10")%>%
+add_trace(x=~pH10_Permeate$Time,
+          y=~pH10_rejection$Calcium, 
+          type='scatter',mode='lines+markers',
+                 colors=colors[4], name = "Ca pH10")%>%
+add_trace(x=~pH10_Permeate$Time,
+          y=~pH10_rejection$Sodium,
+        type='scatter',mode='lines+markers',
+          colors=colors[5], name = "Na pH10")%>%
+  layout( yaxis=list(title=" Rejection",range=c(-35,105)),
+        xaxis=list(title="Time [h]",range=c(0,9)))
+
+fig_pH10
+
+
+fig_pH9.2 
+
+fig_ICR
+```
+
+
+```{R Sammenligning, echo=FALSE, message=FALSE}
 
 
 
+fig <- subplot(fig_pH9.2,fig_ICR,fig_pH10,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
+fig
+# Update title
+annotations = list( 
+  list( 
+    x = 0.15,  
+    y = 1.0,  
+    text = "Silica 75 mg/L, pH 9,25",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.5,  
+    y = 1,  
+    text = "Silica 75 mg/L, pH 9,5",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.85,  
+    y = 1,  
+    text = "Silica 75 mg/L, pH 9,75",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),
+  list( 
+    x = 0.15,  
+    y = 0.4,  
+    text = "Silica 125 mg/L, pH 9,25",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.5,  
+    y = 0.4,  
+    text = "Silica 125 mg/L, pH 9,5",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ),  
+  list( 
+    x = 0.85,  
+    y = 0.4,  
+    text = "Silica 125 mg/L, pH 9,75",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE 
+  ))
 
-IC_9.2_raw = IC_9.2= as.data.frame(pH9.2_IC_data)
-IC_9.2$Sulphate = replace_na(IC_9.2_raw$Sulphate,5)
-IC_9.2 = IC_9.2%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
-
-IC_9.2$value = as.double(IC_9.2$value)
-#IC_9.2 = IC_9.2%>%mutate(Rej = )
-A=IC_9.2%>%filter(Stream == "Feed"& Time != 0)
-B=IC_9.2%>%filter(Stream=="Permeate")
-rejection = 1-B$value/A$value
-C_9.2=data.frame(matrix(ncol=3,nrow=length(rejection)))
-colnames(C_9.2)=c('time','key','value')
-C_9.2$time=A$Time
-C_9.2$key=A$key
-C_9.2$value=rejection
-
-IC_9.2 = na.omit(IC_9.2)
-labs = c('Na','Ca','Cl','SO4')
-#level_order = c('Sodium','Calcium','Chloride','Sulphate')
-conc_9.2 = ggplot(IC_9.2%>%filter(Stream=="Feed"), aes(x=Time, y=value,color= key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(0,1200))+
-  labs(x="Time [h]",y="Ion Concentration Feed  [mg/L]", color="")+
-  ggtitle("Ion concentration Multisalt pH 9.2")
-p_conc_9.2 =  ggplotly(conc_9.2) %>% layout(showlegend = FALSE)
-
-
-rej_9.2=ggplot(C_9.2, aes(x=time, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
-  scale_color_brewer(palette= "Set1")+scale_y_continuous(limits = c(-0.6,1))+
-  labs(x="Time [h]",y="Rejection", color="")+xlim(c(0,NA))+
-  ggtitle("pH 9.2")
-ggplotly(rej_9.2)
 
 ```
