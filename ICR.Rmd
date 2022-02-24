@@ -120,19 +120,6 @@ SiO2_IC_data <- as.data.frame(SiO2_IC_data)
 
 
 
-#data fra MgSO4 forsøg ikke ICR. 
-
-Mg_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",5)
-
-old_names_IC=colnames(Mg_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names_IC=c("time","Stream","Dilution","Mg_1_mg/L","Mg_2_mg/L") #Vi finder på nogle lidt bedre nogle
-Mg_IC_data = Mg_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
-Mg_IC_data <- as.data.frame(Mg_IC_data)
-#noget med gennemsnit. 
-
-Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE)))%>%
-                          mutate(std_mgL=(rowSds(as.matrix(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE))))
-
 
 ```
 

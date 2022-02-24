@@ -26,13 +26,15 @@ library(ggiraphExtra)
 library(coronavirus)
 library(lubridate)
 library(plotly)
-
 library(readxl)
 require(readr)
 library(zoo)
 library(latex2exp)
 library(fs)
 library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
 
 colors = c(
     '#1f77b4',  # muted blue
@@ -598,6 +600,40 @@ fig_B
 
 ```
 
+```{r MgSO4}
+
+#data fra MgSO4 forsøg ikke ICR. 
+
+Mg_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",5)
+
+old_names_IC=colnames(Mg_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","Mg_1_mg/L","Mg_2_mg/L") #Vi finder på nogle lidt bedre nogle
+Mg_IC_data = Mg_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Mg_IC_data <- as.data.frame(Mg_IC_data)
+#noget med gennemsnit. 
+
+Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE)))%>%
+mutate(std_mgL=(rowSds(as.matrix(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE))))
+
+
+SO4_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",2)
+
+old_names_IC=colnames(SO4_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","SO4_1_mg/L","SO4_2_mg/L") #Vi finder på nogle lidt bedre nogle
+SO4_IC_data = SO4_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SO4_IC_data <- as.data.frame(SO4_IC_data)
+#noget med gennemsnit. 
+
+SO4_IC_data <-SO4_IC_data%>%mutate(avg_mgL=(rowMeans(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))%>%mutate(Std_p=((std_mgL/avg_mgL)*100))
+SO4_IC_data <- SO4_IC_data[-c(1:36),]
+SO4_IC_data[is.na(SO4_IC_data)]=0
+SO4_IC_data$Stream[1:3] = c("Feed","Feed","Feed")
+SO4_IC_data$Stream[4:6] = "Permeate"
+
+
+
+```
 
 
 

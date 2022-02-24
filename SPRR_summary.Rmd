@@ -123,7 +123,7 @@ row.names(Rej_total) <- c("Calcium","Sodium","Chloride","Sulphate","Silica","Bic
 
 ```
 
-## Databehandling Multisalt {.tabset}
+## Databehandling SPRR {.tabset}
 
 
 
