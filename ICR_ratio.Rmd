@@ -99,6 +99,7 @@ SPRR_clean = SPRR_clean[,col_order]
 ICR_clean = ICR_clean[,col_order]
 
 Ion_data_frame = rbind(M_9.2_clean,M_10_clean,M_10.5_clean,SPRR_clean,ICR_clean)
+Ion_data_frame[1:18,8:12] = Ion_data_frame[1:18,8:11]*100
 
 
 ```
@@ -107,7 +108,20 @@ Ion_data_frame = rbind(M_9.2_clean,M_10_clean,M_10.5_clean,SPRR_clean,ICR_clean)
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
+```{r så går det for sig, echo=FALSE}
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
+Ion_data_frame = Ion_data_frame%>%mutate("Na_mmol"=Na/Mw_Na)
+Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Na/Mw_Ca)
+Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Na/Mw_Cl)
+Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=Na/Mw_SO4)
+Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=Na/Mw_SiO2)
+
+
+ggplotly(ggplot(Ion_data_frame, aes(x=SiO2_mmol, y=Rej_Cl))+geom_point())
 
 ```
 

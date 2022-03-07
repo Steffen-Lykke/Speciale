@@ -860,7 +860,7 @@ M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Chloride")%>%select("value"))
 M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Sulphate")%>%select("value"))
 M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Sodium")%>%select("value"))
 M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Calcium")%>%select("value"))
-sil_10.5 = data.frame(pH10.5_rej_SiO2/10.50)
+sil_10.5 = data.frame(pH10.5_rej_SiO2/100)
 M10.5 = cbind(M10.5,sil_10.5[2:7,])
 
 
