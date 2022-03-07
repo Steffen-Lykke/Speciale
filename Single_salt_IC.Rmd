@@ -50,7 +50,8 @@ colors = c(
 )
 
 ```
-
+### Salt data
+#### NaCl
 ```{R NaCl plot IC data, echo=FALSE, message=FALSE}
 
 NaCl_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx")
@@ -111,7 +112,7 @@ fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1],
 
 ```
 
-
+#### CaCl2
 ```{R CaCl2 plot IC data, echo=FALSE, message=FALSE}
 
 CaCl2_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx",2)
@@ -167,7 +168,7 @@ fig_CaCL2 <- plot_ly(x=~CaCl2_Feed$time[-1],
 #fig_CaCL2
 
 ```
-
+#### SiO2
 ```{R SIO2 plot IC data, echo=FALSE, message=FALSE}
 
 SiO2_IC_data <- read_excel("data/NaCl_IC_analyse_test.xlsx",3)
@@ -225,7 +226,84 @@ fig_SiO2 <- plot_ly(x=~SiO2_Feed$time[-1],
 #fig_SiO2
 
 ```
+#### MgSO4
 
+```{r MgSO4, echo=FALSE, warning=FALSE}
+
+#data fra MgSO4 forsøg ikke ICR. 
+
+Mg_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",5)
+
+old_names_IC=colnames(Mg_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","Mg_1_mg/L","Mg_2_mg/L") #Vi finder på nogle lidt bedre nogle
+Mg_IC_data = Mg_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Mg_IC_data <- as.data.frame(Mg_IC_data)
+#noget med gennemsnit. 
+
+Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE)))%>%
+mutate(std_mgL=(rowSds(as.matrix(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE))))
+
+
+SO4_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",2)
+
+old_names_IC=colnames(SO4_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("time","Stream","Dilution","SO4_1_mg/L","SO4_2_mg/L") #Vi finder på nogle lidt bedre nogle
+SO4_IC_data = SO4_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SO4_IC_data <- as.data.frame(SO4_IC_data)
+#noget med gennemsnit. 
+
+SO4_IC_data <-SO4_IC_data%>%mutate(avg_mgL=(rowMeans(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE)))%>%
+                          mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))%>%mutate(Std_p=((std_mgL/avg_mgL)*100))
+SO4_IC_data <- SO4_IC_data[-c(1:36),]
+SO4_IC_data[is.na(SO4_IC_data)]=0
+SO4_IC_data$Stream[1:3] = c("Feed","Feed","Feed")
+SO4_IC_data$Stream[4:6] = "Permeate"
+
+MgSO4 = Mg_IC_data[,c(1,2,6,7)]
+MgSO4 = cbind(MgSO4,SO4_IC_data[,6:8])
+colnames(MgSO4)=c("time","stream","Mg_avg","Mg_std","SO4_avg","SO4_std","SO4_std%")
+MgSO4 = MgSO4%>%mutate("Mg_std%" = Mg_std/Mg_avg*100)
+MgSO4_feed = MgSO4%>%filter(stream=="Feed")%>%select(c(1,2,3,5,7,8))
+MgSO4_perm = MgSO4%>%filter(stream=="Permeate")%>%select(c(1,2,3,5,7,8))
+MgSO4_rej = 1-(MgSO4_perm[,c(3:4)]/MgSO4_feed[,c(3:4)])
+MgSO4_rej = cbind(MgSO4[1:3,c(1,2)],MgSO4_rej)
+
+#Standardafvigelser
+
+
+
+MgSO4_rej$Mg_std_p = (MgSO4_perm$`Mg_std%`+MgSO4_feed$`Mg_std%`)/100
+MgSO4_rej$SO4_std_p = (MgSO4_perm$`SO4_std%`+MgSO4_feed$`SO4_std%`)/100
+MgSO4_rej = MgSO4_rej%>%mutate(Mg_std = abs(`Mg_std_p`*Mg_avg*100))
+MgSO4_rej = MgSO4_rej%>%mutate(SO4_std = abs(SO4_std_p*SO4_avg*100))
+
+Ca_rej_std_p <- (Ca_perm$Std_p+Ca_feed$Std_p[c(2:16)])/100
+Ca_rej_std <- abs(Ca_rej_std_p*Ca_rej)
+
+
+
+fig_MgSO4 <- plot_ly(x=~MgSO4_rej$time/60,
+          y=~MgSO4_rej$Mg_avg*100,
+          type='scatter',mode='lines+markers',
+          colors=colors[1], name = "MgSO4 Mg",
+        error_y = list(array = MgSO4_rej$Mg_std))%>%
+  add_trace(x=~MgSO4_rej$time/60,
+          y=~MgSO4_rej$SO4_avg*100,
+        type='scatter',mode='lines+markers',
+          colors=colors[2], name = "MgSO4 SO4",
+        error_y = list(array = MgSO4_rej$SO4_std))  %>%
+     layout(
+       #title="Rejection CaCl2",
+         yaxis=list(title="Rejection %",range=c(0,100)),
+         xaxis=list(title="Time [h]")) 
+fig_MgSO4
+
+
+```
+
+
+
+### Samlet Rejection
 ```{R Summary Rjection, echo=FALSE, message=FALSE}
 
 fig_cations <- plot_ly(x=~NaCl_Feed$time[-1],
@@ -277,7 +355,7 @@ fig <- subplot(fig_cations,fig_anions,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1
 
 fig
 
-fig_2 <- subplot(fig_NaCl,fig_CaCL2, fig_SiO2
+fig_2 <- subplot(fig_NaCl,fig_CaCL2, fig_SiO2,fig_MgSO4
               ,nrows=1,titleY=TRUE,titleX=TRUE)
 # Update title
 annotations = list( 
@@ -292,7 +370,7 @@ annotations = list(
     showarrow = FALSE 
   ),  
   list( 
-    x = 0.5,  
+    x = 0.35,  
     y = 1,  
     text = "CaCl2",  
     xref = "paper",  
@@ -302,7 +380,7 @@ annotations = list(
     showarrow = FALSE 
   ),  
   list( 
-    x = 0.85,  
+    x = 0.55,  
     y = 1,  
     text = "SiO2",  
     xref = "paper",  
@@ -310,7 +388,17 @@ annotations = list(
     xanchor = "center",  
     yanchor = "bottom",  
     showarrow = FALSE 
-  ))
+  ),
+    list( 
+    x = 0.9,  
+    y = 1,  
+    text = "MgSO4",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE )
+)
   
 
 fig_2 <- fig_2 %>%layout(annotations = annotations) 
@@ -493,6 +581,7 @@ dat_SiO2 %>%#dplyr arbejder indenfor 'dat' data framen
          xaxis=list(title="Time [h]", range=c(0,4)))#Her plottet de to tryk på feed siden plus et TMP
 
 ```
+### Osmotic Pressure
 ```{R NaCl osmotisk tryk, echo=FALSE, message=FALSE}
 
 plot_ly(data=dat_NaCl, x=~sek/3600, y=~temp0501)%>%
@@ -595,41 +684,6 @@ fig_B <- plot_ly(data=SingleSalt,x=~tid[-2],
     layout( yaxis=list(title="Bicarbonate [mM]"),
          xaxis=list(title="Time [h]"))
 fig_B  
-
-
-
-```
-
-```{r MgSO4}
-
-#data fra MgSO4 forsøg ikke ICR. 
-
-Mg_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",5)
-
-old_names_IC=colnames(Mg_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names_IC=c("time","Stream","Dilution","Mg_1_mg/L","Mg_2_mg/L") #Vi finder på nogle lidt bedre nogle
-Mg_IC_data = Mg_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
-Mg_IC_data <- as.data.frame(Mg_IC_data)
-#noget med gennemsnit. 
-
-Mg_IC_data <-Mg_IC_data%>%mutate(avg_mgL=(rowMeans(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE)))%>%
-mutate(std_mgL=(rowSds(as.matrix(Mg_IC_data[,c("Mg_1_mg/L","Mg_2_mg/L")],na.rm=TRUE))))
-
-
-SO4_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",2)
-
-old_names_IC=colnames(SO4_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
-new_names_IC=c("time","Stream","Dilution","SO4_1_mg/L","SO4_2_mg/L") #Vi finder på nogle lidt bedre nogle
-SO4_IC_data = SO4_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
-SO4_IC_data <- as.data.frame(SO4_IC_data)
-#noget med gennemsnit. 
-
-SO4_IC_data <-SO4_IC_data%>%mutate(avg_mgL=(rowMeans(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE)))%>%
-                          mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))%>%mutate(Std_p=((std_mgL/avg_mgL)*100))
-SO4_IC_data <- SO4_IC_data[-c(1:36),]
-SO4_IC_data[is.na(SO4_IC_data)]=0
-SO4_IC_data$Stream[1:3] = c("Feed","Feed","Feed")
-SO4_IC_data$Stream[4:6] = "Permeate"
 
 
 
