@@ -144,6 +144,7 @@ SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Rejection",n
 SPRR_data = SPRR_data %>% mutate(Cl_ratio=replace(Cl_ratio,Stream=="Permeat",new_ratios_feed$acutal_cl_ratio))
 SPRR_data = SPRR_data %>% mutate(Cl_ratio=Cl_ratio*100)
 SPRR_data$HCO3[1:3] = 0
+write.table(SPRR_data,file='data/SPRR_df.csv',col.names = T,row.names = F,sep="\t")
 #A=SPRR_data %>% filter(Stream=="Feed"& (!is.na(Cl))&Experiment_no >1)
 ```
 

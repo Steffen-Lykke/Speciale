@@ -717,7 +717,12 @@ The ion results were obtained by IC analysis of samples taken at various times f
 ##### pH 9.2
 ```{r Ions 9.2, echo=FALSE}
 IC_9.2_raw = IC_9.2= as.data.frame(pH9.2_IC_data)
-IC_9.2$Sulphate = replace_na(IC_9.2_raw$Sulphate,5)
+IC_9.2$Sodium = as.double(IC_9.2$Sodium)
+IC9.2p=IC_9.2 %>% filter(Stream=="Permeate")%>%mutate(Sulphate=5)
+IC9.2f=IC_9.2 %>% filter(Stream=="Feed")
+IC_9.2 = rbind(IC9.2f,IC9.2p)
+#IC_9.2$Sulphate = replace_na(IC_9.2$Sulphate,5)
+M9.2=IC_9.2%>%filter(Stream =="Feed")%>%slice(-1)
 IC_9.2 = IC_9.2%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
 
 IC_9.2$value = as.double(IC_9.2$value)
@@ -725,11 +730,32 @@ IC_9.2$value = as.double(IC_9.2$value)
 A=IC_9.2%>%filter(Stream == "Feed"& Time != 0)
 B=IC_9.2%>%filter(Stream=="Permeate")
 rejection = 1-B$value/A$value
-C_9.2=data.frame(matrix(ncol=3,nrow=length(rejection)))
-colnames(C_9.2)=c('time','key','value')
+#C_9.2=data.frame(matrix(ncol=3,nrow=length(rejection)))
+C_9.2=data.frame()
+C_9.2[1:length(rejection),1]=NA
 C_9.2$time=A$Time
 C_9.2$key=A$key
 C_9.2$value=rejection
+C_9.2=C_9.2[,2:4]
+
+## Export af data
+
+M9.2 = cbind(M9.2, C_9.2 %>% filter(key =="Chloride")%>%select("value"))
+M9.2 = cbind(M9.2, C_9.2 %>% filter(key =="Sulphate")%>%select("value"))
+M9.2 = cbind(M9.2, C_9.2 %>% filter(key =="Sodium")%>%select("value"))
+M9.2 = cbind(M9.2, C_9.2 %>% filter(key =="Calcium")%>%select("value"))
+sil_9.2 = data.frame(pH9.2_rej_SiO2/100)
+M9.2 = cbind(M9.2,sil_9.2)
+
+
+
+colnames(M9.2)=c("time","Stream","name","Na","Cl","SO4","Ca","SiO2_mgL","fuck","af","pls","conductivity","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2")
+M9.2=M9.2%>%select(-c("Stream","fuck","af","pls"))
+write.table(M9.2,file='data/M9.2_df.csv',col.names = T,row.names = F,sep="\t")
+#write_csv(M9.2,file='data/M9.2_df.csv')
+
+
+#all_ion_9.2 = rbind(C_9.2,sil_9.2)
 
 IC_9.2 = na.omit(IC_9.2)
 labs = c('Na','Ca','Cl','SO4')
@@ -751,7 +777,10 @@ ggplotly(rej_9.2)
 ```{r Ions 10, echo=FALSE}
 IC_10_raw = IC_10 = as.data.frame(pH10_IC_data)
 IC_10 = slice(IC_10,-c(2,3))
-IC_10$Sulphate = replace_na(IC_10$Sulphate,5)
+IC10p=IC_10 %>% filter(Stream=="Permeate")%>%mutate(Sulphate=5)
+IC10f=IC_10 %>% filter(Stream=="Feed")
+IC_10 = rbind(IC10f,IC10p)
+M10=IC_10%>%filter(Stream =="Feed")%>%slice(-1)
 IC_10 = IC_10%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
 
 IC_10 = subset(IC_10,select=-5)
@@ -766,6 +795,23 @@ colnames(C_10)=c('time','key','value')
 C_10$time=A$Time
 C_10$key=A$key
 C_10$value=rejection
+
+## Export af data
+M10 = cbind(M10, C_10 %>% filter(key =="Chloride")%>%select("value"))
+M10 = cbind(M10, C_10 %>% filter(key =="Sulphate")%>%select("value"))
+M10 = cbind(M10, C_10 %>% filter(key =="Sodium")%>%select("value"))
+M10 = cbind(M10, C_10 %>% filter(key =="Calcium")%>%select("value"))
+sil_10 = data.frame(pH10_rej_SiO2/100)
+M10 = cbind(M10,sil_10[2:7,])
+
+
+
+colnames(M10)=c("time","Stream","name","Na","Cl","SO4","Ca","SiO2_mgL","fuck","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2")
+M10=M10%>%select(-c("Stream","fuck"))
+write.table(M10,file='data/M10_df.csv',col.names = T,row.names = F,sep="\t")
+#write_csv(M9.2,file='data/M9.2_df.csv')
+
+
 
 IC_10 = na.omit(IC_10)
 labs = c('Na','Ca','Cl','SO4')
@@ -787,7 +833,11 @@ ggplotly(rej_10)
 ```{r Ions 10.5, echo=FALSE}
 IC_10.5_raw = IC_10.5 = as.data.frame(pH10.5_IC_data)
 IC_10.5 = slice(IC_10.5,-c(14,15))
-IC_10.5$Sulphate = replace_na(IC_10.5$Sulphate,5)
+IC10.5p=IC_10.5 %>% filter(Stream=="Permeate")%>%mutate(Sulphate=5)
+IC10.5f=IC_10.5 %>% filter(Stream=="Feed")
+IC_10.5 = rbind(IC10.5f,IC10.5p)
+M10.5=IC_10.5%>%filter(Stream =="Feed")%>%slice(-1)
+#IC_10.5$Sulphate = replace_na(IC_10.5$Sulphate,5)
 IC_10.5 = IC_10.5%>%gather(key,value, Sodium,Chloride,Sulphate,Calcium)
 
 IC_10.5 = subset(IC_10.5,select=-c(5,6,7))
@@ -802,6 +852,24 @@ colnames(C_10.5)=c('time','key','value')
 C_10.5$time=A$Time
 C_10.5$key=A$key
 C_10.5$value=rejection
+
+
+
+## Export af data
+M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Chloride")%>%select("value"))
+M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Sulphate")%>%select("value"))
+M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Sodium")%>%select("value"))
+M10.5 = cbind(M10.5, C_10.5 %>% filter(key =="Calcium")%>%select("value"))
+sil_10.5 = data.frame(pH10.5_rej_SiO2/10.50)
+M10.5 = cbind(M10.5,sil_10.5[2:7,])
+
+
+
+colnames(M10.5)=c("time","Stream","name","Na","Cl","SO4","Ca","SiO2_mgL","fuck","af","pls","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2")
+M10.5=M10.5%>%select(-c("Stream","fuck","af","pls"))
+write.table(M10.5,file='data/M10.5_df.csv',col.names = T,row.names = F,sep="\t")
+#write_csv(M9.2,file='data/M9.2_df.csv')
+
 
 IC_10.5 = na.omit(IC_10.5)
 labs = c('Na','Ca','Cl','SO4')
@@ -1023,5 +1091,5 @@ IC_9.2_C = data.frame(IC_9.2_B$Time, IC_9.2_B$Na, IC_9.2_B$Cl)
 IC_10_C = cbind(IC_10_B$Time, IC_10_B$Na, IC_10_B$Cl)
 IC_10.5_C = cbind(IC_10.5_B$Time, IC_10.5_B$Na, IC_10.5_B$Cl)
 print(xtable(IC_10.5_C))
-help
+
 ´´´

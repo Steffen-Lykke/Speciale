@@ -1,0 +1,114 @@
+---
+title: "ICR phase 2"
+author: "Steffen"
+date: "7/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Loading af pakker 
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
+
+```
+
+## 
+
+
+
+```{r import en masse data}
+Ion_data_frame = data.frame()
+## SPRR data håndtering
+SPRR = read.table(file='data/SPRR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+SPRR_pH= c(NA,9.37,9.26,NA,9.26,9.35,NA,9.67,9.68,NA,9.56,9.66,NA,9.83,9.89,NA,9.81,9.87)
+SPRR_names = c("SPRR_1","SPRR_2","SPRR_3","SPRR_4","SPRR_5","SPRR_6","SPRR_7","SPRR_8","SPRR_9","SPRR_10","SPRR_11","SPRR_12","SPRR_13","SPRR_14","SPRR_15","SPRR_16","SPRR_17","SPRR_18")
+
+
+SPRR_wrangle = cbind(SPRR%>%filter(Stream == "Feed"),SPRR%>%filter(Stream == "Rejection")%>%select("Na","Ca","Cl","SO4","SiO2","HCO3"))
+SPRR_wrangle$pH = SPRR_pH
+
+colnames(SPRR_wrangle) = c("name","Stream","Cl_ratio","SiO2_teo","pH","Ca","Na","Cl","SO4","SiO2_mgL","HCO3","Rej_Na","Rej_Ca","Rej_Cl","Rej_SO4","Rej_SiO2","Rej_HCO3")
+SPRR_wrangle$name = SPRR_names
+SPRR_clean = SPRR_wrangle%>%select(-c("Stream","SiO2_teo","HCO3","Rej_HCO3","Cl_ratio"))
+SPRR_clean$state = "Steady State"
+
+###multisalt håndtering
+M_9.2 = read.table(file='data/M9.2_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_9.2_clean = M_9.2%>%select(-c("time","conductivity"))
+M_9.2_clean$state = "Batch"
+M_9.2_clean$name = c("M_9.2_3.5h","M_9.2_5h","M_9.2_6h","M_9.2_7h","M_9.2_8h","M_9.2_8.7h")
+
+M_10 = read.table(file='data/M10_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_10_clean = M_10%>%select(-c("time"))
+M_10_clean$state = "Batch"
+M_10_clean$pH = NA
+M_10_clean$name = c("M_10_3h","M_10_4h","M_10_5h","M_10_5.5h","M_10_6h","M_10_6.5h")
+
+M_10.5 = read.table(file='data/M10.5_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_10.5_clean = M_10.5%>%select(-c("time"))
+M_10.5_clean$state = "Batch"
+M_10.5_clean$pH = NA
+M_10.5_clean$name = c("M_10.5_2.5h","M_10.5_4h","M_10.5_5h","M_10.5_6h","M_10.7h","M_10.5_8h")
+
+ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","pH","Rej_SiO2","state")
+ICR_clean = ICR_1
+
+col_order <- c("name","Na","Cl","SO4","Ca","SiO2_mgL","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
+M_9.2_clean = M_9.2_clean[,col_order]
+M_10_clean = M_10_clean[,col_order]
+M_10.5_clean = M_10.5_clean[,col_order]
+SPRR_clean = SPRR_clean[,col_order]
+ICR_clean = ICR_clean[,col_order]
+
+Ion_data_frame = rbind(M_9.2_clean,M_10_clean,M_10.5_clean,SPRR_clean,ICR_clean)
+
+
+```
+
+##
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -120,7 +120,6 @@ SiO2_IC_data <- as.data.frame(SiO2_IC_data)
 
 
 
-
 ```
 
 ```{R plot af conc , echo=FALSE, message=FALSE}
@@ -263,8 +262,17 @@ add_trace(x=~Na_perm$time/60,
   layout( yaxis=list(title=" Rejection"),
          xaxis=list(title="Time [h]"))
 
-
-
+###Data export
+ICR_data = read_excel("data/ICR/analyse_ICR_samlet.xlsx",2)
+ICR_df = ICR_data[2:16,]
+ICR_df$pH = NA
+ICR_df$Rej_Cl = Cl_rej
+ICR_df$Rej_SO4 = SO4_rej
+ICR_df$Rej_Na = Na_rej
+ICR_df$Rej_Ca = Ca_rej
+ICR_df$Rej_SiO2 = SiO2_rej
+ICR_df$state = "Batch"
+write.table(ICR_df,file='data/ICR_df.csv',col.names = T,row.names = F,sep="\t")
 
 ```
 sampling every 20 min for the first 4 hours then every 30 mins 1 hour and 2 hours. 
