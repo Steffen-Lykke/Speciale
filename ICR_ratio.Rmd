@@ -68,7 +68,7 @@ colnames(SPRR_wrangle) = c("name","Stream","Cl_ratio","SiO2_teo","pH","Ca","Na",
 SPRR_wrangle$name = SPRR_names
 SPRR_clean = SPRR_wrangle%>%select(-c("Stream","SiO2_teo","HCO3","Rej_HCO3","Cl_ratio"))
 SPRR_clean$state = "Steady State"
-
+SPRR_clean$pH[1]=9.33
 ###multisalt håndtering
 M_9.2 = read.table(file='data/M9.2_df.csv', header = T,sep = "\t",stringsAsFactors = T)
 M_9.2_clean = M_9.2%>%select(-c("time","conductivity"))
@@ -88,8 +88,7 @@ M_10.5_clean$pH = c(10.5,10.52,10.54,10.56,10.59,10.63)
 M_10.5_clean$name = c("M_10.5_2.5h","M_10.5_4h","M_10.5_5h","M_10.5_6h","M_10.7h","M_10.5_8h")
 ### ICR data
 ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
-colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","pH","Rej_SiO2","state")
-ICR_1$pH = NA
+colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
 ICR_clean = ICR_1
 
 ###Sættes sammen
@@ -148,6 +147,14 @@ ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) 
 }
 ggplotRegression(fit_SiO2_pH)
 
+plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values',
+     abline(a=0, b=1))
+plot(fit_SiO2_pH$residuals, pch = 16, col = "red")
+plot(cooks.distance(fit_SiO2_pH), pch = 16, col = "red")
+
 Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
 
 ```
@@ -163,87 +170,30 @@ Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion=Cl_mmol/anion_total)
 fit_Clrej_cl_anion = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
 ggplotRegression(fit_Clrej_cl_anion)
 
+
+fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
+
+#pred.int <- predict(model, interval = "prediction")
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_Cl,color=name))+geom_point())
+
+ggplotRegression(fit2)
+```
+
+```{r fri leg}
+fit_Clrej_test1 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_test1)
+
+plot(x=predict(fit_Clrej_test1), y=na.omit(Ion_data_frame$Rej_Cl),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values',
+     abline(a=0, b=1))
+
 fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
 
 #pred.int <- predict(model, interval = "prediction")
 ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point())
 
-ggplotRegression(fit1)
-
-
-
-
-ggplotRegression(fit2)
+ggplotRegression(fit_Clrej_test1)
 ```
-
-```{r passer det med silica, echo=FALSE}
-
-
-
-#Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74)
-Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
-Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
-Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion=Cl_mmol/anion_total)
-
-fit1 = lm(Rej_SiO2~SiO2_ladet, data = Ion_data_frame)
-ggplotRegression(fit1)
-
-
-ggplotRegression <- function (fit) {
-
-require(ggplot2)
-
-ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
-  geom_point() +
-  stat_smooth(method = "lm", col = "red") +
-  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
-                     "Intercept =",signif(fit$coef[[1]],5 ),
-                     " Slope =",signif(fit$coef[[2]], 5),
-                     " P =",signif(summary(fit)$coef[2,4], 5)))
-}
-#pred.int <- predict(model, interval = "prediction")
-ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point())
-
-ggplotRegression(fit1)
-
-
-
-fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
-ggplotRegression(fit2)
-```
-Kopiret oppe fra not to fuck shit up. 
-
-```{r passer det med silica, echo=FALSE}
-
-#frac=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74
-#Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74)
-Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
-Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
-Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion=Cl_mmol/anion_total)
-
-fit1 = lm(Rej_SiO2~SiO2_ladet, data = Ion_data_frame)
-
-ggplotRegression <- function (fit) {
-
-require(ggplot2)
-
-ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
-  geom_point() +
-  stat_smooth(method = "lm", col = "red") +
-  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
-                     "Intercept =",signif(fit$coef[[1]],5 ),
-                     " Slope =",signif(fit$coef[[2]], 5),
-                     " P =",signif(summary(fit)$coef[2,4], 5)))
-}
-pred.int <- predict(model, interval = "prediction")
-ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point())
-
-ggplotRegression(fit1)
-
-
-
-fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
-ggplotRegression(fit2)
-```
-
 
