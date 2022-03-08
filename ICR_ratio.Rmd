@@ -155,7 +155,8 @@ plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
 plot(fit_SiO2_pH$residuals, pch = 16, col = "red")
 plot(cooks.distance(fit_SiO2_pH), pch = 16, col = "red")
 
-Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
+
+Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=((fit_SiO2_pH$coef)[2]*pH+(fit_SiO2_pH$coef)[1])/100*SiO2_mmol)
 
 ```
 Anion fraktion udregneds udfra Cl/[SO4]+[SiO2_ladet]+[Cl]
