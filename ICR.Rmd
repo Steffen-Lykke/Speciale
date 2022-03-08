@@ -265,7 +265,6 @@ add_trace(x=~Na_perm$time/60,
 ###Data export
 ICR_data = read_excel("data/ICR/analyse_ICR_samlet.xlsx",2)
 ICR_df = ICR_data[2:16,]
-ICR_df$pH = NA
 ICR_df$Rej_Cl = Cl_rej
 ICR_df$Rej_SO4 = SO4_rej
 ICR_df$Rej_Na = Na_rej

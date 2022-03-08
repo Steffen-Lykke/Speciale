@@ -53,7 +53,7 @@ colors = c(
 
 
 
-```{r import en masse data}
+```{r import en masse data, include=FALSE}
 Ion_data_frame = data.frame()
 ## SPRR data håndtering
 SPRR = read.table(file='data/SPRR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
@@ -78,19 +78,21 @@ M_9.2_clean$name = c("M_9.2_3.5h","M_9.2_5h","M_9.2_6h","M_9.2_7h","M_9.2_8h","M
 M_10 = read.table(file='data/M10_df.csv', header = T,sep = "\t",stringsAsFactors = T)
 M_10_clean = M_10%>%select(-c("time"))
 M_10_clean$state = "Batch"
-M_10_clean$pH = NA
+M_10_clean$pH = c(10.13,10.15,10.17,10.19,10.21,10.24)
 M_10_clean$name = c("M_10_3h","M_10_4h","M_10_5h","M_10_5.5h","M_10_6h","M_10_6.5h")
 
 M_10.5 = read.table(file='data/M10.5_df.csv', header = T,sep = "\t",stringsAsFactors = T)
 M_10.5_clean = M_10.5%>%select(-c("time"))
 M_10.5_clean$state = "Batch"
-M_10.5_clean$pH = NA
+M_10.5_clean$pH = c(10.5,10.52,10.54,10.56,10.59,10.63)
 M_10.5_clean$name = c("M_10.5_2.5h","M_10.5_4h","M_10.5_5h","M_10.5_6h","M_10.7h","M_10.5_8h")
-
+### ICR data
 ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
 colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","pH","Rej_SiO2","state")
+ICR_1$pH = NA
 ICR_clean = ICR_1
 
+###Sættes sammen
 col_order <- c("name","Na","Cl","SO4","Ca","SiO2_mgL","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
 M_9.2_clean = M_9.2_clean[,col_order]
 M_10_clean = M_10_clean[,col_order]
@@ -99,8 +101,7 @@ SPRR_clean = SPRR_clean[,col_order]
 ICR_clean = ICR_clean[,col_order]
 
 Ion_data_frame = rbind(M_9.2_clean,M_10_clean,M_10.5_clean,SPRR_clean,ICR_clean)
-Ion_data_frame[1:18,8:12] = Ion_data_frame[1:18,8:11]*100
-
+Ion_data_frame[1:18,8:12] = Ion_data_frame[1:18,8:12]*100
 
 ```
 
@@ -115,14 +116,41 @@ Mw_Ca=40.078
 Mw_SO4=96.06
 Mw_SiO2=60.08
 Ion_data_frame = Ion_data_frame%>%mutate("Na_mmol"=Na/Mw_Na)
-Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Na/Mw_Ca)
-Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Na/Mw_Cl)
-Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=Na/Mw_SO4)
-Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=Na/Mw_SiO2)
-
-
-ggplotly(ggplot(Ion_data_frame, aes(x=SiO2_mmol, y=Rej_Cl))+geom_point())
+Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Ca/Mw_Ca)
+Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Cl/Mw_Cl)
+Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=SO4/Mw_SO4)
+Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
 
 ```
+```{r passer det med silica, echo=FALSE}
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#frac=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74
+#Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74)
+
+fit1 = lm(Rej_SiO2~SiO2_ladet, data = Ion_data_frame)
+
+ggplotRegression <- function (fit) {
+
+require(ggplot2)
+
+ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") +
+  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                     "Intercept =",signif(fit$coef[[1]],5 ),
+                     " Slope =",signif(fit$coef[[2]], 5),
+                     " P =",signif(summary(fit)$coef[2,4], 5)))
+}
+pred.int <- predict(model, interval = "prediction")
+ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point())
+
+ggplotRegression(fit1)
+
+Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
+Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion=Cl_mmol/anion_total)
+
+fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
+ggplotRegression(fit2)
+```
+
