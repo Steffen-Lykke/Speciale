@@ -277,8 +277,8 @@ MgSO4_rej$SO4_std_p = (MgSO4_perm$`SO4_std%`+MgSO4_feed$`SO4_std%`)/100
 MgSO4_rej = MgSO4_rej%>%mutate(Mg_std = abs(`Mg_std_p`*Mg_avg*100))
 MgSO4_rej = MgSO4_rej%>%mutate(SO4_std = abs(SO4_std_p*SO4_avg*100))
 
-Ca_rej_std_p <- (Ca_perm$Std_p+Ca_feed$Std_p[c(2:16)])/100
-Ca_rej_std <- abs(Ca_rej_std_p*Ca_rej)
+#Ca_rej_std_p <- (Ca_perm$Std_p+Ca_feed$Std_p[c(2:16)])/100
+#Ca_rej_std <- abs(Ca_rej_std_p*Ca_rej)
 
 
 

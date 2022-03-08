@@ -939,7 +939,7 @@ ggarrange(all_rejec_9.2,all_rejec_10,all_rejec_10.5, ncol=3, nrow=1, common.lege
 ```
 
 
-```{r Estimation of ionic ratios}
+```{r Estimation of ionic ratios, eval=FALSE, include=FALSE}
 IC_9.2_B = IC_9.2_raw%>%filter(Stream == "Feed")%>%select(-c(3,9,10,11,12,13))
 IC_9.2_B = na.omit(IC_9.2_B)
 
@@ -1049,7 +1049,7 @@ med_sul = IC_9.2 %>% filter(!is.na(Sulphate))
 med_sul %>% mutate(con = (Sodium*ion_values[1,2]+Chloride*ion_values[2,2]+Sulphate*ion_values[3,2]+Calcium*ion_values[4,2])) %>%mutate(dCOn = Conductivity-con)
 ```
 ###Comparison to SPRR
-```{r Estimation of ionic ratios}
+```{r Estimation of ionic ratios 2, eval=FALSE, include=FALSE}
 IC_9.2_B = IC_9.2_raw %>% filter(Stream == "Feed") %>% select(-c(3, 9, 10, 11, 12, 13))
 IC_9.2_B = na.omit(IC_9.2_B)
 IC_9.2_B$Sodium = as.numeric(IC_9.2_B$Sodium)
