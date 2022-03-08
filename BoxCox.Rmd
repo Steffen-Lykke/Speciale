@@ -1,5 +1,5 @@
 ---
-title: "ICR phase 2"
+title: "BoxCox"
 author: "Steffen"
 date: "7/3/2022"
 output: html_document
@@ -151,6 +151,26 @@ ggplotRegression(fit_SiO2_pH)
 Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
 
 ```
+Nu prøver vi med nog BoxCox, held og lykke til os. 
+
+```{r Silica BoxCox , echo=FALSE}
+
+model <- lm(y~x)
+
+#find optimal lambda for Box-Cox transformation 
+bc <- boxcox(y ~ x)
+(lambda <- bc$x[which.max(bc$y)])
+
+[1] -0.4242424
+
+#fit new linear regression model using the Box-Cox transformation
+new_model <- lm(((y^lambda-1)/lambda) ~ x)
+
+```
+
+
+
+
 Anion fraktion udregneds udfra Cl/[SO4]+[SiO2_ladet]+[Cl]
 
 
