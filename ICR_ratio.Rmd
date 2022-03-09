@@ -175,7 +175,7 @@ ggplotRegression(fit_Clrej_cl_anion)
 fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
 
 #pred.int <- predict(model, interval = "prediction")
-ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_Cl,color=name))+geom_point())
+ggplotly(ggplot(Ion_data_frame, aes(x=Cl_mmol, y=Rej_Cl,color=name))+geom_point())
 
 ggplotRegression(fit2)
 ```
