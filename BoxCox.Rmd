@@ -68,7 +68,7 @@ colnames(SPRR_wrangle) = c("name","Stream","Cl_ratio","SiO2_teo","pH","Ca","Na",
 SPRR_wrangle$name = SPRR_names
 SPRR_clean = SPRR_wrangle%>%select(-c("Stream","SiO2_teo","HCO3","Rej_HCO3","Cl_ratio"))
 SPRR_clean$state = "Steady State"
-
+SPRR_clean$pH[1]=9.33
 ###multisalt håndtering
 M_9.2 = read.table(file='data/M9.2_df.csv', header = T,sep = "\t",stringsAsFactors = T)
 M_9.2_clean = M_9.2%>%select(-c("time","conductivity"))
@@ -88,8 +88,7 @@ M_10.5_clean$pH = c(10.5,10.52,10.54,10.56,10.59,10.63)
 M_10.5_clean$name = c("M_10.5_2.5h","M_10.5_4h","M_10.5_5h","M_10.5_6h","M_10.7h","M_10.5_8h")
 ### ICR data
 ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
-colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","pH","Rej_SiO2","state")
-ICR_1$pH = NA
+colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
 ICR_clean = ICR_1
 
 ###Sættes sammen
@@ -123,11 +122,9 @@ Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
 
 ```
 
-Når rejetion af Silica plottes mod pH opnås linear regression med udtrykket silica rejection = 38.183 * pH - 335.39 
+Når rejetion af Silica plottes mod pH opnås linear regression 
 Det antages derved at rejection af silica er baseret på hvilken fraktion der er ladet, hvilket er afhængigt af pH. 
-SiO2_ladet er dermed = (38.183 * pH - 335.39)/100* [SiO2]
 
-skal vi skelne mellem Steady state og batch? 
 
 ```{r Silica rej mod pH , echo=FALSE}
 
@@ -148,35 +145,111 @@ ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) 
 }
 ggplotRegression(fit_SiO2_pH)
 
-Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
+
 
 ```
-Nu prøver vi med nog BoxCox, held og lykke til os. 
+Data normaliseres med boxcox. 
+det giver ny linear regression på silica rejection = 36.78 * pH - 323.75 R2=0.9591
+Det er ikke meget forskelligt fra før boxcox transformationen, og sammenlignes QQ plots af før og efter transformaitonen er der heller ikke stor forskel, dvs. BoxCox har nok ikke den påvirkning i dette tilmelde. (tror jeg)
 
 ```{r Silica BoxCox , echo=FALSE}
-
-model <- lm(y~x)
+library(MASS)
 
 #find optimal lambda for Box-Cox transformation 
-bc <- boxcox(y ~ x)
-(lambda <- bc$x[which.max(bc$y)])
+bc <- boxcox(Rej_SiO2~pH, data = Ion_data_frame)
 
-[1] -0.4242424
+
+lambda <- bc$x[which.max(bc$y)]
+
+lambda
 
 #fit new linear regression model using the Box-Cox transformation
-new_model <- lm(((y^lambda-1)/lambda) ~ x)
+fit_new_model <- lm(((Rej_SiO2^lambda-1)/lambda)~pH, data = Ion_data_frame)
+summary(fit_new_model)
+#ggplotRegression(fit_new_model) #plot virker ikke :( 
+plot(x=Ion_data_frame$pH, y=((Ion_data_frame$Rej_SiO2^lambda-1)/lambda))
+abline(lm(((Rej_SiO2^lambda-1)/lambda)~pH, data = Ion_data_frame))
+
+
+## QQ plots
+#define plotting area
+op <- par(pty = "s", mfrow = c(1, 2))
+
+#Q-Q plot for original model
+qqnorm(fit_SiO2_pH$residuals)
+qqline(fit_SiO2_pH$residuals)
+
+#Q-Q plot for Box-Cox transformed model
+qqnorm(fit_new_model$residuals)
+qqline(fit_new_model$residuals)
+
+#display both Q-Q plots
+par(op)
+
+
 
 ```
+Det testes om modellen bliver bedre for Steady state eller batch. 
+
+først plottes data fra kun steady state, der efter fra batch. 
+
+```{r Silica rej mod pH, SS , echo=FALSE}
 
 
+fit_SiO2_pH_SS = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(state=="Steady State"))
+ggplotRegression(fit_SiO2_pH_SS)
+
+fit_SiO2_pH_B = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(state=="Batch"))
+ggplotRegression(fit_SiO2_pH_B)
+
+
+## QQ plots
+#define plotting area
+op <- par(pty = "s", mfrow = c(1, 2))
+
+#Q-Q plot for original model
+qqnorm(fit_SiO2_pH_SS$residuals)
+qqline(fit_SiO2_pH_SS$residuals)
+
+#Q-Q plot for Box-Cox transformed model
+qqnorm(fit_SiO2_pH_B$residuals)
+qqline(fit_SiO2_pH_B$residuals)
+
+#display both Q-Q plots
+par(op)
+
+#vi prøver med BoxCox for Steady State 
+#find optimal lambda for Box-Cox transformation 
+bc <- boxcox(Rej_SiO2~pH, data =Ion_data_frame%>%filter(state=="Steady State"))
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#fit new linear regression model using the Box-Cox transformation
+fit_new_model_SS <- lm(((Rej_SiO2^lambda-1)/lambda)~pH, data = Ion_data_frame%>%filter(state=="Steady State"))
+summary(fit_new_model_SS)
+
+
+#vi prøver med BoxCox for Steady State 
+#find optimal lambda for Box-Cox transformation 
+bc <- boxcox(Rej_SiO2~pH, data =Ion_data_frame%>%filter(state=="Batch"))
+lambda <- bc$x[which.max(bc$y)]
+lambda
+#fit new linear regression model using the Box-Cox transformation
+fit_new_model_B <- lm(((Rej_SiO2^lambda-1)/lambda)~pH, data = Ion_data_frame%>%filter(state=="Batch"))
+summary(fit_new_model_B)
+
+
+
+
+```
 
 
 Anion fraktion udregneds udfra Cl/[SO4]+[SiO2_ladet]+[Cl]
 
 
-```{r mere mutate med anion fraktion , echo=FALSE}
+```{r mere mutate med anion fraktion, eval=FALSE, include=FALSE}
 
 #Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74)
+Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=(38.183*pH-335.39)/100*SiO2_mmol)
 Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
 Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion=Cl_mmol/anion_total)
 
@@ -196,7 +269,7 @@ ggplotRegression(fit1)
 ggplotRegression(fit2)
 ```
 
-```{r passer det med silica, echo=FALSE}
+```{r passer det med silica3, eval=FALSE, include=FALSE}
 
 
 
@@ -233,7 +306,7 @@ ggplotRegression(fit2)
 ```
 Kopiret oppe fra not to fuck shit up. 
 
-```{r passer det med silica, echo=FALSE}
+```{r passer det med silica2, eval=FALSE, include=FALSE}
 
 #frac=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74
 #Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74)

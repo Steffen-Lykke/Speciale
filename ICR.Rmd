@@ -330,9 +330,23 @@ dat_ICR_1 %>%#dplyr arbejder indenfor 'dat' data framen
          yaxis=list(title="Pressure [bar]"),
          xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
 
-
-
-
+dat_ICR_1 %>%#dplyr arbejder indenfor 'dat' data framen
+    plot_ly(x=~(sek)/3600,
+          y=~con0301,
+          name="Feed",
+          color='#1f77b4',
+          type='scatter',
+          mode='lines')%>%
+  add_lines(y=~con0501,
+            name='Permeate',
+            color='#E41317')%>%
+  add_lines(y=~(1-(con0501/con0301))*100,
+            name='Rejection',
+            color='#forestgreen')%>%
+  layout(title="Conductivity ICR",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Conductivity"),
+         xaxis=list(title="Time [h]")) #Her plottet de to tryk på feed siden plus et TMP
 
 ```
 

@@ -448,6 +448,30 @@ dat_M_9.2 %>%
          xaxis=list(title="Time [h]",range=c(0,7.4))
          ) #Her plottet TMP
 
+dat_M_9.2 %>%
+  plot_ly(x=~(sek)/3600,
+          y=~con0301,
+          name=" pH 9.2",
+          type='scatter',
+          mode='line',
+          line=list(color='#00CC96'))%>%
+  add_lines(x=~(dat_M_10$sek)/3600,
+          y=~dat_M_10$con0301,
+          name=' pH 10',
+          type='scatter',
+          mode='line',
+          line=list(color='#636EFA'))%>%
+  add_lines(x=~(dat_M_10.5$sek)/3600,
+          y=~dat_M_10.5$con0301,
+          name=' pH 10.5',
+          type='scatter',
+          mode='line',
+       line=list(color='#EF553B'))%>%
+  layout(title="Conductivity Feed",
+         legend=list(x=0.7,y=0.2),
+         yaxis=list(title="Conductivity Feed  "),
+         xaxis=list(title="Time [h]")#,range=c(0,7.4))
+         ) #Her plottet TMP
 
 ```
 
