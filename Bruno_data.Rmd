@@ -57,7 +57,7 @@ colors = c(
 
 dat = readRDS("data/Copy_Water_Quality_Analysis_dat.rds")
 
-
+dat_m_SiO2=dat[!is.na(dat$Dissolved_SiO2),]
 
 ```
 

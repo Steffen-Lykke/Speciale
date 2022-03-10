@@ -917,6 +917,66 @@ p_conc_10.5
 ```
 ### Comparison of results
 
+```{r Silica pH}
+by <- list(
+      tickfont = list(color = "red"),
+      overlaying = "y",
+      side = "right",
+      title = "Solution pH")
+
+fig= plot_ly(x=~pH9.2_silica$Time,
+            y=~pH9.2_silica$Silica,
+            yaxis = "y2",
+            name='low pH Silica',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10_silica$Time,
+            y=~pH10_silica$Silica,
+            yaxis = "y2",
+            name='middle pH Silica',
+            type='scatter',
+            mode='lines+markers')%>%
+  add_trace(x=~pH10.5_silica$Time,
+        y=~pH10.5_silica$Silica,
+        yaxis = "y2",
+        name='high pH Silica',
+        type='scatter',
+        mode='lines+markers')
+
+fig = fig%>%
+  add_trace(x=~pH10_silica$Time[1:7],
+            y=~pH10_pH,
+            yaxis = "y2",
+            name='middle pH',
+            type='scatter',
+            mode='lines+markers')
+
+  
+fig <- fig %>% layout(
+  title = "",
+  yaxis2 = by,
+  xaxis = list(title = "Time [h]"),
+  yaxis = list(title = "pH",range=c(9,11)),
+  legend=list(x=0,y=1)
+) %>%
+  layout(
+    xaxis = list(
+      zerolinecolor = '#ffff',
+      zerolinewidth = 2,
+      gridcolor = 'ffff'
+    ),
+    yaxis = list(
+      zerolinecolor = '#ffff',
+      zerolinewidth = 2,
+      gridcolor = 'ffff'
+    )
+  )
+
+          
+fig
+```
+
+
 ```{r plot next to each other, echo=FALSE}
 require(gridExtra)
 require(ggpubr)
