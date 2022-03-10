@@ -111,11 +111,33 @@ add_lines(x=~(sek),
           type='scatter',
           mode='line',
           line=list(color= colors[4]))%>%
+  add_lines(x=~(sek/60/60),
+          y=~con0301,
+          name='Feed con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[5]))%>%
   layout(title="Run no. 1",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="value ", range=c(NA,NA)),
          xaxis=list(title="Time ",range=c(NA,NA))
          ) #Her plottet TMP
+
+dat_1 %>%mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)%>%#Her regner vi TMP, som dplyr husker nu er en del af den data
+  mutate(TMP_slid=rollapply(TMP,100,mean,align="right",fill=NA))%>%#Nu tager vi et glidende gennemsnit
+  mutate(R = (1-(con0501/con0301))*100) %>%
+  plot_ly(x=~(sek),
+          y=~pH0201,
+          name="pH",
+          type='scatter',
+          mode='line',
+          line=list(color= colors[1]))%>%
+ add_lines(x=~(sek/60/60),
+          y=~con0301,
+          name='Feed con',
+          type='scatter',
+          mode='line',
+          line=list(color= colors[5]))
 
 ```
 

@@ -104,6 +104,7 @@ ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactor
 colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
 ICR_clean = ICR_1
 ICR_clean$Conductivity = c(2477,2517,2570,2625,2685,2740,2810,2881,2951,3040,3126,3221,3376,3568,4019)
+SPRR_clean$Conductivity[1]=4210
 ICR_clean$type = "ICR"
 
 ###Sættes sammen
