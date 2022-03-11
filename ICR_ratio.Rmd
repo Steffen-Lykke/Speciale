@@ -269,7 +269,7 @@ plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
 plot(fit_SiO2_pH$residuals, pch = 16, col = "red")
 plot(cooks.distance(fit_SiO2_pH), pch = 16, col = "red")
 
-multisalt_plot = multisalt_rej
+multisalt_plot = multisalt_conc
 
 rej_9.2=ggplot(multisalt_plot%>%filter(type=="M_9.2"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
@@ -295,8 +295,11 @@ ggarrange(rej_9.2,rej_10,rej_10.5, ncol=3, nrow=1, common.legend = TRUE, legend=
 hejmeddig = subplot(rej_9.2,rej_10,rej_10.5,nrows=1)
 hejmeddig
 ```
+
+
+
 ```{r ICR}
-ggplotly(ggplot(Ion_data_frame%>%filter(type %in% c("ICR")), aes(x=Recovery, y=Rej_Cl,color=type))+geom_point()+geom_line())
+ggplotly(ggplot(Ion_data_frame%>%filter(type %in% c("ICR")), aes(x=Recovery, y=pH,color=type))+geom_point()+geom_line())
 
 
 ICR = Ion_data_frame%>%filter(type %in% c("ICR"))
@@ -307,10 +310,16 @@ ICR_rej = ICR%>%gather(key,value, Rej_Na,Rej_Cl,Rej_Ca,Rej_SO4,Rej_SiO2)
 
 rej_ICR=ggplot(ICR_rej, aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  labs(x="Water Recovery",y="Conc", color="")+xlim(c(0,90))+ylim(c(-65,100))+
+  labs(x="Water Recovery",y="Rejection", color="")+xlim(c(0,80))+ylim(c(-65,100))+
   ggtitle("ICR")
 ggplotly(rej_ICR)
 
+ICR_conc = ICR%>%gather(key,value, Na_mmol,Cl_mmol,Ca_mmol,SO4_mmol,SiO2_mmol)
 
+conc_ICR=ggplot(ICR_conc, aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery",y="Feed Concentration", color="")+xlim(c(0,80))+ylim(c(0,NA))+
+  ggtitle("ICR")
+ggplotly(conc_ICR)
 ```
 
