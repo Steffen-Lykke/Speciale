@@ -20,7 +20,18 @@ library(latex2exp)
 library(zoo)
 library(ggthemes)
 
-NF = function(A,V,dt,rec,J,conc){
+
+
+##### TEST ENVIRONMENT #####
+A=0.05
+V=10
+dt=60
+rec=80
+conc=c(17,3.4,0.7,0.7,0.09)
+J=20
+test = NF(0.05,10,60,95,20,c(10,10,5,5))
+
+
 ############# Operational Parameters ###############
 R = 0.08314
 Temp = 25
@@ -150,23 +161,8 @@ cf_f$tid = cf_p$tid = df$tid
 cf_p[1,]=NA
 df$con_p[1]=NA
 #rm(feed_tank_volume,feed_tank_mass,feed_tank_conc,permeate_tank_volume,permeate_tank_mass,permeate_tank_conc)
-my_list = list()
-my_list[[1]] = df
-my_list[[2]] = cf_f
-my_list[[3]] = nf_f
-my_list[[4]] = cf_p
-my_list[[5]] = nf_p
-return(my_list)
-}
 
-##### TEST ENVIRONMENT #####
-A=0.05
-V=10
-dt=60
-rec=80
-conc=c(17,3.4,0.7,0.7,0.09)
-J=20
-test = NF(0.05,10,60,95,20,c(10,10,5,5))
+
 ########## plot #############
 cf_f.long = cf_f %>%
   gather(key,value, Na,Cl,SO4,SiO2,Ca)
