@@ -1,0 +1,177 @@
+---
+title: "Membran og ion parameter"
+author: "Steffen"
+date: "18/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+```
+
+
+```{r cars}
+
+ion_data = data.frame(
+  ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
+  Mw=c(23,35,96,60,40,61),
+  molar_con = c(50.1, 76.4, 160, NA,119,NA),# Molær konduktivitet[S*cm^2*mol^-1]
+ stokes=c(1.84,1.21,2.3,NA,3.1,NA)*0.1,
+ pauling=c(0.95,1.81,2.9,NA,0.99,NA)*0.1,
+ hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*0.1,
+ z=c(1,-1,-2,-1,2,-1)
+)
+
+
+```
+
+```{r steric, echo=FALSE, message=FALSE, warning=FALSE}
+radius_navne = c("stokes","pauling","hydrated")
+
+df_steric=data.frame( 
+  rp=double(),
+  S_Na=double(),
+  S_Cl=double(),
+  S_SO4=double(),
+  S_SiO2=double(),
+  S_Ca=double(),
+  S_HCO3=double()
+)
+store_df_steric = data.frame()
+for (j in 1:3) {
+  radius=radius_navne[j]
+  radii = ion_data%>%select(c(ion,radius))
+
+for (i in 1:100) {
+ rper = seq(0.5,1,0.005)
+ rp= rper[i]
+ 
+ 
+  steric=(1-(radii[,2]/rp))^2
+  df_steric[i,2:7]=steric
+  df_steric[i,1]=rp
+}
+store_df_steric = rbind(store_df_steric,df_steric %>%mutate(type = radius_navne[j]))
+  }
+steric.long = store_df_steric%>%filter(type=="stokes") %>% 
+  gather(key,value,S_Na,S_Cl,S_SO4,S_SiO2,S_Ca,S_HCO3)
+level_order = c('S_Na','S_Cl','S_SO4','S_SiO2','S_Ca','S_HCO3')
+
+ggplot(steric.long,aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = level_order)+
+  theme_bw()+labs(y = "Phi S", x = "rp [nm]", color = "Ion")
+
+
+steric.long = store_df_steric%>%filter(type=="pauling") %>% 
+  gather(key,value,S_Na,S_Cl,S_SO4,S_SiO2,S_Ca,S_HCO3)
+ggplot(steric.long,aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = level_order)+
+  theme_bw()+labs(y = "Phi S", x = "rp [nm]", color = "Ion")
+
+
+steric.long = store_df_steric%>%filter(type=="hydrated") %>% 
+  gather(key,value,S_Na,S_Cl,S_SO4,S_SiO2,S_Ca,S_HCO3)
+ggplot(steric.long,aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = level_order)+
+  theme_bw()+labs(y = "Phi S", x = "rp [nm]", color = "Ion")
+
+```
+
+```{r Dielectric exclusion}
+
+
+radius_navne = c("stokes","pauling","hydrated")
+E_b = 78.4
+E_la = 31
+delta = 0.28 #nm
+e = 1.602*10^-19 #C
+E_0 = 8.85*10^-12 #F m^-1
+k_B = 1.386*10^-23
+Temp=25
+Temp=Temp+273.15
+  
+  
+df_DE=data.frame( 
+  rp=double(),
+  Na=double(),
+  Cl=double(),
+  SO4=double(),
+  SiO2=double(),
+  Ca=double(),
+  HCO3=double()
+)
+store_df_steric = data.frame()
+for (j in 1:3) {
+  radius=radius_navne[j]
+  ioner = ion_data%>%select(c(ion,radius,z))
+
+for (i in 1:100) {
+ rper = seq(0.5,1,0.005)
+ rp= rper[i]
+ 
+ 
+
+
+  E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
+  dW = (ioner$z^2*e^2)/(8*pi*E_0*ioner[,2]*10^-9)*(1/E_p-1/E_b)
+  phi_DE = exp(-dW/(k_B*Temp))
+  
+  df_DE[i,2:7]=phi_DE
+  df_DE[i,1]=rp
+}
+store_df_steric = rbind(store_df_steric,df_steric %>%mutate(type = radius_navne[j]))
+}
+
+
+
+DE.long = df_DE %>% 
+  gather(key,value,Na,Cl,SO4,SiO2,Ca,HCO3)
+level_order = c('Na','Cl','SO4','SiO2','Ca','HCO3')
+
+ggplot(DE.long,aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = level_order)+
+  theme_bw()+labs(y = "Phi DE", x = "rp [nm]", color = "Ion")
+
+
+```
+
