@@ -127,9 +127,10 @@ E_la = 31
 delta = 0.28 #nm
 e = 1.602*10^-19 #C
 E_0 = 8.85*10^-12 #F m^-1
-k_B = 1.386*10^-23
-Temp=25
-Temp=Temp+273.15
+k_B = 1.386*10^-23 #J/mol ?
+Temp=25 #C
+Temp=Temp+273.15 #K
+Faraday = 98465 #C/mol
   
   
 df_DE=data.frame( 
@@ -206,6 +207,11 @@ ggplotly(ggplot(DSPM.long2, aes(fill=type, y=value, x=key)) +
 ggplotly(ggplot(DSPM.long2, aes(fill=key, y=value, x=type))+ 
     geom_col(position="dodge",alpha=0.8)+labs(title="Dielectric exclusion for r = 0.5 nm",
         x ="Ion", y = "Exclusion factor")+scale_fill_manual(values=colors[1:4]))
+
+```
+
+
+```{r Forsøg på Donnan}
 
 ```
 
@@ -441,4 +447,160 @@ server <- function(input, output, session) {
 shinyApp(ui = ui, server = server)
 ```
 
+```{r Interactive new}
+library(deSolve)
+library(shiny)
+library(shinyWidgets)
+library(plotly)
 
+ui <- fluidPage(
+  # App Title ----
+  titlePanel("Nanofiltration Exclusion Mechanisms"),
+  
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+    
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+      fluidRow(
+        column(width=6,
+               sliderInput("r", "Pore Radius",0.5, 2, 0.5, step=0.005)
+        )
+      )
+    ),
+    mainPanel(
+      selectInput("Var",
+                  label = "Choose Exclsion factor to plot:",
+                  choices = c("Steric"="U", "Dielectric"="V","Steric2"="X","Dielectric2"="W","Comparison"="Z"), 
+                  selected = c("U")
+      ),
+      
+      plotlyOutput("plot0")
+      
+    )
+  )
+)
+
+ion_data = data.frame(
+  ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
+  Mw=c(23,35,96,60,40,61),
+  molar_con = c(50.1, 76.4, 160, NA,119,NA),# Molær konduktivitet[S*cm^2*mol^-1]
+ stokes=c(1.84,1.21,2.3,NA,3.1,NA)*0.1,
+ pauling=c(0.95,1.81,2.9,NA,0.99,NA)*0.1,
+ hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*0.1,
+ z=c(1,-1,-2,-1,2,-1)
+)
+
+LV <- function(r) {
+  radius_navne = c("stokes", "pauling", "hydrated")
+  df_steric = data.frame(
+    rp = double(),
+    Na = double(),
+    Cl = double(),
+    SO4 = double(),
+    SiO2 = double(),
+    Ca = double(),
+    HCO3 = double()
+  )
+  store_df_steric = data.frame()
+  for (j in 1:3) {
+    radius = radius_navne[j]
+    radii = ion_data %>% select(c(ion, radius))
+    rp = r
+    
+    
+    steric = (1 - (radii[, 2] / rp)) ^ 2
+    df_steric[1, 2:7] = steric
+    df_steric[1, 1] = rp
+    store_df_steric = rbind(store_df_steric, df_steric %>% mutate(type = radius_navne[j]))
+  }
+  
+  store_df_steric = store_df_steric %>% mutate(ex = "Steric")
+
+return(store_df_steric)
+}
+
+LV2 <- function(r){
+  
+radius_navne = c("stokes","pauling","hydrated")
+E_b = 78.4
+E_la = 31
+delta = 0.28 #nm
+e = 1.602*10^-19 #C
+E_0 = 8.85*10^-12 #F m^-1
+k_B = 1.386*10^-23
+Temp=25
+Temp=Temp+273.15
+  
+df_DE=data.frame( 
+  rp=double(),
+  Na=double(),
+  Cl=double(),
+  SO4=double(),
+  SiO2=double(),
+  Ca=double(),
+  HCO3=double()
+)
+store_df_DE = data.frame()
+for (j in 1:3) {
+  radius=radius_navne[j]
+  radii = ion_data%>%select(c(ion,radius,z))
+  rp= r
+  E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
+  dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2]*10^-9)*(1/E_p-1/E_b)
+  phi_DE = exp(-dW/(k_B*Temp))
+  
+  df_DE[1,2:7]=phi_DE
+  df_DE[1,1]=rp
+store_df_DE = rbind(store_df_DE,df_DE %>%mutate(type = radius_navne[j]))
+}
+store_df_DE = store_df_DE%>%mutate(ex = "Dielectric")
+return(store_df_DE)
+}
+
+
+
+server <- function(input, output, session) {
+  solution <- reactive({
+    sim <- rbind(LV(input$r), LV2(input$r))
+    
+  })
+  
+  output$plot0 <- renderPlotly({
+    sol <- req(solution())
+    if (input$Var == "U") {
+      ex_var = "Steric" # will plot steric exclusion
+      plt = aes(fill = type, y = value, x = key)
+    } else if (input$Var == "V") {
+      ex_var = "Dielectric" # will plot DE
+      plt = aes(fill = type, y = value, x = key)
+    } else if (input$Var == "W") {
+      #plot DE but radius grouped
+      ex_var = "Dielectric"
+      plt = aes(fill = key, y = value, x = type)
+    } else if(input$Var =="X"){
+      ex_var = "Steric"
+      plt = aes(fill = key, y = value, x = type)
+    } else if(input$Var=="Z") {
+      
+    }
+    Data = sol %>% filter(ex == ex_var)
+    Data = Data %>% gather(key, value, Na, Cl, SO4, Ca)
+    str_r = as.character(input$r)
+    ggplotly(
+      ggplot(Data, plt) +
+        geom_bar(
+          position = "dodge",
+          alpha = 0.8,
+          stat = "identity"
+        ) + labs(
+          title = paste(ex_var, "exclusion w/ r =",  str_r, "nm"),
+          x = "Ion",
+          y = "Exclusion factor"
+        ) + ylim(c(0, 1))
+     + scale_fill_manual(values = colors))
+  })
+  
+}
+shinyApp(ui = ui, server = server)
+```
