@@ -1,0 +1,118 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+```
+
+```{r data import, include=FALSE}
+FCT_raw = read_delim("data/FCT_1A_CTvand_22-03-2022 090341.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+FCT_1A = as.data.frame(FCT_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(FCT_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+FCT_1A = FCT_1A %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+FCT_1A$Time = dmy_hms(FCT_1A$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = FCT_1A$flow0501>16&FCT_1A$flow0501<25
+start_tid = min(which(flow_boolean))
+FCT_1A=FCT_1A[-c(1:start_tid),]
+flow_boolean_slut = FCT_1A$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+FCT_1A=FCT_1A[-c(slut_tid:(nrow(FCT_1A)) ),]
+### Tid i s fra forsøgs start
+FCT_1A = FCT_1A%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(FCT_1A$Time))-as.numeric(FCT_1A$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+FCT_1A = FCT_1A %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+```
+
+```{R Simple Graphs,  echo=FALSE, message=FALSE}
+
+
+FCT_1A %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="Feed values",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,8))
+         ) 
+
+
+
+
+
+
+
+```
