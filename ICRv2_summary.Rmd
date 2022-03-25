@@ -1,0 +1,204 @@
+---
+title: "ICR_phase_2"
+author: "Steffen"
+date: "25/3/2022"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+```
+
+## PLC Data
+
+```{r data import, include=FALSE}
+##### ICR vol 2 A ####
+ICR_vol2_A_raw = read_delim("data/ICR_volume2_A_16-03-2022 084022.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+ICR_vol2_A = as.data.frame(ICR_vol2_A_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(ICR_vol2_A_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+ICR_vol2_A = ICR_vol2_A %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+ICR_vol2_A$Time = dmy_hms(ICR_vol2_A$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = ICR_vol2_A$flow0501>16&ICR_vol2_A$flow0501<25
+start_tid = min(which(flow_boolean))
+ICR_vol2_A=ICR_vol2_A[-c(1:start_tid),]
+flow_boolean_slut = ICR_vol2_A$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+ICR_vol2_A=ICR_vol2_A[-c(slut_tid:(nrow(ICR_vol2_A)) ),]
+### Tid i s fra forsøgs start
+ICR_vol2_A = ICR_vol2_A%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(ICR_vol2_A$Time))-as.numeric(ICR_vol2_A$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+ICR_vol2_A = ICR_vol2_A %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+
+##### ICR vol 2 B ####
+ICR_vol2_B_raw = read_delim("data/ICR_volume2_B_17-03-2022 084934.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+ICR_vol2_B = as.data.frame(ICR_vol2_B_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(ICR_vol2_B_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+ICR_vol2_B = ICR_vol2_B %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+ICR_vol2_B$Time = dmy_hms(ICR_vol2_B$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+# flow_boolean = ICR_vol2_B$flow0501>16&ICR_vol2_B$flow0501<25
+# start_tid = min(which(flow_boolean))
+# ICR_vol2_B=ICR_vol2_B[-c(1:start_tid),]
+# flow_boolean_slut = ICR_vol2_B$flow0501<1
+# slut_tid = min(which(flow_boolean_slut))
+# ICR_vol2_B=ICR_vol2_B[-c(slut_tid:(nrow(ICR_vol2_B)) ),]
+### Tid i s fra forsøgs start
+ICR_vol2_B = ICR_vol2_B%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(ICR_vol2_B$Time))-as.numeric(ICR_vol2_B$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+ICR_vol2_B = ICR_vol2_B %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+
+##### ICR vol 2 A silica ######
+ICR_v2_A_silica = read_excel("data/ICR2.xlsx",2)
+ICR_v2_A_silica = ICR_v2_A_silica[c(1:10,13:16),-c(2,3)]
+
+ICR_v2_A = data.frame(
+  name = NA,
+  Na =NA,
+  Cl =NA,
+  SO4=NA,
+  Ca=NA,
+  SiO2mgL=NA,
+  pH=NA,
+  time=c(2,4,6,7),
+  recovery=NA,
+  startvol=NA,
+  permvol=NA
+)
+ICR_v2_A$name = c("ICR_v2_A_2h","ICR_v2_A_4h","ICR_v2_A_6h","ICR_v2_A_7h")
+ICR_v2_A$sio2_feed=ICR_v2_A_silica[c(2:5),2]
+ICR_v2_A$sio2_perm=ICR_v2_A_silica[c(7:10),2]
+ICR_v2_A=ICR_v2_A%>%mutate(Rej_sio2=1-(sio2_perm/sio2_feed))
+
+```
+
+help
+```{R ICRv2 plot PLCdata, echo=TRUE, message=TRUE, warning=TRUE}
+
+
+ICR_vol2_A %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="PLC data ICRv2_A",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,8))
+         ) 
+
+
+
+
+
+ICR_vol2_B %>%
+  plot_ly(x=~Time,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~Time,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~Time,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="PLC data ICRv2_B",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(NA,NA))
+         ) 
+
+
+
+```
