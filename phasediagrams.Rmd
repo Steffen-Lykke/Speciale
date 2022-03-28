@@ -1,0 +1,69 @@
+---
+title: "Phasediagrams"
+author: "Steffen"
+date: "28/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+```
+
+
+```{r data}
+silica =  read_excel("data/minteq/pH_pC_silica.xlsx", 
+    range = "A1:I51")
+
+carbonat = read_excel("data/minteq/pH_pC_carbonat.xlsx")
+carbonat = carbonat%>%mutate(Ct=`CO3-2`+`HCO3-`+`H2CO3* (aq)`)
+carbonat.long = carbonat %>% gather(key = "key",value="value",`CO3-2`,`HCO3-`,`H2CO3* (aq)` )
+ggplotly(ggplot(carbonat.long, aes(x=pH, y=value,color= key))+geom_line())
+
+```
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
