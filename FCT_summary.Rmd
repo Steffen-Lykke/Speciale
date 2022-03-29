@@ -1,6 +1,8 @@
 ---
 title: "FCT Databehandling"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -81,10 +83,10 @@ FCT_1A = FCT_1A%>%
 FCT_1A = FCT_1A %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
 ```
 
-```{R Simple Graphs,  echo=FALSE, message=FALSE}
+```{R Simple Graphs, echo=FALSE, message=FALSE}
 
 
-FCT_1A %>%
+plc_1A = FCT_1A %>%
   plot_ly(x=~(sek)/3600,
           y=~TMP,
           name="TMP",
@@ -110,7 +112,7 @@ add_lines(x=~sek/3600,
          ) 
 
 
-
+plc_1A
 
 
 
