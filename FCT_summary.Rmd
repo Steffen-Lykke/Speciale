@@ -1,13 +1,18 @@
 ---
 title: "FCT Databehandling"
-output:
+date: "22/10/2021"
+output: 
   html_document:
-    df_print: paged
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(include = FALSE)
+knitr::opts_chunk$set(echo = TRUE,warning=F,message=F)
 library(plyr)
 library(dplyr)
 library(tidyr)
@@ -50,7 +55,8 @@ colors = c(
 )
 ```
 
-```{r data import, include=FALSE}
+
+```{r FCT_1A_fail, echo=FALSE}
 FCT_raw = read_delim("data/FCT_1A_CTvand_22-03-2022 090341.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
 
 FCT_1A = as.data.frame(FCT_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
@@ -81,10 +87,6 @@ FCT_1A = FCT_1A%>%
                 )  
 ### TMP ###
 FCT_1A = FCT_1A %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
-```
-
-```{R Simple Graphs, echo=FALSE, message=FALSE}
-
 
 plc_1A = FCT_1A %>%
   plot_ly(x=~(sek)/3600,
@@ -105,7 +107,7 @@ add_lines(x=~sek/3600,
           type='scatter',
           mode='line',
       line=list(color=colors[3]))%>%
-  layout(title="Feed values",
+  layout(title="1A_Fail",
          legend=list(x=0.9,y=0.9),
          yaxis=list(title="value", range=c(NA,NA)),
          xaxis=list(title="Time [h]",range=c(0,8))
@@ -118,3 +120,401 @@ plc_1A
 
 
 ```
+
+```{r FCT_1A_PLC, echo=FALSE}
+FCT_raw = read_delim("data/FCT/FCT_1A_24-03-2022 083543.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+FCT_1A_plc = as.data.frame(FCT_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(FCT_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+FCT_1A_plc = FCT_1A_plc %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+FCT_1A_plc$Time = dmy_hms(FCT_1A_plc$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = FCT_1A_plc$flow0501>16&FCT_1A_plc$flow0501<25
+start_tid = min(which(flow_boolean))
+FCT_1A_plc=FCT_1A_plc[-c(1:start_tid),]
+flow_boolean_slut = FCT_1A_plc$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+FCT_1A_plc=FCT_1A_plc[-c(slut_tid:(nrow(FCT_1A_plc)) ),]
+### Tid i s fra forsøgs start
+FCT_1A_plc = FCT_1A_plc%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(FCT_1A_plc$Time))-as.numeric(FCT_1A_plc$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+FCT_1A_plc = FCT_1A_plc %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+
+plc_1A = FCT_1A_plc %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="FCT 1A",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,8.5))
+         ) 
+
+plc_1A
+
+```
+
+```{r FCT_1B_PLC, echo=FALSE}
+FCT_raw = read_delim("data/FCT/FCT_1B_25-03-2022 083738.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+FCT_1B = as.data.frame(FCT_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(FCT_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+FCT_1B = FCT_1B %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+FCT_1B$Time = dmy_hms(FCT_1B$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = FCT_1B$flow0501>16&FCT_1B$flow0501<25
+start_tid = min(which(flow_boolean))
+FCT_1B=FCT_1B[-c(1:start_tid),]
+flow_boolean_slut = FCT_1B$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+FCT_1B=FCT_1B[-c(slut_tid:(nrow(FCT_1B)) ),]
+### Tid i s fra forsøgs start
+FCT_1B = FCT_1B%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(FCT_1B$Time))-as.numeric(FCT_1B$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+FCT_1B = FCT_1B %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+
+plc_1B = FCT_1B %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="FCT 1B",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,7.5))
+         ) 
+
+plc_1B
+
+
+
+
+
+```
+```{R FCT_2A_PLC, echo=FALSE}
+FCT_raw = read_delim("data/FCT/FCT_2A_28-03-2022 085424.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+FCT_2A = as.data.frame(FCT_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(FCT_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+FCT_2A = FCT_2A %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+FCT_2A$Time = dmy_hms(FCT_2A$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+FCT_2A=FCT_2A[-c(1:180),]
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = FCT_2A$flow0501>16&FCT_2A$flow0501<25
+start_tid = min(which(flow_boolean))
+FCT_2A=FCT_2A[-c(1:start_tid),]
+flow_boolean_slut = FCT_2A$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+FCT_2A=FCT_2A[-c(slut_tid:(nrow(FCT_2A)) ),]
+### Tid i s fra forsøgs start
+FCT_2A = FCT_2A%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(FCT_2A$Time))-as.numeric(FCT_2A$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+FCT_2A = FCT_2A %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+
+plc_2A = FCT_2A %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="FCT 2A",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,8.5))
+         ) 
+
+plc_2A
+
+```
+
+```{R FCT_2B_PLC, eval=FALSE, include=FALSE}
+FCT_raw = read_delim("data/FCT/FCT_2B_28-03-2022 085424.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
+
+FCT_2B = as.data.frame(FCT_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(FCT_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","con0201","pH0201","con0301","flow0301",
+            "p0301","p0302","p0501","con0501",
+            "temp0501","p0601","temp0601","CV0301","pmp0301","pmp0501","flow_avg0301",
+            "p_avg0301","p_avg0302",
+            "p_avg0501","FT0302","weight0302","flow0501","weight0501","pH0301",
+            "pH0501") #Vi finder på nogle lidt bedre nogle
+FCT_2B = FCT_2B %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+FCT_2B$Time = dmy_hms(FCT_2B$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+FCT_2B=FCT_2B[-c(1:180),]
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = FCT_2B$flow0501>16&FCT_2B$flow0501<25
+start_tid = min(which(flow_boolean))
+FCT_2B=FCT_2B[-c(1:start_tid),]
+flow_boolean_slut = FCT_2B$flow0501<1
+slut_tid = min(which(flow_boolean_slut))
+FCT_2B=FCT_2B[-c(slut_tid:(nrow(FCT_2B)) ),]
+### Tid i s fra forsøgs start
+FCT_2B = FCT_2B%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(FCT_2B$Time))-as.numeric(FCT_2B$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+### TMP ###
+FCT_2B = FCT_2B %>% mutate(TMP=(p_avg0301+p_avg0302)/2-p_avg0501)
+
+plc_2B = FCT_2B %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~pH0201,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~con0301,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="FCT 2B",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,8.5))
+         ) 
+
+plc_2B
+
+```
+
+Lav errorbars for silica. 
+
+```{r Import IC data, echo=FALSE}
+
+FCT_Ion_data_frame = data.frame()
+
+#import af 1A
+FCT_1A = read_excel("data/FCT/FCT_samlet.xlsx",1)
+FCT_1A_raw=FCT_1A
+FCT_1A$start_vol = 10
+
+#import af 1B
+FCT_1B = read_excel("data/FCT/FCT_samlet.xlsx",2)
+FCT_1B_raw=FCT_1B
+FCT_1B$start_vol = 8.5
+
+#import af 2A
+FCT_2A = read_excel("data/FCT/FCT_samlet.xlsx",3)
+FCT_2A_raw=FCT_2A
+FCT_2A$start_vol = 10
+
+#import af 2B
+FCT_2B = read_excel("data/FCT/FCT_samlet.xlsx",4)
+FCT_2B_raw=FCT_2B
+FCT_2B$start_vol = 8.45
+
+#sæt dem sammen. 
+FCT_Ion_data_frame = rbind(FCT_1A,FCT_1B,FCT_2A,FCT_2B)
+FCT_Ion_data_frame$rej_SiO2=((1-(FCT_Ion_data_frame$Perm_SiO2/FCT_Ion_data_frame$Feed_SiO2))*100)
+FCT_Ion_data_frame$rej_Cl_hach=((1-(FCT_Ion_data_frame$Perm_Cl_hach/FCT_Ion_data_frame$Feed_Cl_hach))*100)
+
+### noget med recovery
+FCT_Ion_data_frame = FCT_Ion_data_frame%>%mutate("perm_vol"=tid*1.02)
+FCT_Ion_data_frame = FCT_Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
+
+
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
+#vi konvertere senere.... 
+#Ion_data_frame = Ion_data_frame%>%mutate("Na_mmol"=Na/Mw_Na)
+#Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Ca/Mw_Ca)
+#Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Cl/Mw_Cl)
+#Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=SO4/Mw_SO4)
+#Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
+
+``` 
+
+```{r plot af silica og Cl , echo=FALSE}
+#sammenligning af Silica
+plot_SiO2=ggplot(FCT_Ion_data_frame, aes(x=Recovery, y=rej_SiO2,color= name))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery %",y="Rejection %", color="")+#xlim(c(20,90))+ylim(c(-60,100))+
+  ggtitle("ID: Silica Rejection")
+
+#sammenligning af Cl.
+plot_Cl=ggplot(FCT_Ion_data_frame, aes(x=Recovery, y=rej_Cl_hach,color= name))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery %",y="Rejection %", color="")+#xlim(c(20,90))+ylim(c(-60,100))+
+  ggtitle("ID: Chloride Rejection")
+
+plot_SiO2
+plot_Cl
+
+
+#sammenligning af alle ioner. 
+ggplotly(ggplot(FCT_Ion_data_frame%>%filter(name %in% c("FCT_1A","FCT_2A","FCT_1B")), aes(x=Recovery, y=rej_SiO2,color=name))+geom_point()+geom_line())
+
+FCT_rej = FCT_Ion_data_frame%>%gather(key,value, rej_Cl_hach,rej_SiO2)
+#FCT_feed = FCT_Ion_data_frame%>%gather(name,Recovery, (Feed_SiO2/Mw_SiO2),(Feed_Cl_hach/Mw_Cl)
+
+
+#vi plotter rejection
+FCT_plot = FCT_rej
+
+plot_1A_rej=ggplot(FCT_plot%>%filter(name=="FCT_1A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(0,90))+ylim(c(-75,100))+
+  ggtitle("ID:1A")
+
+
+plot_1B_rej=ggplot(FCT_plot%>%filter(name=="FCT_1B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(0,90))+ylim(c(-75,100))+
+  ggtitle("ID:1B")
+
+plot_2A_rej=ggplot(FCT_plot%>%filter(name=="FCT_2A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(0,90))+ylim(c(-75,100))+
+  ggtitle("ID:2A")
+
+plot_2B_rej=ggplot(FCT_plot%>%filter(name=="FCT_2B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(0,90))+ylim(c(-75,100))+
+  ggtitle("ID:2B")
+
+plot_1A_rej
+plot_1B_rej
+plot_2A_rej
+plot_2B_rej
+
+ggarrange(plot_1A_rej,plot_2A_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_1A_rej,plot_1B_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_1A_rej,plot_1B_rej,plot_2A_rej,plot_2B_rej, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+#plot_1A_rej=ggplotly(plot_1A_rej)
+#plot_1B_rej=ggplotly(plot_1B_rej)
+#plot_2A_rej=ggplotly(plot_2A_rej)
+#plot_2B_rej=ggplotly(plot_2B_rej)
+
+
+#plotly grafer hvis man foretrækker det. 
+#hejmeddig_1 = subplot(plot_1A_rej,plot_1B_rej,nrows=1)
+#hejmeddig_1
+
+#hejmeddig_A = subplot(plot_1A_rej,plot_2A_rej,nrows=1)
+#hejmeddig_A
+
+
+``` 
+
+```{r plot af rej og pH , echo=FALSE}
+
+  
+  
+FCT_rej_pH=FCT_rej%>%filter(name=="FCT_1A")
+ 
+plot_1A_rej=ggplot()+
+  geom_point(data=FCT_rej_pH,aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+   geom_line(data=FCT_1A_plc,aes(x=sek/3600,y=pH0201))+
+  scale_color_brewer(palette= "Set1")+
+  labs(x="Time [h]",y="Rejection %", color="")+xlim(c(0,8.5))+#ylim(c(-75,100))+
+  ggtitle("ID:1A")
+
+
+
+plot_1A_rejection=ggplot()+
+  geom_point(data=FCT_rej_pH,aes(x=tid, y=value,color= key))+geom_point()+geom_line()+
+   scale_color_brewer(palette= "Set1")+
+  labs(x="Time [h]",y="Rejection %", color="")+xlim(c(0,8.5))+#ylim(c(-75,100))+
+  ggtitle("ID:1A")
+  
+  plot_1A_pH=ggplot()+
+ geom_line(data=FCT_1A_plc,aes(x=sek/3600,y=pH0201))+
+   scale_color_brewer(palette= "Set1")+
+  labs(x="Time [h]",y="Rejection %", color="")+xlim(c(0,8.5))+#ylim(c(-75,100))+
+  ggtitle("ID:1A")
+  
+ggarrange(plot_1A_rejection, plot_1A_pH, ncol=1, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")  
+  
+
+
+
+```
+
