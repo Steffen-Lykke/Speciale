@@ -943,13 +943,13 @@ fig= plot_ly(x=~pH9.2_silica$Time,
         type='scatter',
         mode='lines+markers')
 
-fig = fig%>%
-  add_trace(x=~pH10_silica$Time[1:7],
-            y=~pH10_pH,
-            yaxis = "y2",
-            name='middle pH',
-            type='scatter',
-            mode='lines+markers')
+#fig = fig%>%
+#  add_trace(x=~pH10_silica$Time[1:7],
+#            y=~pH10_pH,
+#            yaxis = "y2",
+#            name='middle pH',
+#            type='scatter',
+#            mode='lines+markers')
 
   
 fig <- fig %>% layout(

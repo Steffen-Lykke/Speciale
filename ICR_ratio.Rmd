@@ -143,7 +143,7 @@ Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
 
 
 ### noget med recovery
-Ion_data_frame = Ion_data_frame%>%mutate("perm_vol"=time)
+Ion_data_frame = Ion_data_frame%>%mutate("perm_vol"=time*1.02)
 Ion_data_frame = Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
 ```
 
@@ -231,6 +231,7 @@ ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point
 
 ggplotRegression(fit_Clrej_test1)
 ```
+
 ```{r Vi kører lige hele multisalt databehandling igen...}
 ggplotly(ggplot(Ion_data_frame%>%filter(type %in% c("M_9.2","M_10","M_10.5")), aes(x=Recovery, y=Rej_SiO2,color=type))+geom_point()+geom_line())
 
@@ -261,37 +262,40 @@ fit_SiO2_pH = lm(Rej_SiO2~SiO2_ladet+pH, data = multisalt%>%filter(type %in% c("
 ggplotRegression(fit_SiO2_pH)
 summary(fit_SiO2_pH)
 
-plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
-     xlab='Predicted Values',
-     ylab='Actual Values',
-     main='Predicted vs. Actual Values',
-     abline(a=0, b=1))
-plot(fit_SiO2_pH$residuals, pch = 16, col = "red")
-plot(cooks.distance(fit_SiO2_pH), pch = 16, col = "red")
+#plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
+#     xlab='Predicted Values',
+#     ylab='Actual Values',
+#     main='Predicted vs. Actual Values',
+#     abline(a=0, b=1))
+#plot(fit_SiO2_pH$residuals, pch = 16, col = "red")
+#plot(cooks.distance(fit_SiO2_pH), pch = 16, col = "red")
 
-multisalt_plot = multisalt_conc
+multisalt_plot = multisalt_rej
 
 rej_9.2=ggplot(multisalt_plot%>%filter(type=="M_9.2"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  labs(x="Water Recovery",y="Conc", color="")+xlim(c(20,90))+ylim(c(-65,100))+
-  ggtitle("pH 9.2")
-rej_9.2=ggplotly(rej_9.2)
+  labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(20,90))+ylim(c(-60,100))+
+  ggtitle("ID:1 - pH 9.2")
+
 
 rej_10=ggplot(multisalt_plot%>%filter(type=="M_10"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  labs(x="Water Recovery",y="Conc", color="")+xlim(c(20,90))+ylim(c(-65,100))+
-  ggtitle("pH 10")
-rej_10=ggplotly(rej_10)
+  labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(20,90))+ylim(c(-60,100))+
+  ggtitle("ID:2 - pH 10")
+
 
 rej_10.5=ggplot(multisalt_plot%>%filter(type=="M_10.5"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  labs(x="Water Recovery",y="Conc", color="")+xlim(c(20,90))+ylim(c(-65,100))+
-  ggtitle("pH 10.5")
+  labs(x="Water Recovery %",y="Rejection % ", color="")+xlim(c(20,90))+ylim(c(-60,100))+
+  ggtitle("ID:3 - pH 10.5")
+
+
+
+ggarrange(rej_9.2,rej_10,rej_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+
+rej_9.2=ggplotly(rej_9.2)
+rej_10=ggplotly(rej_10)
 rej_10.5=ggplotly(rej_10.5)
-
-
-ggarrange(rej_9.2,rej_10,rej_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
-
 hejmeddig = subplot(rej_9.2,rej_10,rej_10.5,nrows=1)
 hejmeddig
 ```
