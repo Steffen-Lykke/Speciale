@@ -95,4 +95,17 @@ DE = exp(-dW/(k_B*Temp))
 
 ###### Donnan exclusion?#####
 
+####### Learning maths in R: #####
+fnToFindRoot = function(x) {
+  return((x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2)
+}
+l0 = 1
+rootSearch = optim(l0, fnToFindRoot,method = 'BFGS', hessian=TRUE)
+str(rootSearch)
+fnToFindRoot(rootSearch$par)
+
+
+
+(x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
+
 
