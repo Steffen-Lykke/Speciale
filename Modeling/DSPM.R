@@ -106,6 +106,6 @@ fnToFindRoot(rootSearch$par)
 
 
 
-(x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
-
-
+f = function (x) (x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
+library(rootSolve)
+polyroot(f)

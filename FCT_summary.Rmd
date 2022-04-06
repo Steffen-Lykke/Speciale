@@ -54,7 +54,8 @@ colors = c(
   '#17becf'   # blue-teal
 )
 ```
-
+## Summary of Multi salt experiments. {.tabset}
+### PLC Data 
 
 ```{r FCT_1A_fail, echo=FALSE}
 FCT_raw = read_delim("data/FCT_1A_CTvand_22-03-2022 090341.csv",delim = ",", escape_double = FALSE, trim_ws = TRUE, skip = 3) #Hente data og få det til passe ned i en tabel
@@ -361,6 +362,7 @@ plc_2B
 
 ```
 
+### Ions (Silica + Cl )
 Lav errorbars for silica. 
 
 ```{r Import IC data, echo=FALSE}
@@ -429,7 +431,7 @@ plot_Cl
 
 
 #sammenligning af alle ioner. 
-ggplotly(ggplot(FCT_Ion_data_frame%>%filter(name %in% c("FCT_1A","FCT_2A","FCT_1B")), aes(x=Recovery, y=rej_SiO2,color=name))+geom_point()+geom_line())
+#ggplotly(ggplot(FCT_Ion_data_frame%>%filter(name %in% c("FCT_1A","FCT_2A","FCT_1B")), aes(x=Recovery, y=rej_SiO2,color=name))+geom_point()+geom_line())
 
 FCT_rej = FCT_Ion_data_frame%>%gather(key,value, rej_Cl_hach,rej_SiO2)
 #FCT_feed = FCT_Ion_data_frame%>%gather(name,Recovery, (Feed_SiO2/Mw_SiO2),(Feed_Cl_hach/Mw_Cl)
@@ -459,10 +461,11 @@ plot_2B_rej=ggplot(FCT_plot%>%filter(name=="FCT_2B"), aes(x=Recovery, y=value,co
   labs(x="Water Recovery %",y="Rejection %", color="")+xlim(c(0,90))+ylim(c(-75,100))+
   ggtitle("ID:2B")
 
-plot_1A_rej
-plot_1B_rej
-plot_2A_rej
-plot_2B_rej
+## Herunder alle rejection plottene individuelt
+# plot_1A_rej
+# plot_1B_rej
+# plot_2A_rej
+# plot_2B_rej
 
 ggarrange(plot_1A_rej,plot_2A_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 ggarrange(plot_1A_rej,plot_1B_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
@@ -484,6 +487,7 @@ ggarrange(plot_1A_rej,plot_1B_rej,plot_2A_rej,plot_2B_rej, ncol=2, nrow=2, commo
 
 ``` 
 
+#### pH development along with rejections for 1A
 ```{r plot af rej og pH , echo=FALSE}
 
   
