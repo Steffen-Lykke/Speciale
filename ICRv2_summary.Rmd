@@ -375,7 +375,7 @@ Cl_IC_data <- as.data.frame(Cl_IC_data)
 
 Cl_IC_data <-Cl_IC_data%>%mutate(avg_mgL=(rowMeans(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE)))%>%
                           mutate(std_mgL=(rowSds(as.matrix(Cl_IC_data[,c("Cl_1_mg/L","Cl_2_mg/L")],na.rm=TRUE))))%>%
-                          mutate(Std_p=((std_mgL/avg_mgL)*100))
+                          mutate(Std_p=((std_mgL/avg_mgL)))
 
 
 
@@ -389,7 +389,7 @@ SO4_IC_data <- as.data.frame(SO4_IC_data)
 
 SO4_IC_data <-SO4_IC_data%>%mutate(avg_mgL=(rowMeans(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE)))%>%
                           mutate(std_mgL=(rowSds(as.matrix(SO4_IC_data[,c("SO4_1_mg/L","SO4_2_mg/L")],na.rm=TRUE))))%>%
-                          mutate(Std_p=((std_mgL/avg_mgL)*100))
+                          mutate(Std_p=((std_mgL/avg_mgL)))
 SO4_IC_data <- SO4_IC_data[c(1:35),]
 
 
@@ -403,7 +403,7 @@ Na_IC_data <- as.data.frame(Na_IC_data)
 
 Na_IC_data <-Na_IC_data%>%mutate(avg_mgL=(rowMeans(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE)))%>%
                           mutate(std_mgL=(rowSds(as.matrix(Na_IC_data[,c("Na_1_mg/L","Na_2_mg/L")],na.rm=TRUE))))%>%
-                          mutate(Std_p=((std_mgL/avg_mgL)*100))
+                          mutate(Std_p=((std_mgL/avg_mgL)))
 
 Ca_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx",4)
 
@@ -415,7 +415,7 @@ Ca_IC_data <- as.data.frame(Ca_IC_data)
 
 Ca_IC_data <-Ca_IC_data%>%mutate(avg_mgL=(rowMeans(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE)))%>%
                           mutate(std_mgL=(rowSds(as.matrix(Ca_IC_data[,c("Ca_1_mg/L","Ca_2_mg/L")],na.rm=TRUE))))%>%
-                          mutate(Std_p=((std_mgL/avg_mgL)*100))
+                          mutate(Std_p=((std_mgL/avg_mgL)))
 
 #data fra SiO2 
 
@@ -426,7 +426,7 @@ new_names_IC=c("time","Stream","SiO2_mgL") #Vi finder på nogle lidt bedre nogle
 SiO2_IC_data = SiO2_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
 SiO2_IC_data <- as.data.frame(SiO2_IC_data)
 #noget med gennemsnit. 
-
+SiO2_IC_data$std=2
 
 
 ```
@@ -509,21 +509,21 @@ ID:4 plottet med error bars etc.
 Cl_feed <- Cl_IC_data%>%filter(Stream=="Feed")
 Cl_perm <- Cl_IC_data%>%filter(Stream=="Permeate")
 Cl_rej <- (1-(Cl_perm$avg_mgL/Cl_feed$avg_mgL[c(2:16)]))*100
-Cl_rej_std_p <- (Cl_perm$Std_p+Cl_feed$Std_p[c(2:16)])/100
+Cl_rej_std_p <- (Cl_perm$Std_p+Cl_feed$Std_p[c(2:16)])
 Cl_rej_std <- abs(Cl_rej*Cl_rej_std_p)
 
 #SO4
 SO4_feed <- SO4_IC_data%>%filter(Stream=="Feed")
 SO4_perm <- SO4_IC_data%>%filter(Stream=="Permeate")
 SO4_rej <- (1-(SO4_perm$avg_mgL/SO4_feed$avg_mgL[c(2:16)]))*100
-SO4_rej_std_p <- (SO4_perm$Std_p+SO4_feed$Std_p[c(2:16)])/100
+SO4_rej_std_p <- (SO4_perm$Std_p+SO4_feed$Std_p[c(2:16)])
 SO4_rej_std <- abs(SO4_rej_std_p*SO4_rej)
 
 #Na
 Na_feed <- Na_IC_data%>%filter(Stream=="Feed")
 Na_perm <- Na_IC_data%>%filter(Stream=="Permeate")
 Na_rej <- (1-(Na_perm$avg_mgL/Na_feed$avg_mgL[c(2:16)]))*100
-Na_rej_std_p <- (Na_perm$Std_p+Na_feed$Std_p[c(2:16)])/100
+Na_rej_std_p <- (Na_perm$Std_p+Na_feed$Std_p[c(2:16)])
 Na_rej_std <- abs(Na_rej_std_p*Na_rej)
 
 
@@ -532,7 +532,7 @@ Na_rej_std <- abs(Na_rej_std_p*Na_rej)
 Ca_feed <- Ca_IC_data%>%filter(Stream=="Feed")
 Ca_perm <- Ca_IC_data%>%filter(Stream=="Permeate")
 Ca_rej <- (1-(Ca_perm$avg_mgL/Ca_feed$avg_mgL[c(2:16)]))*100
-Ca_rej_std_p <- (Ca_perm$Std_p+Ca_feed$Std_p[c(2:16)])/100
+Ca_rej_std_p <- (Ca_perm$Std_p+Ca_feed$Std_p[c(2:16)])
 Ca_rej_std <- abs(Ca_rej_std_p*Ca_rej)
 #Ca_rej <- set_na(Ca_rej,na=c(Ca_rej[10]))
 #Ca_rej_std <- set_na(Ca_rej_std,na=c(Ca_rej_std[10]))
@@ -543,35 +543,9 @@ Ca_rej_std <- abs(Ca_rej_std_p*Ca_rej)
 SiO2_feed <- SiO2_IC_data%>%filter(Stream=="Feed")
 SiO2_perm <- SiO2_IC_data%>%filter(Stream=="Permeate")
 SiO2_rej <- (1-(SiO2_perm$SiO2_mgL/SiO2_feed$SiO2_mgL[c(2:16)]))*100
-SiO2_rej_std <- c(rep(0,15))
+SiO2_rej_std <- c(rep(2,15))
+SiO2_rej_std_p <- ((2/SiO2_perm$SiO2_mgL)+(2/SiO2_feed$SiO2_mgL[c(2:16)]))
 
-plot_ly(x=~Cl_perm$time/60,
-          y=~Cl_rej,
-         error_y = list(array = ~Cl_rej_std),
-        type='scatter',mode='lines+markers',
-          colors=colors[1], name = "Cl")%>%
-  add_trace(x=~SO4_perm$time/60,
-          y=~SO4_rej,
-          error_y = list(array = ~SO4_rej_std),
-        type='scatter',mode='lines+markers',
-          colors=colors[2], name = "SO4")%>%
-add_trace(x=~SiO2_perm$time/60,
-          y=~SiO2_rej,
-          error_y = list(array = ~SiO2_rej_std),
-        type='scatter',mode='lines+markers',
-          colors=colors[3], name = "SiO2")%>%
-add_trace(x=~Ca_perm$time[-c(10)]/60,
-          y=~Ca_rej[-c(10)], 
-          type='scatter',mode='lines+markers',
-          error_y = list(array = ~Ca_rej_std[-c(10)]),
-                 colors=colors[4], name = "Ca")%>%
-add_trace(x=~Na_perm$time/60,
-          y=~Na_rej,
-          error_y = list(array = ~Na_rej_std),
-        type='scatter',mode='lines+markers',
-          colors=colors[5], name = "Na")%>%
-  layout( yaxis=list(title=" Rejection"),
-         xaxis=list(title="Time [h]"))
 
 ###Data export
 ICR_data = read_excel("data/ICR/analyse_ICR_samlet.xlsx",2)
@@ -583,6 +557,39 @@ ICR_df$Rej_Ca = Ca_rej
 ICR_df$Rej_SiO2 = SiO2_rej
 ICR_df$state = "Batch"
 write.table(ICR_df,file='data/ICR_df.csv',col.names = T,row.names = F,sep="\t")
+
+
+ICR_df$Rej_Cl_std_p = Cl_rej_std_p
+ICR_df$Rej_SO4_std_p = SO4_rej_std_p
+ICR_df$Rej_Na_std_p = Na_rej_std_p
+ICR_df$Rej_Ca_std_p = Ca_rej_std_p
+ICR_df$Rej_SiO2_std_p = SiO2_rej_std_p
+
+
+ICR_df$Time=c(20,40,60,80,100,120,140,160,180,200,220,240,270,300,360)
+ICR_df = ICR_df%>%mutate("perm_vol"=Time/60*1.02)
+ICR_df$start_vol=10
+ICR_df = ICR_df%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
+
+ICR_df_rej_std_p=c(ICR_df$Rej_Cl_std_p,ICR_df$Rej_SO4_std_p,ICR_df$Rej_SiO2_std_p,ICR_df$Rej_Ca_std_p,ICR_df$Rej_Na_std_p)
+
+ICR_ID4_rej = ICR_df%>%gather(key,value, Rej_Cl,Rej_SO4,Rej_SiO2,Rej_Ca,Rej_Na)
+ICR_ID4_rej=ICR_ID4_rej%>%mutate("rej_std_p"=ICR_df_rej_std_p)
+
+
+plot_ID_4=ggplot(ICR_ID4_rej, aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+  labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-25, 110), breaks=c(-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("ID:4")
+
+plot_ID_4
+
+
 
 ```
 sampling every 20 min for the first 4 hours then every 30 mins 1 hour and 2 hours. 
@@ -805,7 +812,7 @@ ID_5_6_7_Cl_IC_data$Cl_2_mg_L=ID_5_6_7_Cl_IC_data$Cl_2_mg_L*ID_5_6_7_Cl_IC_data$
   
 ID_5_6_7_Cl_IC_data <-ID_5_6_7_Cl_IC_data%>%mutate(Cl_mgL=(rowMeans(ID_5_6_7_Cl_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE)))%>%
                           mutate(Cl_std_mgL=(rowSds(as.matrix(ID_5_6_7_Cl_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE))))%>%
-                          mutate(CL_Std_p=((Cl_std_mgL/Cl_mgL)*100))
+                          mutate(CL_Std_p=((Cl_std_mgL/Cl_mgL)))
 
 
 
@@ -824,7 +831,7 @@ ID_5_6_7_SO4_IC_data$SO4_2_mg_L=ID_5_6_7_SO4_IC_data$SO4_2_mg_L*ID_5_6_7_SO4_IC_
   
 ID_5_6_7_SO4_IC_data <-ID_5_6_7_SO4_IC_data%>%mutate(SO4_mgL=(rowMeans(ID_5_6_7_SO4_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE)))%>%
                           mutate(SO4_std_mgL=(rowSds(as.matrix(ID_5_6_7_SO4_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE))))%>%
-                          mutate(SO4_Std_p=((SO4_std_mgL/SO4_mgL)*100))
+                          mutate(SO4_Std_p=((SO4_std_mgL/SO4_mgL)))
 
 
 #data fra SiO2 
@@ -838,6 +845,41 @@ ID_5_6_7_SiO2_IC_data <- as.data.frame(ID_5_6_7_SiO2_IC_data)
 
 
 
+#Imort af Ca_IC data. 
+ID_5_6_7_Ca_IC_data <- read_excel("data/ICR/ICR_2.xlsx",4)
+
+old_names_IC=colnames(ID_5_6_7_Ca_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Ca_1_mg_L","Ca_2_mg_L") #Vi finder på nogle lidt bedre nogle
+ID_5_6_7_Ca_IC_data = ID_5_6_7_Ca_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+ID_5_6_7_Ca_IC_data <- as.data.frame(ID_5_6_7_Ca_IC_data)
+#noget med gennemsnit. 
+
+
+ID_5_6_7_Ca_IC_data$Ca_1_mg_L=ID_5_6_7_Ca_IC_data$Ca_1_mg_L*ID_5_6_7_Ca_IC_data$Dilution
+ID_5_6_7_Ca_IC_data$Ca_2_mg_L=ID_5_6_7_Ca_IC_data$Ca_2_mg_L*ID_5_6_7_Ca_IC_data$Dilution
+  
+ID_5_6_7_Ca_IC_data <-ID_5_6_7_Ca_IC_data%>%mutate(Ca_mgL=(rowMeans(ID_5_6_7_Ca_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Ca_std_mgL=(rowSds(as.matrix(ID_5_6_7_Ca_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Ca_Std_p=((Ca_std_mgL/Ca_mgL)))
+
+
+
+#Imort af Na_IC data. 
+ID_5_6_7_Na_IC_data <- read_excel("data/ICR/ICR_2.xlsx",5)
+
+old_names_IC=colnames(ID_5_6_7_Na_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Na_1_mg_L","Na_2_mg_L") #Vi finder på nogle lidt bedre nogle
+ID_5_6_7_Na_IC_data = ID_5_6_7_Na_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+ID_5_6_7_Na_IC_data <- as.data.frame(ID_5_6_7_Na_IC_data)
+#noget med gennemsnit. 
+
+
+ID_5_6_7_Na_IC_data$Na_1_mg_L=ID_5_6_7_Na_IC_data$Na_1_mg_L*ID_5_6_7_Na_IC_data$Dilution
+ID_5_6_7_Na_IC_data$Na_2_mg_L=ID_5_6_7_Na_IC_data$Na_2_mg_L*ID_5_6_7_Na_IC_data$Dilution
+  
+ID_5_6_7_Na_IC_data <-ID_5_6_7_Na_IC_data%>%mutate(Na_mgL=(rowMeans(ID_5_6_7_Na_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Na_std_mgL=(rowSds(as.matrix(ID_5_6_7_Na_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Na_Std_p=((Na_std_mgL/Na_mgL)))
 
 ```
 
@@ -857,11 +899,14 @@ ID_5_Feed_SO4 = ID_5_6_7_SO4_IC_data %>% filter(Name == "ID:5")%>%filter(Stream 
 ID_5_perm_SO4 = ID_5_6_7_SO4_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Permeate")
 ID_5_Feed_SiO2 = ID_5_6_7_SiO2_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Feed")
 ID_5_perm_SiO2 = ID_5_6_7_SiO2_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Permeate")
+ID_5_Feed_Ca = ID_5_6_7_Ca_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Feed")
+ID_5_perm_Ca = ID_5_6_7_Ca_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Permeate")
+ID_5_Feed_Na = ID_5_6_7_Na_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Feed")
+ID_5_perm_Na = ID_5_6_7_Na_IC_data %>% filter(Name == "ID:5")%>%filter(Stream %in%"Permeate")
 #sammel resterne 
-ID_5=cbind(ID_5_Feed_Cl[-1,c(1:2,7,9)],ID_5_perm_Cl[,c(7,9)],ID_5_Feed_SO4[-1,c(7,9)],ID_5_perm_SO4[,c(7,9)], ID_5_Feed_SiO2[-1,5],ID_5_perm_SiO2[5])
+ID_5=cbind(ID_5_Feed_Cl[-1,c(1:2,7,9)],ID_5_perm_Cl[,c(7,9)],ID_5_Feed_SO4[-1,c(7,9)],ID_5_perm_SO4[,c(7,9)], ID_5_Feed_SiO2[-1,5],ID_5_perm_SiO2[5],ID_5_Feed_Ca[-1,c(7,9)],ID_5_perm_Ca[,c(7,9)],ID_5_Feed_Na[-1,c(7,9)],ID_5_perm_Na[,c(7,9)])
 #giver ting de rigtige navne. 
-colnames(ID_5) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','SiO2_Feed','SiO2_perm')
-### noget med recovery
+colnames(ID_5) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','SiO2_Feed','SiO2_perm','Ca_Feed','Ca_Feed_Std_p','Ca_perm','Ca_perm_std_p','Na_Feed','Na_Feed_Std_p','Na_perm','Na_perm_std_p')
 
 
 #klip i shit
@@ -871,11 +916,14 @@ ID_6_Feed_SO4 = ID_5_6_7_SO4_IC_data %>% filter(Name == "ID:6")%>%filter(Stream 
 ID_6_perm_SO4 = ID_5_6_7_SO4_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Permeate")
 ID_6_Feed_SiO2 = ID_5_6_7_SiO2_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Feed")
 ID_6_perm_SiO2 = ID_5_6_7_SiO2_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Permeate")
+ID_6_Feed_Ca = ID_5_6_7_Ca_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Feed")
+ID_6_perm_Ca = ID_5_6_7_Ca_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Permeate")
+ID_6_Feed_Na = ID_5_6_7_Na_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Feed")
+ID_6_perm_Na = ID_5_6_7_Na_IC_data %>% filter(Name == "ID:6")%>%filter(Stream %in%"Permeate")
 #sammel resterne 
-ID_6=cbind(ID_6_Feed_Cl[-c(1,6),c(1:2,7,9)],ID_6_perm_Cl[,c(7,9)],ID_6_Feed_SO4[-c(1,6),c(7,9)],ID_6_perm_SO4[,c(7,9)], ID_6_Feed_SiO2[-c(1,6),5],ID_6_perm_SiO2[5])
+ID_6=cbind(ID_6_Feed_Cl[-c(1,6),c(1:2,7,9)],ID_6_perm_Cl[,c(7,9)],ID_6_Feed_SO4[-c(1,6),c(7,9)],ID_6_perm_SO4[,c(7,9)], ID_6_Feed_SiO2[-c(1,6),5],ID_6_perm_SiO2[5],ID_6_Feed_Ca[-c(1,6),c(7,9)],ID_6_perm_Ca[,c(7,9)],ID_6_Feed_Na[-c(1,6),c(7,9)],ID_6_perm_Na[,c(7,9)])
 #giver ting de rigtige navne. 
-colnames(ID_6) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','SiO2_Feed','SiO2_perm')
-### noget med recovery
+colnames(ID_6) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','SiO2_Feed','SiO2_perm','Ca_Feed','Ca_Feed_Std_p','Ca_perm','Ca_perm_std_p','Na_Feed','Na_Feed_Std_p','Na_perm','Na_perm_std_p')
 
 ICR_2_df = rbind(ID_5,ID_6)
 ICR_2_df = ICR_2_df%>%mutate("perm_vol"=Time*1.02)
@@ -884,25 +932,47 @@ ICR_2_df = ICR_2_df%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
 ICR_2_df$rej_Cl=((1-(ICR_2_df$Cl_perm/ICR_2_df$Cl_Feed))*100)
 ICR_2_df$rej_SO4=((1-(ICR_2_df$SO4_perm/ICR_2_df$SO4_Feed))*100)
 ICR_2_df$rej_SiO2=((1-(ICR_2_df$SiO2_perm/ICR_2_df$SiO2_Feed))*100)
+ICR_2_df$rej_Ca=((1-(ICR_2_df$Ca_perm/ICR_2_df$Ca_Feed))*100)
+ICR_2_df$rej_Na=((1-(ICR_2_df$Na_perm/ICR_2_df$Na_Feed))*100)
+
+ICR_2_df$Rej_Cl_std_p=(ICR_2_df$Cl_perm_std_p+ICR_2_df$Cl_Feed_Std_p)
+ICR_2_df$Rej_SO4_std_p=(ICR_2_df$SO4_perm_std_p+ICR_2_df$SO4_Feed_Std_p)
+ICR_2_df$Rej_SiO2_std_p=((2/ICR_2_df$SiO2_perm)+(2/ICR_2_df$SiO2_Feed))
+ICR_2_df$Rej_Ca_std_p=(ICR_2_df$Ca_perm_std_p+ICR_2_df$Ca_Feed_Std_p)
+ICR_2_df$Rej_Na_std_p=(ICR_2_df$Na_perm_std_p+ICR_2_df$Na_Feed_Std_p)
 
 
-ICR_2_rej = ICR_2_df%>%gather(key,value, rej_Cl,rej_SO4,rej_SiO2)
+ICR_2_rej = ICR_2_df%>%gather(key,value, rej_Cl,rej_SO4,rej_SiO2,rej_Ca,rej_Na)
+ICR_2_rej_std_p=c(ICR_2_df$Rej_Cl_std_p,ICR_2_df$Rej_SO4_std_p,ICR_2_df$Rej_SiO2_std_p,ICR_2_df$Rej_Ca_std_p,ICR_2_df$Rej_Na_std_p)
 
- 
+ICR_2_rej=ICR_2_rej%>%mutate("rej_std_p"=ICR_2_rej_std_p)
+
+
 
 plot_ID_5=ggplot(ICR_2_rej%>%filter(Name=="ID:5"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  labs(x="Water Recovery %",y="Rejection %", color="")+ #xlim(c(0,90))+ylim(c(-75,100))+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-25, 110), breaks=c(-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
   ggtitle("ID:5")
+
 
 
 plot_ID_6=ggplot(ICR_2_rej%>%filter(Name=="ID:6"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  labs(x="Water Recovery %",y="Rejection %", color="")+ #xlim(c(0,90))+ylim(c(-75,100))+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+  labs(x="Water Recovery %",y="Rejection %", color="")+ 
+  scale_y_continuous(limits=c(-25, 110), breaks=c(-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
   ggtitle("ID:6")
 
 ggarrange(plot_ID_5,plot_ID_6, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
-
+ggarrange(plot_ID_4,plot_ID_5,plot_ID_6, ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 
 
 plotly_ID_5=ggplotly(plot_ID_5)
@@ -917,106 +987,12 @@ hejmeddig_1
 
 
 
-```{r IC data ID: 5, eval=FALSE, include=FALSE}
-
-
-##### ICR vol 2 A silica ######
-ICR_v2_A_silica = read_excel("data/ICR2.xlsx",2)
-ICR_v2_A_silica = ICR_v2_A_silica[c(1:10,13:16),-c(2,3)]
-
-ICR_v2_A = data.frame(
-  name = NA,
-  Na =NA,
-  Cl =NA,
-  SO4=NA,
-  Ca=NA,
-  SiO2mgL=NA,
-  pH=NA,
-  time=c(2,4,6,7),
-  recovery=NA,
-  startvol=NA,
-  permvol=NA
-)
-ICR_v2_A$name = c("ICR_v2_A_2h","ICR_v2_A_4h","ICR_v2_A_6h","ICR_v2_A_7h")
-ICR_v2_A$sio2_feed=ICR_v2_A_silica[c(2:5),2]
-ICR_v2_A$sio2_perm=ICR_v2_A_silica[c(7:10),2]
-ICR_v2_A=ICR_v2_A%>%mutate(Rej_sio2=1-(sio2_perm/sio2_feed))
 
 
 
 
 
-```
 
 
 
-
-
-```{r Import IC data, include=FALSE}
-
-ICR_2_Ion_data_frame = data.frame()
-
-#import af ID 5
-ID_5 = read_excel("data/ICR/ICR_2_samlet.xlsx",2)
-ID_5_raw=ID_5
-ID_5$start_vol = 10
-
-#import af ID 6
-ID_6 = read_excel("data/ICR/ICR_2_samlet.xlsx",3)
-ID_6_raw=ID_6
-ID_6$start_vol = 10
-
-
-#sæt dem sammen. 
-ICR_2_Ion_data_frame = rbind(ID_5,ID_6)
-ICR_2_Ion_data_frame$rej_SiO2=((1-(ICR_2_Ion_data_frame$Perm_SiO2/ICR_2_Ion_data_frame$Feed_SiO2))*100)
-
-
-### noget med recovery
-ICR_2_Ion_data_frame = ICR_2_Ion_data_frame%>%mutate("perm_vol"=tid*1.02)
-ICR_2_Ion_data_frame = ICR_2_Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
-
-
-Mw_Cl=35.45
-Mw_Na=22.99
-Mw_Ca=40.078
-Mw_SO4=96.06
-Mw_SiO2=60.08
-#vi konvertere senere.... 
-#Ion_data_frame = Ion_data_frame%>%mutate("Na_mmol"=Na/Mw_Na)
-#Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Ca/Mw_Ca)
-#Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Cl/Mw_Cl)
-#Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=SO4/Mw_SO4)
-#Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
-
-``` 
-
-
-```{R ICRv2 plot PLCdata, echo=FALSE, include=FALSE}
-
-ICR_v2_A_silica = read_excel("data/ICR2.xlsx",2)
-ICR_v2_A_silica = ICR_v2_A_silica[c(1:10,13:16),-c(2,3)]
-
-ICR_v2_A = data.frame(
-  name = NA,
-  Na =NA,
-  Cl =NA,
-  SO4=NA,
-  Ca=NA,
-  SiO2mgL=NA,
-  pH=NA,
-  time=c(2,4,6,7),
-  recovery=NA,
-  startvol=NA,
-  permvol=NA
-)
-ICR_v2_A$name = c("ICR_v2_A_2h","ICR_v2_A_4h","ICR_v2_A_6h","ICR_v2_A_7h")
-ICR_v2_A$sio2_feed=ICR_v2_A_silica[c(2:5),2]
-ICR_v2_A$sio2_perm=ICR_v2_A_silica[c(7:10),2]
-ICR_v2_A=ICR_v2_A%>%mutate(Rej_sio2=1-(sio2_perm/sio2_feed))
-
-
-
-
-```
 

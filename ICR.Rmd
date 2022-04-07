@@ -53,7 +53,6 @@ colors = c(
 ```
 
 
-
 ```{R import af data, echo=FALSE, message=FALSE}
 
 Cl_IC_data <- read_excel("data/ICR/IC_data_ICR_udvalgtdata_igen.xlsx")
