@@ -362,7 +362,7 @@ plc_2B
 
 ```
 
-### Ions (Silica + Cl )
+### Rejection (Silica + Cl )
 Lav errorbars for silica. 
 
 ```{r Import IC data, echo=FALSE}
@@ -398,6 +398,8 @@ FCT_Ion_data_frame$rej_Cl_hach=((1-(FCT_Ion_data_frame$Perm_Cl_hach/FCT_Ion_data
 FCT_Ion_data_frame = FCT_Ion_data_frame%>%mutate("perm_vol"=tid*1.02)
 FCT_Ion_data_frame = FCT_Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
 
+### Import af dunk
+FCT_Dunk = read_excel("data/FCT/FCT_samlet.xlsx",6)
 
 Mw_Cl=35.45
 Mw_Na=22.99
@@ -519,6 +521,10 @@ ggarrange(plot_1A_rejection, plot_1A_pH, ncol=1, nrow=2, common.legend = TRUE, l
   
 
 
+
+```
+
+```{r noget med cl rejected vs tilsat}
 
 ```
 
