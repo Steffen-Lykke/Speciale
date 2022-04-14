@@ -220,10 +220,10 @@ NaCl_Concentrate <- filter(NaCl_IC_data, Stream=="Concentrate")
 NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Concentrate$Chloride)/2)))*100
 
 NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Concentrate$Sodium)/2)))*100
-
-ggplot()+
-  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
-  geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))
+# 
+# ggplot()+
+#   geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Na,color="NaCl R Na"))+
+#   geom_point(data=NaCl_Feed[-1,], aes(x=NaCl_Feed$time[-1], y=NaCl_rej_Cl,color="NaCl R Cl"))
 
 
 
