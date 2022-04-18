@@ -104,8 +104,26 @@ rootSearch = optim(l0, fnToFindRoot,method = 'BFGS', hessian=TRUE)
 str(rootSearch)
 fnToFindRoot(rootSearch$par)
 
+library(rootSolve)
+polyroot(f)
+
+#Manual (solver) solution
+x = 1
+err = 1
+while (err>0.001) {
+  y=(x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
+  err = abs(y)
+  x = x+0.00001
+}
 
 
 f = function (x) (x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
-library(rootSolve)
-polyroot(f)
+
+D(expression((x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2,'x'),'x')
+
+g= function(x) x^1*15.25+x^-1*5+x^(-2)*5*(-2)+x^2*0.5*2-50
+xyr = D(expression(x^1*15.25+x^-1*5+x^(-2)*5*(-2)+x^2*0.5*2-50),'x')
+D2 <- D(xyr, 'x')
+
+
+Donnan = uniroot(D2,c(0,100))$root
