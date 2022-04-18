@@ -71,7 +71,7 @@ NaCl_Retentate <- filter(NaCl_IC_data, Stream=="Retentate")
 NaCl_rej_Cl <- (1-(NaCl_Permeate$Chloride[-6]/((NaCl_Feed$Chloride[-1]+NaCl_Retentate$Chloride)/2)))*100
 NaCl_rej_Na <- (1-(NaCl_Permeate$Sodium[-6]/((NaCl_Feed$Sodium[-1]+NaCl_Retentate$Sodium)/2)))*100
 
-fig_NaCl_Cl <- plot_ly(data=NaCl_IC_data[1:16,], x=~time,
+fig_NaCl_Cl <- plot_ly(data=NaCl_IC_data[1:16,], x=~time/6*100,
           y=~(Chloride/35.45),
          color=~Stream,
           type='scatter',mode='lines+markers',
@@ -79,33 +79,33 @@ fig_NaCl_Cl <- plot_ly(data=NaCl_IC_data[1:16,], x=~time,
          showlegend=FALSE)  %>%
       layout(
          yaxis=list(title="Concentration Chloride [mM]", range=c(0,4)),
-         xaxis=list(title="Time [h]")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
-fig_NaCl_Na <- plot_ly(data=NaCl_IC_data[1:16,], x=~time,
+fig_NaCl_Na <- plot_ly(data=NaCl_IC_data[1:16,], x=~time/6*100,
           y=~(Sodium/22.99),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]))  %>%
       layout(
          yaxis=list(title="Concentration Sodium [mM]",range=c(0,4)),
-         xaxis=list(title="Time")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
 fig_NaCl_conc <- subplot(fig_NaCl_Cl, fig_NaCl_Na, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
 fig_NaCl_conc
 
 
-fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1],
+fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1]/6*100,
           y=~NaCl_rej_Na,
           type='scatter',mode='lines+markers',
           colors=colors[1], name = "NaCl Na")  %>%
-  add_trace(x=~NaCl_Feed$time[-1],
+  add_trace(x=~NaCl_Feed$time[-1]/6*100,
           y=~NaCl_rej_Cl,
         type='scatter',mode='lines+markers',
           colors=colors[2], name = "NaCl Cl")  %>%
      layout(
        #title="Rejection NaCl",
          yaxis=list(title="Rejection %",range=c(0,100)),
-         xaxis=list(title="Time [h]")) 
+         xaxis=list(title="Water Recovery [%]")) 
 #fig_NaCl
 
 
@@ -132,39 +132,39 @@ CaCl2_rej_Cl <- (1-(CaCl2_Permeate$Chloride[-6]/((CaCl2_Feed$Chloride[-1]+CaCl2_
 
 CaCl2_rej_Ca <- (1-(CaCl2_Permeate$Calcium[-6]/((CaCl2_Feed$Calcium[-1]+CaCl2_Retentate$Calcium)/2)))*100
 
-fig_CaCl2_Cl <- plot_ly(data=CaCl2_IC_data[1:16,], x=~time,
+fig_CaCl2_Cl <- plot_ly(data=CaCl2_IC_data[1:16,], x=~time/6*100,
           y=~(Chloride/35.45),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]),
          showlegend=FALSE)  %>%
       layout(yaxis=list(title="Concentration Chloride [mM]", range=c(0,10)),
-         xaxis=list(title="Time [h]")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
-fig_CaCl2_Ca <- plot_ly(data=CaCl2_IC_data[1:16,], x=~time,
+fig_CaCl2_Ca <- plot_ly(data=CaCl2_IC_data[1:16,], x=~time/6*100,
           y=~(Calcium/40.078),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]))  %>%
       layout(
          yaxis=list(title="Concentration Calcium [mM]",range=c(0,10)),
-         xaxis=list(title="Time")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
 fig_CaCl2_conc <- subplot(fig_CaCl2_Cl, fig_CaCl2_Ca, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
 fig_CaCl2_conc
 
-fig_CaCL2 <- plot_ly(x=~CaCl2_Feed$time[-1],
+fig_CaCL2 <- plot_ly(x=~CaCl2_Feed$time[-1]/6*100,
           y=~CaCl2_rej_Ca,
           type='scatter',mode='lines+markers',
           colors=colors[1], name = "CaCl2 Ca")  %>%
-  add_trace(x=~CaCl2_Feed$time[-1],
+  add_trace(x=~CaCl2_Feed$time[-1]/6*100,
           y=~CaCl2_rej_Cl,
         type='scatter',mode='lines+markers',
           colors=colors[2], name = "CaCl2 Cl")  %>%
      layout(
        #title="Rejection CaCl2",
          yaxis=list(title="Rejection %",range=c(0,100)),
-         xaxis=list(title="Time [h]")) 
+         xaxis=list(title="Water Recovery [%]")) 
 #fig_CaCL2
 
 ```
@@ -188,40 +188,40 @@ SiO2_rej_Si<- (1-(SiO2_Permeate$Silica[-6]/((SiO2_Feed$Silica[-1]+SiO2_Retentate
 
 SiO2_rej_Na <- (1-(SiO2_Permeate$Sodium[-6]/((SiO2_Feed$Sodium[-1]+SiO2_Retentate$Sodium)/2)))*100
 
-fig_SiO2_Si <- plot_ly(data=SiO2_IC_data[1:16,], x=~time,
+fig_SiO2_Si <- plot_ly(data=SiO2_IC_data[1:16,], x=~time/6*100,
           y=~(Silica/60.08),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]),
          showlegend=FALSE)  %>%
       layout(yaxis=list(title="Concentration Silica [mM]",range=c(0,3)),
-         xaxis=list(title="Time [h]")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
-fig_SiO2_Na <- plot_ly(data=SiO2_IC_data[1:16,], x=~time,
+fig_SiO2_Na <- plot_ly(data=SiO2_IC_data[1:16,], x=~time/6*100,
           y=~(Sodium/22.99),
          color=~Stream,
           type='scatter',mode='lines+markers',
           colors=c(colors[1],colors[2],colors[3]))  %>%
       layout(
          yaxis=list(title="Concentration Sodium [mM]",range=c(0,3)),
-         xaxis=list(title="Time")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
 fig_SiO2_conc <- subplot(fig_SiO2_Si, fig_SiO2_Na, nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1)
 fig_SiO2_conc
 
 
-fig_SiO2 <- plot_ly(x=~SiO2_Feed$time[-1],
+fig_SiO2 <- plot_ly(x=~SiO2_Feed$time[-1]/6*100,
           y=~SiO2_rej_Na,
           type='scatter',mode='lines+markers',
           colors=colors[1], name = "SiO2 Na")  %>%
-  add_trace(x=~SiO2_Feed$time[-1],
+  add_trace(x=~SiO2_Feed$time[-1]/6*100,
           y=~SiO2_rej_Si,
         type='scatter',mode='lines+markers',
           colors=colors[2], name = "SiO2")  %>%
      layout(
        #title="Rejection Na2OSIO2",
          yaxis=list(title="Rejection %",range=c(0,100)),
-         xaxis=list(title="Time [h]")) 
+         xaxis=list(title="Water Recovery [%]")) 
 
 #fig_SiO2
 
@@ -355,8 +355,7 @@ fig <- subplot(fig_cations,fig_anions,nrows=1,titleY=TRUE,titleX=TRUE,margin=0.1
 
 fig
 
-fig_2 <- subplot(fig_NaCl,fig_CaCL2, fig_SiO2,fig_MgSO4
-              ,nrows=1,titleY=TRUE,titleX=TRUE)
+fig_2 <- subplot(fig_NaCl,fig_CaCL2, fig_SiO2,nrows=1,titleY=TRUE,titleX=TRUE)
 # Update title
 annotations = list( 
   list( 
@@ -370,7 +369,7 @@ annotations = list(
     showarrow = FALSE 
   ),  
   list( 
-    x = 0.35,  
+    x = 0.5,  
     y = 1,  
     text = "CaCl2",  
     xref = "paper",  
@@ -380,7 +379,7 @@ annotations = list(
     showarrow = FALSE 
   ),  
   list( 
-    x = 0.55,  
+    x = 0.85,  
     y = 1,  
     text = "SiO2",  
     xref = "paper",  
@@ -388,22 +387,11 @@ annotations = list(
     xanchor = "center",  
     yanchor = "bottom",  
     showarrow = FALSE 
-  ),
-    list( 
-    x = 0.9,  
-    y = 1,  
-    text = "MgSO4",  
-    xref = "paper",  
-    yref = "paper",  
-    xanchor = "center",  
-    yanchor = "bottom",  
-    showarrow = FALSE )
+  )
 )
   
 
 fig_2 <- fig_2 %>%layout(annotations = annotations) 
-
-
 
 fig_2
 
@@ -633,20 +621,20 @@ add_trace(data=SiO2_IC_data %>% filter(Stream=="Feed"),x=~time,
 ```{R pH, echo=FALSE, message=FALSE}
 
 
-fig_pH <- plot_ly(data=dat_NaCl,x=~sek/3600,
+fig_pH <- plot_ly(data=dat_NaCl,x=~sek/3600/6*100,
           y=~pH0201,
           type='scatter',mode='lines+markers',
           colors=colors[1], name = "pH NaCl") %>%
-      add_trace(data=dat_CaCl2,x=~sek/3600,
+      add_trace(data=dat_CaCl2,x=~sek/3600/6*100,
           y=~pH0201,
           type='scatter',mode='lines+markers',
           colors=colors[2], name = "pH CaCl2") %>%
-      add_trace(data=dat_SiO2,x=~sek/3600,
+      add_trace(data=dat_SiO2,x=~sek/3600/6*100,
           y=~pH0201,
           type='scatter',mode='lines+markers',
           colors=colors[3], name = "pH Na2OSiO2") %>%
     layout( yaxis=list(title="pH",range=c(7,9)),
-         xaxis=list(title="Time [h]"))
+         xaxis=list(title="Water Recovery [%]"))
 fig_pH  
 
 ```
@@ -658,7 +646,8 @@ B_NaCl <- c(8.4,NA,31,42,43)
 B_CaCl2 <- c(6,NA,15,18,20)
 B_Na2OSiO2 <- c(128,141,157,196,205)
 
-tid <- (c(0,1,2,3.5,4))
+tid <- (c(0,1,2,3.5,4))/6*100
+
 
 
 SingleSalt <- data.frame(tid,B_NaCl, B_CaCl2,B_Na2OSiO2)
@@ -682,7 +671,7 @@ fig_B <- plot_ly(data=SingleSalt,x=~tid[-2],
           type='scatter',mode='lines+markers',
           colors=colors[1], name = "Na2OSiO2") %>%
     layout( yaxis=list(title="Bicarbonate [mM]"),
-         xaxis=list(title="Time [h]"))
+         xaxis=list(title="Water Recovery [%]"))
 fig_B  
 
 

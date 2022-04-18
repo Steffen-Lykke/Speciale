@@ -14,22 +14,25 @@ ID1 <- import("CT_vand_langå_0.2MNaOH.csv",";", skip=1, header=F,stringsAsFacto
 ID2 <- import("pH_titration_NaOH_22_03_22-12_43_27.csv",";", skip=1, header=F,stringsAsFactors = FALSE,col.names = columnnames) %>%
   mutate(mL = as.numeric(mL),pH = as.numeric(pH),sec = as.numeric(sec),dpHdml = as.numeric(dpHdml))
 
+C=0.02
 #differentiering af data
 titrationdata <- ID2
-n <- 2
+n <-7
 dvdpH <- diff(titrationdata$mL,lag=n)/diff(titrationdata$pH,lag=n) 
+dCdpH <- diff(titrationdata$mL*C,lag=n)/diff(titrationdata$pH,lag=n) 
 length(dvdpH) =nrow(titrationdata)-(n-1)
 dpHdv <- diff(titrationdata$pH,lag=n)/diff(titrationdata$mL,lag=n) 
 length(dpHdv) = nrow(titrationdata)-(n-1)
-diff.cal<- cbind(dvdpH,dpHdv) 
-na_df<-data.frame(matrix(NA,nrow = n-1, ncol = 2))
-colnames(na_df) <- c('dvdpH','dpHdv')
+beta = 1/dpHdv
+diff.cal<- cbind(dvdpH,dpHdv,beta) 
+na_df<-data.frame(matrix(NA,nrow = n-1, ncol = 3))
+colnames(na_df) <- c('dvdpH','dpHdv','beta')
 diff.cal<-rbind(na_df,diff.cal)
 titrationdata <-cbind(titrationdata,diff.cal)
 #write.csv(titrationdata,here("Job","Indlet 4-11.csv"))
 
 #polynomisk regration
-tidata1<-dplyr::filter(titrationdata, dvdpH > -100 &dvdpH < 100  &pH<5.5&pH>3.3)
+tidata1<-dplyr::filter(titrationdata, dvdpH > -50 &dvdpH < 50)
 tidata1$mod<-fitted(lm(tidata1$dvdpH ~ poly(tidata1$pH,2)))
 tidata1[which.max(tidata1$mod),]
 
@@ -37,7 +40,7 @@ tidata1[which.max(tidata1$mod),]
 #plot af data
 P <- plot_ly(data = titrationdata, x = ~pH) %>%
   add_lines(y = ~pH, name = "pH", color = I("red") ,x = ~mL,line=list(width=4))%>%
-  add_lines(y = ~dvdpH, yaxis = "y2", name = "dV/dpH",  color = I("darkgreen"))%>%
+  add_lines(y = ~dvdpH, yaxis = "y2", name = "beta",  color = I("darkgreen"))%>%
   #add_lines(y=tidata3$mod,yaxis = "y2", name = "dV/dpH model",x = tidata3$pH, color = I("green"))%>%
   subplot(nrows = 2)%>%
   plotly::layout(yaxis=list(title="pH"),yaxis2=list(title="dV/dpH"),
@@ -55,11 +58,11 @@ P
 
 
 pHplot <- plot_ly(data = titrationdata, x = ~pH) %>%
-  add_lines(y = ID1$pH, name = "pH test 1", x = ID1$mL,line=list(width=4))%>%
-  add_lines(y = ID2$pH, name = "pH test 2", x = ID2$mL,line=list(width=4))%>%
+  add_lines(y = ID1$pH, name = "pH test 1", x = ID1$mL*0.02,line=list(width=4))%>%
+  add_lines(y = ID2$pH, name = "pH test 2", x = ID2$mL*0.01,line=list(width=4))%>%
   plotly::layout(
     yaxis = list(title = "pH", showgrid = FALSE, color = "red"),
-    xaxis=list(title="V [mL]"),
+    xaxis=list(title="NaOH [mmol]"),
     legend = list(x = 0.1, y = 100, orientation = 'h'),
     hovermode = "x", spikedistance = -1 )
 pHplot
