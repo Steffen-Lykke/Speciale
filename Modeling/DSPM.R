@@ -93,48 +93,22 @@ E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
 dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2]*10^-9)*(1/E_p-1/E_b)
 DE = exp(-dW/(k_B*Temp))
 
-###### Donnan exclusion?#####
+###### Donnan exclusion#####
 
-####### Learning maths in R: #####
-fnToFindRoot = function(x) {
-  return((x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2)
-}
-l0 = 1
-rootSearch = optim(l0, fnToFindRoot,method = 'BFGS', hessian=TRUE)
-str(rootSearch)
-fnToFindRoot(rootSearch$par)
-
-library(rootSolve)
-polyroot(f)
 
 #Manual (solver) solution
 x = 1
 err = 1
 while (err>0.001) {
-  y=(x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
+  y=x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
+    x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
   err = abs(y)
   x = x+0.00001
 }
 
+#Using Uniroot
 
-f = function (x) (x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2
-
-D(expression((x*(x*(x*(x + 15.25) - 50) - 5) - 10)/x^2,'x'),'x')
-
-g= expression(x^1*15.25+x^-1*5+x^(-2)*5*(-2)+x^2*0.5*2-50)
-D1 <- D(g, 'x')
-D2 <- D(D1,'x')
-root_function = function(x) eval(D2)
-
-Donnan = uniroot(D2,c(0,100))$root
-Donnan
-
-xyr <- D(expression((x^1*15.25+x^-1*5+x^(-2)*5*(-2)+x^2*0.5*2)-50), 'x')
-
-D2 <- D(xyr, 'x')
-fa = function(x) eval(D2)
-uniroot(fa,c(0.001,100))  
-
+## Variables
 c_Na = 15.25
 c_Cl = 5
 c_SO4 = 5
@@ -150,22 +124,16 @@ phi_S_Cl = 0.575
 phi_S_SO4 = 0.292
 phi_S_Ca = 0.144
 
-
-
 phi_DE_Na = 0.1574
 phi_DE_Cl = 0.0601
 phi_DE_SO4 = 0.0027
 phi_DE_Ca = 0.012
 
-
 X = -50
 
-h=expression (x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
-  x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X)
+##Set up function and find current donnan potential
+f = function (x) x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
+  x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
-Fn_to_find_root =D(h,'x')
-D1 <- D(Fn_to_find_root, 'x')
-
-
-Donnan = uniroot(D1,c(0,100))$root
+Donnan = uniroot(f,c(0,100))$root
 Donnan
