@@ -365,7 +365,7 @@ plc_2B
 ### Rejection (Silica + Cl )
 Lav errorbars for silica. 
 
-```{r Import IC data, echo=FALSE}
+```{r Import silica Cl data, echo=FALSE}
 
 FCT_Ion_data_frame = data.frame()
 
@@ -469,8 +469,8 @@ plot_2B_rej=ggplot(FCT_plot%>%filter(name=="FCT_2B"), aes(x=Recovery, y=value,co
 # plot_2A_rej
 # plot_2B_rej
 
-ggarrange(plot_1A_rej,plot_2A_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
-ggarrange(plot_1A_rej,plot_1B_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+#ggarrange(plot_1A_rej,plot_2A_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+#ggarrange(plot_1A_rej,plot_1B_rej, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 ggarrange(plot_1A_rej,plot_1B_rej,plot_2A_rej,plot_2B_rej, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
 
 #plot_1A_rej=ggplotly(plot_1A_rej)
@@ -489,10 +489,10 @@ ggarrange(plot_1A_rej,plot_1B_rej,plot_2A_rej,plot_2B_rej, ncol=2, nrow=2, commo
 
 ``` 
 
-#### pH development along with rejections for 1A
-```{r plot af rej og pH , echo=FALSE}
 
-  
+```{r plot af rej og pH, eval=FALSE, include=FALSE}
+
+#### pH development along with rejections for 1A  
   
 FCT_rej_pH=FCT_rej%>%filter(name=="FCT_1A")
  
@@ -524,7 +524,346 @@ ggarrange(plot_1A_rejection, plot_1A_pH, ncol=1, nrow=2, common.legend = TRUE, l
 
 ```
 
-```{r noget med cl rejected vs tilsat}
+
+```{R import IC data, echo=FALSE, message=FALSE}
+
+#Imort af CL_IC data. 
+Cl_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx")
+
+old_names_IC=colnames(Cl_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Cl_1_mg_L","Cl_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Cl_ID8_11_IC_data = Cl_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Cl_ID8_11_IC_data <- as.data.frame(Cl_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+Cl_ID8_11_IC_data$Cl_1_mg_L=Cl_ID8_11_IC_data$Cl_1_mg_L*Cl_ID8_11_IC_data$Dilution
+Cl_ID8_11_IC_data$Cl_2_mg_L=Cl_ID8_11_IC_data$Cl_2_mg_L*Cl_ID8_11_IC_data$Dilution
+  
+Cl_ID8_11_IC_data <-Cl_ID8_11_IC_data%>%mutate(Cl_mgL=(rowMeans(Cl_ID8_11_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Cl_std_mgL=(rowSds(as.matrix(Cl_ID8_11_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(CL_Std_p=((Cl_std_mgL/Cl_mgL)))
+
+
+
+#Imort af CL_IC data. 
+SO4_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx",2)
+SO4_ID8_11_IC_data <-SO4_ID8_11_IC_data[,1:6]
+
+old_names_IC=colnames(SO4_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","SO4_1_mg_L","SO4_2_mg_L") #Vi finder på nogle lidt bedre nogle
+SO4_ID8_11_IC_data = SO4_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SO4_ID8_11_IC_data <- as.data.frame(SO4_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+SO4_ID8_11_IC_data$SO4_1_mg_L=SO4_ID8_11_IC_data$SO4_1_mg_L*SO4_ID8_11_IC_data$Dilution
+SO4_ID8_11_IC_data$SO4_2_mg_L=SO4_ID8_11_IC_data$SO4_2_mg_L*SO4_ID8_11_IC_data$Dilution
+  
+SO4_ID8_11_IC_data <-SO4_ID8_11_IC_data%>%mutate(SO4_mgL=(rowMeans(SO4_ID8_11_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(SO4_std_mgL=(rowSds(as.matrix(SO4_ID8_11_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(SO4_Std_p=((SO4_std_mgL/SO4_mgL)))
+
+
+
+#Imort af Ca_IC data. 
+Ca_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx",3)
+
+old_names_IC=colnames(Ca_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Ca_1_mg_L","Ca_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Ca_ID8_11_IC_data = Ca_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Ca_ID8_11_IC_data <- as.data.frame(Ca_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+Ca_ID8_11_IC_data$Ca_1_mg_L=Ca_ID8_11_IC_data$Ca_1_mg_L*Ca_ID8_11_IC_data$Dilution
+Ca_ID8_11_IC_data$Ca_2_mg_L=Ca_ID8_11_IC_data$Ca_2_mg_L*Ca_ID8_11_IC_data$Dilution
+  
+Ca_ID8_11_IC_data <-Ca_ID8_11_IC_data%>%mutate(Ca_mgL=(rowMeans(Ca_ID8_11_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Ca_std_mgL=(rowSds(as.matrix(Ca_ID8_11_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Ca_Std_p=((Ca_std_mgL/Ca_mgL)))
+
+#Imort af Na_IC data. 
+Na_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx",4)
+
+old_names_IC=colnames(Na_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Na_1_mg_L","Na_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Na_ID8_11_IC_data = Na_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Na_ID8_11_IC_data <- as.data.frame(Na_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+Na_ID8_11_IC_data$Na_1_mg_L=Na_ID8_11_IC_data$Na_1_mg_L*Na_ID8_11_IC_data$Dilution
+Na_ID8_11_IC_data$Na_2_mg_L=Na_ID8_11_IC_data$Na_2_mg_L*Na_ID8_11_IC_data$Dilution
+  
+Na_ID8_11_IC_data <-Na_ID8_11_IC_data%>%mutate(Na_mgL=(rowMeans(Na_ID8_11_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Na_std_mgL=(rowSds(as.matrix(Na_ID8_11_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Na_Std_p=((Na_std_mgL/Na_mgL)))
+
+
+#Imort af Br_IC data. 
+Br_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx",5)
+
+old_names_IC=colnames(Br_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Br_1_mg_L","Br_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Br_ID8_11_IC_data = Br_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Br_ID8_11_IC_data <- as.data.frame(Br_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+Br_ID8_11_IC_data$Br_1_mg_L=Br_ID8_11_IC_data$Br_1_mg_L*Br_ID8_11_IC_data$Dilution
+Br_ID8_11_IC_data$Br_2_mg_L=Br_ID8_11_IC_data$Br_2_mg_L*Br_ID8_11_IC_data$Dilution
+  
+Br_ID8_11_IC_data <-Br_ID8_11_IC_data%>%mutate(Br_mgL=(rowMeans(Br_ID8_11_IC_data[,c("Br_1_mg_L","Br_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Br_std_mgL=(rowSds(as.matrix(Br_ID8_11_IC_data[,c("Br_1_mg_L","Br_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Br_Std_p=((Br_std_mgL/Br_mgL)))
+
+
+#Imort af Mg_IC data. 
+Mg_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx",6)
+
+old_names_IC=colnames(Mg_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Mg_1_mg_L","Mg_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Mg_ID8_11_IC_data = Mg_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Mg_ID8_11_IC_data <- as.data.frame(Mg_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+Mg_ID8_11_IC_data$Mg_1_mg_L=Mg_ID8_11_IC_data$Mg_1_mg_L*Mg_ID8_11_IC_data$Dilution
+Mg_ID8_11_IC_data$Mg_2_mg_L=Mg_ID8_11_IC_data$Mg_2_mg_L*Mg_ID8_11_IC_data$Dilution
+  
+Mg_ID8_11_IC_data <-Mg_ID8_11_IC_data%>%mutate(Mg_mgL=(rowMeans(Mg_ID8_11_IC_data[,c("Mg_1_mg_L","Mg_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Mg_std_mgL=(rowSds(as.matrix(Mg_ID8_11_IC_data[,c("Mg_1_mg_L","Mg_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Mg_Std_p=((Mg_std_mgL/Mg_mgL)))
+
+
+#Imort af K_IC data. 
+K_ID8_11_IC_data <- read_excel("data/FCT/IC_data.xlsx",6)
+
+old_names_IC=colnames(K_ID8_11_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","K_1_mg_L","K_2_mg_L") #Vi finder på nogle lidt bedre nogle
+K_ID8_11_IC_data = K_ID8_11_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+K_ID8_11_IC_data <- as.data.frame(K_ID8_11_IC_data)
+#noget med gennemsnit. 
+
+
+K_ID8_11_IC_data$K_1_mg_L=K_ID8_11_IC_data$K_1_mg_L*K_ID8_11_IC_data$Dilution
+K_ID8_11_IC_data$K_2_mg_L=K_ID8_11_IC_data$K_2_mg_L*K_ID8_11_IC_data$Dilution
+  
+K_ID8_11_IC_data <-K_ID8_11_IC_data%>%mutate(K_mgL=(rowMeans(K_ID8_11_IC_data[,c("K_1_mg_L","K_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(K_std_mgL=(rowSds(as.matrix(K_ID8_11_IC_data[,c("K_1_mg_L","K_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(K_Std_p=((K_std_mgL/K_mgL)))
+```
+
+```{R ID: 5-7 Rejection IC, echo=FALSE, message=FALSE}
+
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
+
+
+Feed_Cl = Cl_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_Cl=Feed_Cl[-c(1,4,7,10),]
+Perm_Cl = Cl_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+Feed_SO4 = SO4_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_SO4=Feed_SO4[-c(1,4,7,10),]
+Perm_SO4 = SO4_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+Feed_Ca = Ca_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_Ca=Feed_Ca[-c(1,4,7,10),]
+Perm_Ca = Ca_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+Feed_Na = Na_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_Na=Feed_Na[-c(1,4,7,10),]
+Perm_Na = Na_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+Feed_Br = Br_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_Br=Feed_Br[-c(1,4,7,10),]
+Perm_Br = Br_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+Feed_Mg = Mg_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_Mg=Feed_Mg[-c(1,4,7,10),]
+Perm_Mg = Mg_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+Feed_K = K_ID8_11_IC_data %>% filter(Stream %in%"Feed")
+Feed_K=Feed_K[-c(1,4,7,10),]
+Perm_K = K_ID8_11_IC_data %>% filter(Stream %in%"Permeate")
+
+
+#sammel resterne 
+ID_8_11=cbind(Feed_Cl[,c(1:2,7,9)],Perm_Cl[,c(7,9)],
+              Feed_SO4[,c(7,9)],Perm_SO4[,c(7,9)],
+              Feed_Ca[,c(7,9)],Perm_Ca[,c(7,9)],
+              Feed_Na[,c(7,9)],Perm_Na[,c(7,9)],
+              Feed_Br[,c(7,9)],Perm_Br[,c(7,9)],
+              Feed_Mg[,c(7,9)],Perm_Mg[,c(7,9)],
+              Feed_K[,c(7,9)],Perm_K[,c(7,9)])
+#først Col = feed anden = perm for alle respektive ioner.   
+
+colnames(ID_8_11) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','Ca_Feed','Ca_Feed_Std_p','Ca_perm','Ca_perm_std_p','Na_Feed','Na_Feed_Std_p','Na_perm','Na_perm_std_p','Br_Feed','Br_Feed_Std_p','Br_perm','Br_perm_std_p','Mg_Feed','Mg_Feed_Std_p','Mg_perm','Mg_perm_std_p','K_Feed','K_Feed_Std_p','K_perm','K_perm_std_p')
+
+              
+ID_8_11$start_vol=c(10,10,8.5,8.5,10,10,8.45,8.45)
+ID_8_11$perm_vol = ID_8_11$Time*1.02
+ID_8_11$Recovery = 100*(1-(ID_8_11$start_vol-ID_8_11$perm_vol)/ID_8_11$start_vol)
+
+ID_8_11=ID_8_11%>%mutate("rej_Cl"=((1-(Cl_perm/Cl_Feed))*100))
+ID_8_11=ID_8_11%>%mutate("rej_SO4"=((1-(SO4_perm/SO4_Feed))*100))
+ID_8_11=ID_8_11%>%mutate("rej_Ca"=((1-(Ca_perm/Ca_Feed))*100))
+ID_8_11=ID_8_11%>%mutate("rej_Na"=((1-(Na_perm/Na_Feed))*100))
+ID_8_11=ID_8_11%>%mutate("rej_Br"=((1-(Br_perm/Br_Feed))*100))
+ID_8_11=ID_8_11%>%mutate("rej_Mg"=((1-(Mg_perm/Mg_Feed))*100))
+ID_8_11=ID_8_11%>%mutate("rej_K"=((1-(K_perm/K_Feed))*100))
+
+
+ID_8_11$rej_Cl_std_p=(ID_8_11[,4]+ID_8_11[,6])
+ID_8_11$rej_SO4_std_p=(ID_8_11[,8]+ID_8_11[,10])
+ID_8_11$rej_Ca_std_p=(ID_8_11[,12]+ID_8_11[,14])
+ID_8_11$rej_Na_std_p=(ID_8_11[,16]+ID_8_11[,18])
+ID_8_11$rej_Br_std_p=(ID_8_11[,20]+ID_8_11[,22])
+ID_8_11$rej_Mg_std_p=(ID_8_11[,24]+ID_8_11[,26])
+ID_8_11$rej_K_std_p=(ID_8_11[,28]+ID_8_11[,30])
+
+
+ID_8_11_rej_alle = ID_8_11%>%gather(key,value, rej_Cl,rej_SO4,rej_Ca,rej_Na,rej_Br,rej_Mg,rej_K)
+ID_8_11_rej_alle_std_p=c(ID_8_11$rej_Cl_std_p,
+                    ID_8_11$rej_SO4_std_p,
+                    ID_8_11$rej_Ca_std_p,
+                    ID_8_11$rej_Na_std_p,
+                    ID_8_11$rej_Br_std_p,
+                    ID_8_11$rej_Mg_std_p,
+                    ID_8_11$rej_K_std_p)
+
+ID_8_11_rej_alle$rej_std_p=ID_8_11_rej_alle_std_p
+``` 
+
+```{R plot af rejection ALLE, echo=FALSE, message=FALSE}
+
+plot_1A_alle=ggplot(ID_8_11_rej_alle%>%filter(Name=="1A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("1A")
+
+plot_1B_alle=ggplot(ID_8_11_rej_alle%>%filter(Name=="1B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("1B")
+
+plot_2A_alle=ggplot(ID_8_11_rej_alle%>%filter(Name=="2A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("2A")
+
+plot_2B_alle=ggplot(ID_8_11_rej_alle%>%filter(Name=="2B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("2B")
+
+ggarrange(plot_1A_alle,plot_1B_alle,plot_2A_alle,plot_2B_alle, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+```
+```{R plot af rejection, echo=FALSE, message=FALSE}
+
+ID_8_11_rej = ID_8_11%>%gather(key,value, rej_Cl,rej_SO4,rej_Ca,rej_Na)
+ID_8_11_rej_std_p=c(ID_8_11$rej_Cl_std_p,
+                    ID_8_11$rej_SO4_std_p,
+                    ID_8_11$rej_Ca_std_p,
+                    ID_8_11$rej_Na_std_p)
+
+ID_8_11_rej$rej_std_p=ID_8_11_rej_std_p
+
+plot_1A=ggplot(ID_8_11_rej%>%filter(Name=="1A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("1A")
+
+plot_1B=ggplot(ID_8_11_rej%>%filter(Name=="1B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("1B")
+
+plot_2A=ggplot(ID_8_11_rej%>%filter(Name=="2A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("2A")
+
+plot_2B=ggplot(ID_8_11_rej%>%filter(Name=="2B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
+  #xlim(c(0,90))+ylim(c(-25,110))+
+  ggtitle("2B")
+
+ggarrange(plot_1A,plot_1B,plot_2A,plot_2B, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
 
 ```
 
+```{R Cl sammenligning, echo=FALSE, message=FALSE}
+FCT_Ion_data_frame$rej_Cl_hach
+ID_8_11$rej_Cl
+
+
+
+plot_1A=ggplot(ID_8_11%>%filter(Name=="1A"), aes(x=Recovery, y=rej_Cl,color='IC'))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_1A"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_1A"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  scale_color_brewer(palette= "Set1")
+
+
+plot_1B=ggplot(ID_8_11%>%filter(Name=="1B"), aes(x=Recovery, y=rej_Cl,color='IC'))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_1B"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_1B"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  scale_color_brewer(palette= "Set1")
+
+plot_2A=ggplot(ID_8_11%>%filter(Name=="2A"), aes(x=Recovery, y=rej_Cl,color='IC'))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_2A"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_2A"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  scale_color_brewer(palette= "Set1")
+
+plot_2B=ggplot(ID_8_11%>%filter(Name=="2B"), aes(x=Recovery, y=rej_Cl,color='IC'))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_2B"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_2B"), aes(x=Recovery, y=rej_Cl_hach,color='hach-lange'))+
+  scale_color_brewer(palette= "Set1")
+
+ggarrange(plot_1A,plot_1B,plot_2A,plot_2B, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+```
