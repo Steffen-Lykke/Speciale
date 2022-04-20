@@ -1,42 +1,68 @@
-##### Konstanter #####
-J_v
-c_p
+###### Setup ######
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
 
-K_a
-K_d
-
-D_infty
-RT
-lambda = (1-r/r_p)^2
-##### Formler #####
-#Concentration Polarization
-
-#DSPM-DE
-phi_S = (1-r/r_p)^2
-phi_DE = exp(-dW/k_B*T)
-dW = (z^2*e^2)/(8*pi*epsilon_0*r)*(1/epsilon_b-1/epsilon_p)
-phi_Don = exp(- z*F/RT*dphi(x))
-
-c_0 = (y_m*c_m*phi_S*phi_DE*phi_Don)/y_0
-
-#ENP
-J=J_v*c_perm # Simpel flux for ioner
-J_convec = K_a*c*J_v #Convection term for flux through pore
-J_diff=-K_d*D_infty*dc/dx
-J_electro = (z*c*K_d*D_infty*F)/R*T*dphi(x)/dx
-J_ENP=J_diff+J_convec-J_electro
-
-dphi(x)=sum((z*J_v/D_P)*K_C*c-c_p)/((F/RT)*sum(z^2*c)) #potential gradient sum er fra i=1 til n
-K_d=
-K_a=
-#DSPM-DE? (måske uden steric)
-
-c_perm = (y_N*c_N*phi_S*phi_DE*phi_Don)/y_perm
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
 
 
-#### Nyt efter vi er blevet super kloge ########
+                            ##### Konstanter #####
+E_b = 78.4
+E_la = 31
+delta = 0.28 #nm
+e = 1.602*10^-19 #C
+E_0 = 8.85*10^-12 #F m^-1
+k_B = 1.3806*10^-23 #J/mol?
+Temp=25 #C
+Temp=Temp+273.15 #K
+Faraday = 96485 #C/mol
+R_gas = 8.314 #J/K/mol
 
-###### Basic data  ######
+
+                            ##### Parameters #####
+    ##Membrane :
+rp=0.5 #nm
+Le = 2 #um
+sigma=-1.2#mC m^-2
+
+
+
+    ##Solutes
 ion_data = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
   Mw=c(23,35,96,60,40,61),
@@ -52,48 +78,58 @@ feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
   concentration = c(15.25,5,5,1.25,0.5,NA)
 )
-###### Constants ######
-E_b = 78.4
-E_la = 31
-delta = 0.28 #nm
-e = 1.602*10^-19 #C
-E_0 = 8.85*10^-12 #F m^-1
-k_B = 1.3806*10^-23 #J/mol?
-Temp=25 #C
-Temp=Temp+273.15 #K
-Faraday = 96485 #C/mol
-R_gas = 8.314 #J/K/mol
+    ## Operation
+P=3
+Temp=298
 
-
-###### Membrane Parameters #####
-rp=0.5 #nm
-Le = 2 #um
-sigma=-1.2#mC m^-2
-
-
-###### Other Variables #####
-P=3#bar
-
-
-
-
-###### Prep ####
+                                ##### Prep ####
 radius="stokes"
 radii = ion_data%>%select(c(ion,radius,z))
 X=(2*sigma/1000)/(rp*10^-9*Faraday)#mmol
 
-##### Modeling start #####
+E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
 
-###### Steric exclusion #####
+
+#c_0 = (y_m*c_m*phi_S*phi_DE*phi_Don)/y_0
+
+
+
+lambda = (1-radii[,2]/rp)^2
+
+#dphi(x)=sum((z*J_v/D_P)*K_C*c-c_p)/((F/RT)*sum(z^2*c)) #potential gradient sum er fra i=1 til n
+
+if (lambda > 0.95) {
+  K_d = 0.984*((1-lambda)/lambda)^(5/2)
+}else{
+  K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)
+  
+  }
+
+K_a=(1+3.867*lambda-1.907*lambda^2-0.834*lambda^3)/(1+1.867*lambda+0.741*lambda^2)
+ion_data$kd=K_d
+ion_data$ka=K_a
+
+#c_perm = (y_N*c_N*phi_S*phi_DE*phi_Don)/y_perm
+
+
+
+
+                            ##### Modeling start #####
+
+                      ###### Concentration Polarization ######
+#det må komme senere
+
+
+                      ###### Steric exclusion #####
 steric=(1-(radii[,2]/rp))^2
 
 
-###### Dielectric exclsion #####
-E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
+                       ###### Dielectric exclusion #####
+
 dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2]*10^-9)*(1/E_p-1/E_b)
 DE = exp(-dW/(k_B*Temp))
 
-###### Donnan exclusion#####
+                      ###### Donnan exclusion#####
 
 
 #Manual (solver) solution
@@ -107,33 +143,20 @@ while (err>0.001) {
 }
 
 #Using Uniroot
-
-## Variables
-c_Na = 15.25
-c_Cl = 5
-c_SO4 = 5
-c_Ca = 0.5
-
-z_Na = 1
-z_Cl = -1
-z_SO4 =-2
-z_Ca = 2
-
-phi_S_Na = 0.399
-phi_S_Cl = 0.575
-phi_S_SO4 = 0.292
-phi_S_Ca = 0.144
-
-phi_DE_Na = 0.1574
-phi_DE_Cl = 0.0601
-phi_DE_SO4 = 0.0027
-phi_DE_Ca = 0.012
-
-X = -50
-
 ##Set up function and find current donnan potential
 f = function (x) x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
   x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
+#med de rigtige udtryk for ion data
+f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
+  x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
+
 Donnan = uniroot(f,c(0,100))$root
 Donnan
+                          ######## ENP ########
+J=J_v*c_perm # Simpel flux for ioner
+
+J_diff=-K_d*D_infty*dc/dx
+J_convec = K_a*c*J_v #Convection term for flux through pore
+J_electro = (z*c*K_d*D_infty*F)/R*T*dphi(x)/dx
+J_ENP=J_diff+J_convec-J_electro
