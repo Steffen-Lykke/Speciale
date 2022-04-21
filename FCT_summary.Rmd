@@ -523,7 +523,7 @@ ggarrange(plot_1A_rejection, plot_1A_pH, ncol=1, nrow=2, common.legend = TRUE, l
 
 
 ```
-
+### IC data all ions. 
 
 ```{R import IC data, echo=FALSE, message=FALSE}
 
@@ -653,15 +653,14 @@ K_ID8_11_IC_data$K_2_mg_L=K_ID8_11_IC_data$K_2_mg_L*K_ID8_11_IC_data$Dilution
 K_ID8_11_IC_data <-K_ID8_11_IC_data%>%mutate(K_mgL=(rowMeans(K_ID8_11_IC_data[,c("K_1_mg_L","K_2_mg_L")],na.rm=TRUE)))%>%
                           mutate(K_std_mgL=(rowSds(as.matrix(K_ID8_11_IC_data[,c("K_1_mg_L","K_2_mg_L")],na.rm=TRUE))))%>%
                           mutate(K_Std_p=((K_std_mgL/K_mgL)))
+
+
 ```
 
-```{R ID: 5-7 Rejection IC, echo=FALSE, message=FALSE}
 
-Mw_Cl=35.45
-Mw_Na=22.99
-Mw_Ca=40.078
-Mw_SO4=96.06
-Mw_SiO2=60.08
+```{R ID: 6_7 Rejection IC, echo=FALSE, message=FALSE}
+
+
 
 
 Feed_Cl = Cl_ID8_11_IC_data %>% filter(Stream %in%"Feed")
@@ -700,7 +699,7 @@ ID_8_11=cbind(Feed_Cl[,c(1:2,7,9)],Perm_Cl[,c(7,9)],
 colnames(ID_8_11) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','Ca_Feed','Ca_Feed_Std_p','Ca_perm','Ca_perm_std_p','Na_Feed','Na_Feed_Std_p','Na_perm','Na_perm_std_p','Br_Feed','Br_Feed_Std_p','Br_perm','Br_perm_std_p','Mg_Feed','Mg_Feed_Std_p','Mg_perm','Mg_perm_std_p','K_Feed','K_Feed_Std_p','K_perm','K_perm_std_p')
 
               
-ID_8_11$start_vol=c(10,10,8.5,8.5,10,10,8.45,8.45)
+ID_8_11$start_vol=c(10,10,10,10,8.5,8.5,8.45,8.45)
 ID_8_11$perm_vol = ID_8_11$Time*1.02
 ID_8_11$Recovery = 100*(1-(ID_8_11$start_vol-ID_8_11$perm_vol)/ID_8_11$start_vol)
 
@@ -732,6 +731,135 @@ ID_8_11_rej_alle_std_p=c(ID_8_11$rej_Cl_std_p,
                     ID_8_11$rej_K_std_p)
 
 ID_8_11_rej_alle$rej_std_p=ID_8_11_rej_alle_std_p
+``` 
+
+Plot af feed concentration samt faktiske feed concentrationer. 
+der er fotyndings faktor på 0,7 grundet at systemmet var fyldt op med 5mM MgSO4 i stedet for CT-vand. 
+
+```{R ID: 6_7 plot af feed, echo=FALSE, message=FALSE}
+
+Mw_Cl=35.45
+Mw_SO4=96.06
+Mw_Ca=40.078
+Mw_Na=22.99
+Mw_Br=79.904
+Mw_Mg=24.305
+Mw_K=39.0983
+Mw_SiO2=60.08
+
+
+
+#vi laver en feed matrice. 
+ID_6_7_data=cbind(Cl_ID8_11_IC_data[,c(1,2,3,7,9)],SO4_ID8_11_IC_data[,c(7,9)],Ca_ID8_11_IC_data[,c(7,9)],Na_ID8_11_IC_data[,c(7,9)],Br_ID8_11_IC_data[,c(7,9)],Mg_ID8_11_IC_data[,c(7,9)],K_ID8_11_IC_data[,c(7,9)])
+ID_6_7_Feed = ID_6_7_data%>%filter(Stream=="Feed")
+
+ID_6_7_Feed$start_vol=c(10,10,10,10,10,10,8.5,8.5,8.5,8.45,8.45,8.45)
+ID_6_7_Feed$perm_vol = ID_6_7_Feed$Time*1.02
+ID_6_7_Feed$Recovery = 100*(1-(ID_6_7_Feed$start_vol-ID_6_7_Feed$perm_vol)/ID_6_7_Feed$start_vol)
+
+
+ID_6_7_Feed$Cl_mM=ID_6_7_Feed$Cl_mgL/Mw_Cl
+ID_6_7_Feed$SO4_mM=ID_6_7_Feed$SO4_mgL/Mw_SO4
+ID_6_7_Feed$Ca_mM=ID_6_7_Feed$Ca_mgL/Mw_Ca
+ID_6_7_Feed$Na_mM=ID_6_7_Feed$Na_mgL/Mw_Na
+ID_6_7_Feed$Br_mM=ID_6_7_Feed$Br_mgL/Mw_Br
+ID_6_7_Feed$Mg_mM=ID_6_7_Feed$Mg_mgL/Mw_Mg
+ID_6_7_Feed$K_mM=ID_6_7_Feed$K_mgL/Mw_K
+
+#vi mutater den så vi kan plotte den rigtigt.
+ID_6_7_Feed_plot = ID_6_7_Feed%>%gather(key,value, Cl_mM,SO4_mM,Ca_mM,#Na_mM,
+                                        Br_mM,Mg_mM,K_mM)
+ID_6_7_Feed_std_p=c(ID_6_7_Feed$CL_Std_p,
+                    ID_6_7_Feed$SO4_Std_p,
+                    ID_6_7_Feed$Ca_Std_p,
+                    #ID_6_7_Feed$Na_Std_p,
+                    ID_6_7_Feed$Br_Std_p,
+                    ID_6_7_Feed$Mg_Std_p,
+                    ID_6_7_Feed$K_Std_p)
+
+ID_6_7_Feed_plot$std_p=ID_6_7_Feed_std_p
+
+
+plot_1A_alle=ggplot(ID_6_7_Feed_plot%>%filter(Name=="1A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*std_p), ymax=value+(value*std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+   scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 90))+
+# scale_y_continuous(limits=c(0, 37), breaks=c(0, 5, 10,15,20,25,30,35))+
+#  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  ggtitle("1A")
+
+plot_1B_alle=ggplot(ID_6_7_Feed_plot%>%filter(Name=="1B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*std_p), ymax=value+(value*std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+  
+    scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 90))+
+# scale_y_continuous(limits=c(0, 37), breaks=c(0, 5, 10,15,20,25,30,35))+
+ # scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  ggtitle("1B")
+
+plot_2A_alle=ggplot(ID_6_7_Feed_plot%>%filter(Name=="2A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*std_p), ymax=value+(value*std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+    scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 90))+
+# scale_y_continuous(limits=c(0, 37), breaks=c(0, 5, 10,15,20,25,30,35))+
+#scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  ggtitle("2A")
+
+plot_2B_alle=ggplot(ID_6_7_Feed_plot%>%filter(Name=="2B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(aes(ymin=value-(value*std_p), ymax=value+(value*std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+  
+    scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 90))+
+#scale_y_continuous(limits=c(0, 37), breaks=c(0, 5, 10,15,20,25,30,35))+
+#  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  ggtitle("2B")
+
+ggarrange(plot_1A_alle,plot_1B_alle,plot_2A_alle,plot_2B_alle, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+# det virker næsten dårligere i plotly. 
+plot_1A_rej=ggplotly(plot_1A_alle)
+plot_1B_rej=ggplotly(plot_1B_alle)
+plot_2A_rej=ggplotly(plot_2A_alle)
+plot_2B_rej=ggplotly(plot_2B_alle)
+
+
+#plotly grafer hvis man foretrækker det. 
+hejmeddig_1 = subplot(plot_1A_rej,plot_1B_rej,plot_2A_rej,plot_2B_rej,nrows=2)
+hejmeddig_1
+
+ID_6_7_Feed_nul=ID_6_7_Feed%>%filter(Time==0)
+ID_6_7_Feed_nul$Cl_std_mM=ID_6_7_Feed_nul$Cl_mM*ID_6_7_Feed_nul$CL_Std_p
+ID_6_7_Feed_nul$SO4_std_mM=ID_6_7_Feed_nul$SO4_mM*ID_6_7_Feed_nul$SO4_Std_p
+ID_6_7_Feed_nul$Ca_std_mM=ID_6_7_Feed_nul$Ca_mM*ID_6_7_Feed_nul$Ca_Std_p
+ID_6_7_Feed_nul$Na_std_mM=ID_6_7_Feed_nul$Na_mM*ID_6_7_Feed_nul$Na_Std_p
+ID_6_7_Feed_nul$Br_std_mM=ID_6_7_Feed_nul$Br_mM*ID_6_7_Feed_nul$Br_Std_p
+ID_6_7_Feed_nul$Mg_std_mM=ID_6_7_Feed_nul$Mg_mM*ID_6_7_Feed_nul$Mg_Std_p
+ID_6_7_Feed_nul$K_std_mM=ID_6_7_Feed_nul$K_mM*ID_6_7_Feed_nul$K_Std_p
+
+Feed_0=t(ID_6_7_Feed_nul[,c(1,2,21:27)])
+Feed_0_std=t(ID_6_7_Feed_nul[,c(1,2,28:34)])
+
+Feed_0[,c(2,3)]=Feed_0[,c(3,2)]
+Feed_0_std[,c(2,3)]=Feed_0_std[,c(3,2)]
+
+Feed_0_1A=as.numeric(Feed_0[,1])
+
+Feed_0_2A=as.numeric(Feed_0[,3])
+
+print(Feed_0_2A/Feed_0_1A)
+
+print(Feed_0)
+print(Feed_0_std)
 ``` 
 
 ```{R plot af rejection ALLE, echo=FALSE, message=FALSE}
