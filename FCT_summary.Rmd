@@ -398,6 +398,11 @@ FCT_Ion_data_frame$rej_Cl_hach=((1-(FCT_Ion_data_frame$Perm_Cl_hach/FCT_Ion_data
 FCT_Ion_data_frame = FCT_Ion_data_frame%>%mutate("perm_vol"=tid*1.02)
 FCT_Ion_data_frame = FCT_Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
 
+### std for silica
+FCT_Ion_data_frame$SiO2_rej_std <- c(rep(2,20))
+FCT_Ion_data_frame$SiO2_rej_std_p <- ((FCT_Ion_data_frame$SiO2_rej_std/FCT_Ion_data_frame$Perm_SiO2)+(FCT_Ion_data_frame$SiO2_rej_std/FCT_Ion_data_frame$Feed_SiO2))
+
+
 ### Import af dunk
 FCT_Dunk = read_excel("data/FCT/FCT_samlet.xlsx",6)
 
@@ -523,7 +528,7 @@ ggarrange(plot_1A_rejection, plot_1A_pH, ncol=1, nrow=2, common.legend = TRUE, l
 
 
 ```
-### IC data all ions. 
+### IC data Feed. 
 
 ```{R import IC data, echo=FALSE, message=FALSE}
 
@@ -861,6 +866,7 @@ print(Feed_0_2A/Feed_0_1A)
 print(Feed_0)
 print(Feed_0_std)
 ``` 
+### IC rejection of ions. 
 
 ```{R plot af rejection ALLE, echo=FALSE, message=FALSE}
 
@@ -909,55 +915,102 @@ ggarrange(plot_1A_alle,plot_1B_alle,plot_2A_alle,plot_2B_alle, ncol=2, nrow=2, c
 ```
 ```{R plot af rejection, echo=FALSE, message=FALSE}
 
-ID_8_11_rej = ID_8_11%>%gather(key,value, rej_Cl,rej_SO4,rej_Ca,rej_Na)
+ID_8_11$rrej_Mg=ID_8_11$rej_Mg
+ID_8_11_rej = ID_8_11%>%gather(key,value, rej_Cl,rej_SO4,rej_Ca,rej_Na,rrej_Mg)
 ID_8_11_rej_std_p=c(ID_8_11$rej_Cl_std_p,
                     ID_8_11$rej_SO4_std_p,
                     ID_8_11$rej_Ca_std_p,
-                    ID_8_11$rej_Na_std_p)
+                    ID_8_11$rej_Na_std_p,
+                    ID_8_11$rej_Mg_std_p)
 
 ID_8_11_rej$rej_std_p=ID_8_11_rej_std_p
 
-plot_1A=ggplot(ID_8_11_rej%>%filter(Name=="1A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+plot_1A=ggplot()+
+  geom_line(data=ID_8_11_rej%>%filter(Name=="1A"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8_11_rej%>%filter(Name=="1A"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+  geom_errorbar(data=ID_8_11_rej%>%filter(Name=="1A"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
                  position=position_dodge(0.05))+
-    labs(x="Water Recovery %",y="Rejection %", color="")+  
+geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_1A"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_1A"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=FCT_Ion_data_frame%>%filter(name=="FCT_1A"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+labs(x="Water Recovery %",y="Rejection %", color="")+  
   scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
   scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
   #xlim(c(0,90))+ylim(c(-25,110))+
-  ggtitle("1A")
-
-plot_1B=ggplot(ID_8_11_rej%>%filter(Name=="1B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  ggtitle("ID:6A")  
+  
+  
+plot_1B=ggplot()+
+  geom_line(data=ID_8_11_rej%>%filter(Name=="1B"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8_11_rej%>%filter(Name=="1B"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+  geom_errorbar(data=ID_8_11_rej%>%filter(Name=="1B"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
                  position=position_dodge(0.05))+
-    labs(x="Water Recovery %",y="Rejection %", color="")+  
+geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_1B"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_1B"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=FCT_Ion_data_frame%>%filter(name=="FCT_1B"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+labs(x="Water Recovery %",y="Rejection %", color="")+  
   scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
   scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
   #xlim(c(0,90))+ylim(c(-25,110))+
-  ggtitle("1B")
+  ggtitle("ID:6B") 
 
-plot_2A=ggplot(ID_8_11_rej%>%filter(Name=="2A"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+
+plot_2A=ggplot()+
+  geom_line(data=ID_8_11_rej%>%filter(Name=="2A"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8_11_rej%>%filter(Name=="2A"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+  geom_errorbar(data=ID_8_11_rej%>%filter(Name=="2A"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
                  position=position_dodge(0.05))+
-    labs(x="Water Recovery %",y="Rejection %", color="")+  
+geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_2A"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_2A"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=FCT_Ion_data_frame%>%filter(name=="FCT_2A"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+labs(x="Water Recovery %",y="Rejection %", color="")+  
   scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
   scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
   #xlim(c(0,90))+ylim(c(-25,110))+
-  ggtitle("2A")
-
-plot_2B=ggplot(ID_8_11_rej%>%filter(Name=="2B"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  ggtitle("ID:7A")  
+  
+  
+plot_2B=ggplot()+
+  geom_line(data=ID_8_11_rej%>%filter(Name=="2B"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8_11_rej%>%filter(Name=="2B"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
-  geom_errorbar(aes(ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p)), width=5,
+  geom_errorbar(data=ID_8_11_rej%>%filter(Name=="2B"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
                  position=position_dodge(0.05))+
-    labs(x="Water Recovery %",y="Rejection %", color="")+  
+geom_point(data=FCT_Ion_data_frame%>%filter(name=="FCT_2B"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_2B"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=FCT_Ion_data_frame%>%filter(name=="FCT_2B"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+labs(x="Water Recovery %",y="Rejection %", color="")+  
   scale_y_continuous(limits=c(-65, 105), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
   scale_x_continuous(limits=c(0, 90), breaks=c(10, 30,50,70,90 ))+
   #xlim(c(0,90))+ylim(c(-25,110))+
-  ggtitle("2B")
-
+  ggtitle("ID:7B")
 ggarrange(plot_1A,plot_1B,plot_2A,plot_2B, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+
+ggarrange(plot_1A,plot_1B, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_2A,plot_2B, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_1A,plot_1B,plot_2A,plot_2B, ncol=4, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+plot_1A=ggplotly(plot_1A)
+plot_1B=ggplotly(plot_1B)
+plot_2A=ggplotly(plot_2A)
+plot_2B=ggplotly(plot_2B)
+
+
+#plotly grafer hvis man foretrækker det. 
+hejmeddig_1 = subplot(plot_1A,plot_1B,plot_2A,plot_2B,nrows=2)
+hejmeddig_1
+
 
 ```
 
