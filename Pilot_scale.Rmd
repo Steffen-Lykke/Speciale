@@ -1,0 +1,194 @@
+---
+title: "Pilot_scale"
+author: "Lærke"
+date: "2/5/2022"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=F,message=F)
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+```
+## Summary of Multi salt experiments. {.tabset}
+### PLC Data 
+
+```{r pilot PLC 8A, echo=FALSE}
+
+
+
+Pilot_8A_raw = read_delim("data/Pilot_scale/_25-04-2022 091802.csv",delim = "\t", escape_double = FALSE, trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+
+Pilot_8A = as.data.frame(Pilot_8A_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(Pilot_8A_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","TimeStamp1","LT0101","FT0101","PT0101","TT0101","ConT0101","PT0102","FT0102",
+            "PT0103","PT0104","FT0201","LT0201","PT0202","ConT0202","PT0301","LT0401","TT0401","PHT0401",
+            "PT0501","CV0302","PMP0101","PMP0102","PMP0103","PMP010","PMP0201","PMP0301","PMP0402","PMP0403",
+            "PMP0404","sequence","PowerTotal_kW","Power_kW","PHT0101" ) #Vi finder på nogle lidt bedre nogle
+
+Pilot_8A = Pilot_8A %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+Pilot_8A$Time = dmy_hms(Pilot_8A$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+### TMP ###
+Pilot_8A = Pilot_8A %>% mutate(TMP=(PT0104+PT0301)/2-PT0202)
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = Pilot_8A$FT0201>0.150&Pilot_8A$FT0201<0.450
+start_tid = min(which(flow_boolean))
+Pilot_8A=Pilot_8A[-c(1:start_tid),]
+flow_boolean_slut = Pilot_8A$FT0201<0.05
+slut_tid = min(which(flow_boolean_slut))
+Pilot_8A=Pilot_8A[-c(slut_tid:(nrow(Pilot_8A)) ),]
+### Tid i s fra forsøgs start
+
+Pilot_8A = Pilot_8A%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(Pilot_8A$Time))-as.numeric(Pilot_8A$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+
+plc_8A = Pilot_8A %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~PHT0101,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~ConT0101,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="Pilot-scale ID: 8A",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,3))
+         ) 
+
+
+plc_8A
+
+
+
+
+```
+
+```{r pilot PLC 8B, echo=FALSE}
+
+
+
+Pilot_8B_raw = read_delim("data/Pilot_scale/_26-04-2022 000002.csv",delim = "\t", escape_double = FALSE, trim_ws = TRUE, skip = 5) #Hente data og få det til passe ned i en tabel
+
+Pilot_8B = as.data.frame(Pilot_8B_raw) #Ændrer strukturen af dataen til noget vi kan arbejde med
+old_names=colnames(Pilot_8B_raw) #Vi finder de gamle navne kolonnerne i dataen har 
+new_names=c("Time","TimeStamp1","LT0101","FT0101","PT0101","TT0101","ConT0101","PT0102","FT0102",
+            "PT0103","PT0104","FT0201","LT0201","PT0202","ConT0202","PT0301","LT0401","TT0401","PHT0401",
+            "PT0501","CV0302","PMP0101","PMP0102","PMP0103","PMP010","PMP0201","PMP0301","PMP0402","PMP0403",
+            "PMP0404","sequence","PowerTotal_kW","Power_kW","PHT0101" ) #Vi finder på nogle lidt bedre nogle
+
+Pilot_8B = Pilot_8B %>% rename_at(vars(old_names),~new_names) #Vi ændrer navnene til de nye
+Pilot_8B$Time = dmy_hms(Pilot_8B$Time)#Vi ændrer formatet af 'dato' kolonnen til et standard format for tid og datoer istedet for at det bare er noget tekst
+
+
+
+### TMP ###
+Pilot_8B = Pilot_8B %>% mutate(TMP=(PT0104+PT0301)/2-PT0202)
+
+### Finde t=0 (fosøgsstart = der hvor flow er over 16 mL/min)
+flow_boolean = Pilot_8B$FT0201>0.150&Pilot_8B$FT0201<0.450
+start_tid = min(which(flow_boolean))
+Pilot_8B=Pilot_8B[-c(1:start_tid),]
+flow_boolean_slut = Pilot_8B$FT0201<0.140
+slut_tid = min(which(flow_boolean_slut))
+Pilot_8B=Pilot_8B[-c(slut_tid:(nrow(Pilot_8B)) ),]
+### Tid i s fra forsøgs start
+
+Pilot_8B = Pilot_8B%>%
+   mutate(sek=(
+           as.numeric(as.POSIXct(Pilot_8B$Time))-as.numeric(Pilot_8B$Time[1], format='%Y-%m-%d %H:%M:%S'))
+                )  
+plc_8B = Pilot_8B %>%
+  plot_ly(x=~(sek)/3600,
+          y=~TMP,
+          name="TMP",
+          type='scatter',
+          mode='lines',
+          line=list(color= colors[1]))%>%
+  add_lines(x=~sek/3600,
+          y=~PHT0101,
+          name=' pH',
+          type='scatter',
+          mode='line',
+          line=list(color=colors[2]))%>%
+add_lines(x=~sek/3600,
+          y=~ConT0101,
+          name='Conductivity',
+          type='scatter',
+          mode='line',
+      line=list(color=colors[3]))%>%
+  layout(title="Pilot-scale ID: 8B",
+         legend=list(x=0.9,y=0.9),
+         yaxis=list(title="value", range=c(NA,NA)),
+         xaxis=list(title="Time [h]",range=c(0,3))
+         ) 
+
+
+plc_8B
+
+
+
+
+```
