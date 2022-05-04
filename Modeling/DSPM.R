@@ -57,7 +57,7 @@ R_gas = 8.314 #J/K/mol
                             ##### Parameters #####
     ##Membrane :
 rp=0.5 #nm
-Le = 2 #um
+Le = 2000 #nm
 sigma=-1.2#mC m^-2
 
 
@@ -76,10 +76,13 @@ ion_data = data.frame(
 
 feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
-  concentration = c(15.25,5,5,1.25,0.5,NA)
+  concentration = c(50,50,5,1.25,0.5,NA)
 )
-    ## Operation
-P=3
+#Kun NaCl
+ion_data=ion_data[1:2,]
+feed=feed[1:2,] 
+   ## Operation
+P=3 #bar
 Temp=298
 
                                 ##### Prep ####
@@ -94,7 +97,7 @@ E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
 
 
 
-lambda = (1-radii[,2]/rp)^2
+lambda = (1-radii[,2]/rp)
 
 #dphi(x)=sum((z*J_v/D_P)*K_C*c-c_p)/((F/RT)*sum(z^2*c)) #potential gradient sum er fra i=1 til n
 
@@ -112,6 +115,9 @@ ion_data$ka=K_a
 #c_perm = (y_N*c_N*phi_S*phi_DE*phi_Don)/y_perm
 
 
+data = data.frame(cp_guess=feed$concentration*0.2)
+rownames(data)=c("Na","Cl")
+
 
 
                             ##### Modeling start #####
@@ -122,37 +128,42 @@ ion_data$ka=K_a
 
                       ###### Steric exclusion #####
 steric=(1-(radii[,2]/rp))^2
-
+data$steric = steric
 
                        ###### Dielectric exclusion #####
 
 dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2]*10^-9)*(1/E_p-1/E_b)
 DE = exp(-dW/(k_B*Temp))
-
+data$DE = DE
                       ###### Donnan exclusion#####
 
 
 #Manual (solver) solution
-x = 1
-err = 1
-while (err>0.001) {
-  y=x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
-    x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
-  err = abs(y)
-  x = x+0.00001
-}
+# x = 1
+# err = 1
+# while (err>0.001) {
+#   y=x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
+#     x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
+#   err = abs(y)
+#   x = x+0.00001
+# }
 
 #Using Uniroot
 ##Set up function and find current donnan potential
-f = function (x) x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
-  x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
+#f = function (x) x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
 #med de rigtige udtryk for ion data
-f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
-  x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
+#f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
+
+#NaCl
+f = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1] + x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+ X
 
 Donnan = uniroot(f,c(0,100))$root
 Donnan
+
+cm=feed$concentration*Donnan^ion_data$z*steric*DE
+data$cm=cm
+
                           ######## ENP ########
 J=J_v*c_perm # Simpel flux for ioner
 
