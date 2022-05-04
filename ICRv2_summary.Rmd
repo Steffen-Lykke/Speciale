@@ -985,8 +985,8 @@ hejmeddig_1
 ```
 
 ### Concentration
-```{r Concetration}
-
+```{r Concetration, echo=FALSE}
+library(xtable)
 ID4Na=Na_IC_data%>%select(-c(3,4,5))%>%mutate(Name="ID4")%>%mutate(ion="Na")
 ID4Cl=Cl_IC_data%>%select(-c(3,4,5))%>%mutate(Name="ID4")%>%mutate(ion="Cl")
 ID4so4=SO4_IC_data%>%select(-c(3,4,5))%>%mutate(Name="ID4")%>%mutate(ion="SO4")
@@ -1063,23 +1063,21 @@ ICR_4=ICR_plot[c(1:12,14,13,15:17,19,18,20),]
 R_filtration1=1-(ICR_4[6:10,]$mM/ICR_4[1:5,]$mM)
 R_filtration2=1-(ICR_4[16:20,]$mM/ICR_4[1:5,]$mM)
 df=data.frame(ICR_plot[1:5,]$ion,R_filtration1,R_filtration2)
-df
 
-print(xtable(df, type = "latex"))
 
-ion_plot2=ggplot(ICR_plot%>%filter(ion!="Ca"&ion!="sio2"), aes(fill=ion, y=mM, x=plads)) + 
+#print(xtable(df, type = "latex"))
+
+ion_plot2=ggplot(ICR_plot%>%filter(ion!="Ca"&ion!="sio2"), aes(fill=plads, y=mM, x=ion)) + 
     geom_bar(position="dodge", stat="identity")
 ggplotly(ion_plot2)
 
-ion_plot3=ggplot(ICR_plot%>%filter(ion=="Ca"|ion=="sio2"), aes(fill=ion, y=mM, x=plads)) + 
+ion_plot3=ggplot(ICR_plot%>%filter(ion=="Ca"|ion=="sio2"), aes(fill=plads, y=mM, x=ion)) + 
     geom_bar(position="dodge", stat="identity")
 
 
-  p <- ggplot(ICR_plot%>%filter(ion=="Ca"|ion=="sio2"), aes(fill=ion, y=mM, x=plads)) + 
-    geom_bar(position="dodge", stat="identity") + 
-    scale_x_discrete( drop=FALSE) + 
-    guides(fill=FALSE) +
-    theme_bw(base_size=9) +  ## makes everything smaller
+  p <- ion_plot3 + 
+    scale_x_discrete( drop=FALSE) + guides(fill=FALSE)+
+    theme_bw(base_size=10) +  ## makes everything smaller
     theme(panel.background = element_rect(fill="white"),  ## white plot background 
           axis.title.y = element_blank(),
           axis.title.x = element_blank(),
@@ -1090,7 +1088,7 @@ ion_plot3=ggplot(ICR_plot%>%filter(ion=="Ca"|ion=="sio2"), aes(fill=ion, y=mM, x
   
 ion_plot2 + 
   annotation_custom(grob=ggplotGrob(p), 
-    xmin = -4, xmax = 10, ymin = 1, ymax = 100
+    xmin = 2, xmax = 3.5, ymin = 15, ymax = 25
   )
 
 

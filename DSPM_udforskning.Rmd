@@ -3,6 +3,7 @@ title: "Membran og ion parameter"
 author: "Steffen"
 date: "18/3/2022"
 output: html_document
+runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
