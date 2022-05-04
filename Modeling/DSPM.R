@@ -52,14 +52,14 @@ Temp=25 #C
 Temp=Temp+273.15 #K
 Faraday = 96485 #C/mol
 R_gas = 8.314 #J/K/mol
-
+viscosity = 8.9*10^-9 # bar*S
 
                             ##### Parameters #####
     ##Membrane :
 rp=0.5 #nm
 Le = 2000 #nm
 sigma=-1.2#mC m^-2
-
+delta_x=5
 
 
     ##Solutes
@@ -71,7 +71,7 @@ ion_data = data.frame(
   pauling=c(0.95,1.81,2.9,NA,0.99,NA)*0.1,
   hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*0.1,
   z=c(1,-1,-2,-1,2,-1),
-  Diff=c(NA,NA,NA,NA,NA,NA)
+  Diff=c(1.33*10^-9,2.03*10^-9,NA,NA,NA,NA)
 )
 
 feed = data.frame(
@@ -82,7 +82,7 @@ feed = data.frame(
 ion_data=ion_data[1:2,]
 feed=feed[1:2,] 
    ## Operation
-P=3 #bar
+P=10 #bar
 Temp=298
 
                                 ##### Prep ####
@@ -165,9 +165,35 @@ cm=feed$concentration*Donnan^ion_data$z*steric*DE
 data$cm=cm
 
                           ######## ENP ########
-J=J_v*c_perm # Simpel flux for ioner
+#J=J_v*c_perm # Simpel flux for ioner
 
-J_diff=-K_d*D_infty*dc/dx
-J_convec = K_a*c*J_v #Convection term for flux through pore
-J_electro = (z*c*K_d*D_infty*F)/R*T*dphi(x)/dx
-J_ENP=J_diff+J_convec-J_electro
+#J_diff=-K_d*D_infty*dc/dx
+#J_convec = K_a*c*J_v #Convection term for flux through pore
+#J_electro = (z*c*K_d*D_infty*F)/R*T*dphi(x)/dx
+#J_ENP=J_diff+J_convec-J_electro
+
+osmotisk=R_gas*10^-2*Temp*(sum(feed$concentration)-sum(data$cp_guess))/1000
+
+J_volumen = ((rp*10^-9)^2*(P-osmotisk))/(8*viscosity*Le*10^-9)  #m/S
+
+data$c_i_1=data$cm
+#laaaangt udtryk hvor vi gerne vil løse for c_i
+#c_i skal være en vector. 
+#c_i_na=3
+#c_i_cl=3
+
+#d_potential=((ion_data$z[1]*J_volumen/ion_data$Diff[1])*(ion_data$ka[1]*(c_i_na)-data$cp_guess[1]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[1]^2*c_i_na))+
+#  ((ion_data$z[2]*J_volumen/ion_data$Diff[2])*(ion_data$ka[2]*(c_i_cl)-data$cp_guess[2]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[2]^2*c_i_cl))
+
+
+#data$cp_guess[1]*J_volumen = 
+#  (-ion_data$kd[1]*ion_data$Diff[1]*((data$c_i_1[1]-c_i_na)/(Le*10^-9/delta_x)))+
+#                        (ion_data$ka[1]*c_i_na*J_volumen)-
+#                        ((ion_data$z[1]*c_i_na*ion_data$kd[1]*ion_data$Diff[1]*Faraday)/(R_gas*Temp))*
+#  (((ion_data$z[1]*J_volumen/ion_data$Diff[1])*(ion_data$ka[1]*(c_i_na)-data$cp_guess[1]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[1]^2*c_i_na))+
+#                                                                                             ((ion_data$z[2]*J_volumen/ion_data$Diff[2])*(ion_data$ka[2]*(c_i_cl)-data$cp_guess[2]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[2]^2*c_i_cl))
+#                        )
+
+
+
+
