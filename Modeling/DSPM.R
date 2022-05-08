@@ -101,12 +101,13 @@ lambda = (1-radii[,2]/rp)
 
 #dphi(x)=sum((z*J_v/D_P)*K_C*c-c_p)/((F/RT)*sum(z^2*c)) #potential gradient sum er fra i=1 til n
 
-if (lambda > 0.95) {
-  K_d = 0.984*((1-lambda)/lambda)^(5/2)
-}else{
-  K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)
-  
-  }
+# if (lambda > 0.95) {
+#   K_d = 0.984*((1-lambda)/lambda)^(5/2)
+# }else{
+#   K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)
+#   
+#   }
+K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)
 
 K_a=(1+3.867*lambda-1.907*lambda^2-0.834*lambda^3)/(1+1.867*lambda+0.741*lambda^2)
 ion_data$kd=K_d
@@ -193,7 +194,56 @@ data$c_i_1=data$cm
 #  (((ion_data$z[1]*J_volumen/ion_data$Diff[1])*(ion_data$ka[1]*(c_i_na)-data$cp_guess[1]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[1]^2*c_i_na))+
 #                                                                                             ((ion_data$z[2]*J_volumen/ion_data$Diff[2])*(ion_data$ka[2]*(c_i_cl)-data$cp_guess[2]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[2]^2*c_i_cl))
 #                        )
+##### Control Volume Approach
+
+dybde=10000
+var_kon=1
+var_diff=1
+
+N=10 #antal stykker af membran
+ dx = (Le*10^-9)/N#længde af stykker
+ dn = 0.00001
+
+#Fra Excel
+ # dx = 0.005
+ # dn = 13
+
+vec=c("n","j.0")
+for (number in 1:N) {
+  name=paste("j.",(as.character(number)),sep="")
+  vec=append(vec,name)
+}
+vec=append(vec,"j.inf")
+
+ini_values=c(rep(0,length(vec)))
+ini_values[2]=cm[1]
+
+ENP_df=data.frame(t(ini_values))
+colnames(ENP_df)=vec
+ENP_df[2:(dybde),]=NA
+ENP_df[1:(dybde),2]=cm[1]
+ENP_df$j.inf[1:(dybde)]=0
+
+n=2
+while (n<=dybde) {
+  for (ion in ion_data$ion) {
+    for (j in 1:N+2) {
+      ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[1]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
+        ion_data$Diff[1]*ion_data$kd[1]*dn/dx^2*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))
+    }
+    
+  }
+  ENP_df[n,1]=ENP_df[n-1,1]+dn
+  n=n+1
+}
+
+Nth.retain<-function(dataframe, n)dataframe[(seq(n,to=nrow(dataframe),by=n)),]
+
+plot_data=t(Nth.retain(ENP_df,nrow(ENP_df)/100)[,-c(1,2,length(ENP_df))])
+matplot(plot_data, type = "l",ylab="Koncentration [mM?]",xlab="Membran Stykke")
 
 
 
-
+# ggplot(t(ENP_df),aes(x=c(1:10),y=,color=factor(key,level=level_order)))+geom_line()+
+#   scale_color_brewer(palette="Set1",labels=level_order)+
+#   theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
