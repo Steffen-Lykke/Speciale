@@ -76,7 +76,7 @@ ion_data = data.frame(
 
 feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
-  concentration = c(50,50,5,1.25,0.5,NA)
+  concentration = c(50*10^-3,50*10^-3,5*10^-3,1.25*10^-3,0.5*10^-3,NA)
 )
 #Kun NaCl
 ion_data=ion_data[1:2,]
@@ -173,7 +173,7 @@ data$cm=cm
 #J_electro = (z*c*K_d*D_infty*F)/R*T*dphi(x)/dx
 #J_ENP=J_diff+J_convec-J_electro
 
-osmotisk=R_gas*10^-2*Temp*(sum(feed$concentration)-sum(data$cp_guess))/1000
+osmotisk=R_gas*10^-2*Temp*(sum(feed$concentration)-sum(data$cp_guess))
 
 J_volumen = ((rp*10^-9)^2*(P-osmotisk))/(8*viscosity*Le*10^-9)  #m/S
 
@@ -199,10 +199,11 @@ data$c_i_1=data$cm
 dybde=10000
 var_kon=1
 var_diff=1
+var_potential=1
 
 N=10 #antal stykker af membran
  dx = (Le*10^-9)/N#længde af stykker
- dn = 0.00001
+ dn = 0.000001
 
 #Fra Excel
  # dx = 0.005
@@ -216,34 +217,60 @@ for (number in 1:N) {
 vec=append(vec,"j.inf")
 
 ini_values=c(rep(0,length(vec)))
-ini_values[2]=cm[1]
+
+
 
 ENP_df=data.frame(t(ini_values))
 colnames(ENP_df)=vec
 ENP_df[2:(dybde),]=NA
-ENP_df[1:(dybde),2]=cm[1]
 ENP_df$j.inf[1:(dybde)]=0
+ENP_df_Na=ENP_df
+ENP_df_Cl=ENP_df
+pot=ENP_df
+ENP_df_Na[1:(dybde),2]=cm[1]
+ENP_df_Cl[1:(dybde),2]=cm[2]
+pot[1:dybde,2]=0
 
+total_df=list(ENP_df_Na,ENP_df_Cl)
 n=2
 while (n<=dybde) {
-  for (ion in ion_data$ion) {
+  for (ion in 1:length(ion_data$ion)) {
+   ENP_df=total_df[[ion]]
+   
     for (j in 1:N+2) {
-      ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[1]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
-        ion_data$Diff[1]*ion_data$kd[1]*dn/dx^2*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))
+      ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[ion]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
+        ion_data$Diff[ion]*ion_data$kd[ion]*(dn/(dx^2))*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))+
+        var_potential*(((ion_data$z[ion]*ENP_df[n-1,j]*ion_data$Diff[ion]*Faraday)/(R_gas*Temp))*dn/(dx)^2)*(pot[n-1,j+1]-2*pot[n-1,j]+pot[n-1,j-1])
+     
     }
-    
+
+   total_df[[ion]]=ENP_df
+   for (j in 1:N+2) {
+     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]-(50*10^-3)
+   }    
   }
-  ENP_df[n,1]=ENP_df[n-1,1]+dn
+  total_df[[1]][["n"]][n]=total_df[[1]][["n"]][n-1]+dn
   n=n+1
 }
 
 Nth.retain<-function(dataframe, n)dataframe[(seq(n,to=nrow(dataframe),by=n)),]
 
-plot_data=t(Nth.retain(ENP_df,nrow(ENP_df)/100)[,-c(1,2,length(ENP_df))])
-matplot(plot_data, type = "l",ylab="Koncentration [mM?]",xlab="Membran Stykke")
+plot_Na=t(Nth.retain(total_df[[1]],nrow(total_df[[1]])/100)[,-c(1,2,length(total_df[[1]]))])
+plot_Cl=t(Nth.retain(total_df[[2]],nrow(total_df[[2]])/100)[,-c(1,2,length(total_df[[2]]))])
 
+charge=plot_Na-plot_Cl-50
+matplot(charge, type = "l",ylab="Charge",xlab="Membrane x")
+
+par(mfrow=c(1,2))
+matplot(plot_Na, type = "l",ylab="Koncentration [M?]",xlab="Membran Stykke")
+matplot(plot_Cl, type = "l",ylab="Koncentration [M?]",xlab="Membran Stykke")
+par(mfrow=c(1,1))
 
 
 # ggplot(t(ENP_df),aes(x=c(1:10),y=,color=factor(key,level=level_order)))+geom_line()+
 #   scale_color_brewer(palette="Set1",labels=level_order)+
 #   theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
+
+
+
+
