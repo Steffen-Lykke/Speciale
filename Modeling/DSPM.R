@@ -121,8 +121,9 @@ data = data.frame(cp_guess=feed$concentration*0.2)
 rownames(data)=c("Na","Cl")
 
 
-
                             ##### Modeling start #####
+
+  
 
                       ###### Concentration Polarization ######
 #det må komme senere
@@ -167,6 +168,9 @@ cm=feed$concentration*Donnan^ion_data$z*steric*DE
 data$cm=cm
 
                           ######## ENP ########
+g=1
+good_cp=F
+while (good_cp==F) {
 #J=J_v*c_perm # Simpel flux for ioner
 
 #J_diff=-K_d*D_infty*dc/dx
@@ -205,10 +209,6 @@ Xd=-10*10^-3
 N=10 #antal stykker af membran
  dx = (Le*10^-9)/N#længde af stykker
  dn = 0.00001
-
-#Fra Excel
- # dx = 0.005
- # dn = 13
 
 vec=c("n","j.0")
 for (number in 1:N) {
@@ -254,6 +254,36 @@ while (n<=dybde) {
   n=n+1
 }
 
+c_N=vector()
+for (i in 1:nrow(ion_data)) {
+  c_N[i]=total_df[[i]][[c(ncol(total_df[[i]])-1,nrow(total_df[[i]]))]]
+}
+
+####### Donnan ud af membran #####
+f = function (x) x^ion_data$z[1]*c_N[1]*ion_data$z[1] + x^ion_data$z[2]*c_N[2]*ion_data$z[2]
+
+Donnan = uniroot(f,c(0,100))$root
+Donnan
+
+cp=c_N*Donnan^ion_data$z
+cp
+
+#### noget med at tjekke cp #####
+err=sum((cp-data$cp_guess)^2)
+if (err<0.000001) {
+  good_cp = T
+}
+data$cp_guess = cp
+g=g+1
+}
+
+
+
+rejection = 1-(cp/feed$concentration)
+
+
+
+
 ##Plotting of CVM
 Nth.retain<-function(dataframe, n)dataframe[(seq(1,to=nrow(dataframe),by=n)),]
 
@@ -265,6 +295,5 @@ matplot(plot_Na, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 matplot(plot_Cl, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 par(mfrow=c(1,1))
 
-c_na=total_df[[1]][[c(ncol(total_df[[1]])-1,nrow(total_df[[1]]))]]
-c_cl=total_df[[2]][[c(ncol(total_df[[2]])-1,nrow(total_df[[2]]))]]
+
 
