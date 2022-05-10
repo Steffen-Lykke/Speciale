@@ -88,7 +88,8 @@ Temp=298
                                 ##### Prep ####
 radius="stokes"
 radii = ion_data%>%select(c(ion,radius,z))
-X=(2*sigma/1000)/(rp*10^-9*Faraday)#mmol
+X=-10*10^-3
+#X=(2*sigma/1000)/(rp*10^-9*Faraday)#mmol
 
 E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
 
@@ -200,10 +201,10 @@ dybde=10000
 var_kon=1
 var_diff=1
 var_potential=1
-
+Xd=-10*10^-3
 N=10 #antal stykker af membran
  dx = (Le*10^-9)/N#længde af stykker
- dn = 0.000001
+ dn = 0.00001
 
 #Fra Excel
  # dx = 0.005
@@ -246,29 +247,24 @@ while (n<=dybde) {
 
    total_df[[ion]]=ENP_df
    for (j in 1:N+2) {
-     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]-(50*10^-3)
+     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]+Xd
    }    
   }
   total_df[[1]][["n"]][n]=total_df[[1]][["n"]][n-1]+dn
   n=n+1
 }
 
-Nth.retain<-function(dataframe, n)dataframe[(seq(n,to=nrow(dataframe),by=n)),]
+##Plotting of CVM
+Nth.retain<-function(dataframe, n)dataframe[(seq(1,to=nrow(dataframe),by=n)),]
 
 plot_Na=t(Nth.retain(total_df[[1]],nrow(total_df[[1]])/100)[,-c(1,2,length(total_df[[1]]))])
 plot_Cl=t(Nth.retain(total_df[[2]],nrow(total_df[[2]])/100)[,-c(1,2,length(total_df[[2]]))])
-
 
 par(mfrow=c(1,2))
 matplot(plot_Na, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 matplot(plot_Cl, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 par(mfrow=c(1,1))
 
-
-# ggplot(t(ENP_df),aes(x=c(1:10),y=,color=factor(key,level=level_order)))+geom_line()+
-#   scale_color_brewer(palette="Set1",labels=level_order)+
-#   theme_bw()+labs( y = "Concentration [mM]", x = "Time [h]", color = "")
-
-
-
+c_na=total_df[[1]][[c(ncol(total_df[[1]])-1,nrow(total_df[[1]]))]]
+c_cl=total_df[[2]][[c(ncol(total_df[[2]])-1,nrow(total_df[[2]]))]]
 
