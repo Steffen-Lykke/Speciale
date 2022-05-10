@@ -1,4 +1,3 @@
-#Der skal ske noget syg programmering her
 #CT model med diskontinuert blowdown
 
 
@@ -54,7 +53,7 @@ ion_values = data.frame(
 )#[S*cm^2*mol^-1]
 
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
-con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
+con_ini = sum(c_makeup*ion_values[,3],na.rm=T)+600
 con=con_ini
 con_lim = 1000#conductivity grænseværdi [uS/cm]
 
@@ -141,6 +140,8 @@ while(i < n_time_step){
       df$con[i] = con
       
       df$tid[i]=df$tid[i-1]+dt
+      nf$tid[i]=nf$tid[i-1]+dt
+      cf$tid[i]=cf$tid[i-1]+dt
       i=i+1
     }
   nf[i,2:5] = nf[i-1,2:5]*(1-0.1667)+1*c_makeup
@@ -149,10 +150,11 @@ while(i < n_time_step){
   df$con[i] = con
   num_bd=num_bd+1
   df$tid[i]=df$tid[i-1]+dt
+  nf$tid[i]=nf$tid[i-1]+dt
+  cf$tid[i]=cf$tid[i-1]+dt
   i=i+1
 }
-nf$tid=df$tid
-cf$tid=df$tid
+
 
 ########## plot #############
 cf.long = cf %>% 

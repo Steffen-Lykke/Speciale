@@ -258,12 +258,10 @@ Nth.retain<-function(dataframe, n)dataframe[(seq(n,to=nrow(dataframe),by=n)),]
 plot_Na=t(Nth.retain(total_df[[1]],nrow(total_df[[1]])/100)[,-c(1,2,length(total_df[[1]]))])
 plot_Cl=t(Nth.retain(total_df[[2]],nrow(total_df[[2]])/100)[,-c(1,2,length(total_df[[2]]))])
 
-charge=plot_Na-plot_Cl-50
-matplot(charge, type = "l",ylab="Charge",xlab="Membrane x")
 
 par(mfrow=c(1,2))
-matplot(plot_Na, type = "l",ylab="Koncentration [M?]",xlab="Membran Stykke")
-matplot(plot_Cl, type = "l",ylab="Koncentration [M?]",xlab="Membran Stykke")
+matplot(plot_Na, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
+matplot(plot_Cl, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 par(mfrow=c(1,1))
 
 
