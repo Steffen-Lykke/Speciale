@@ -76,19 +76,19 @@ ion_data = data.frame(
 
 feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
-  concentration = c(50*10^-3,50*10^-3,5*10^-3,1.25*10^-3,0.5*10^-3,NA)
+  concentration = c(3*10^-3,3*10^-3,5*10^-3,1.25*10^-3,0.5*10^-3,NA)
 )
 #Kun NaCl
 ion_data=ion_data[1:2,]
 feed=feed[1:2,] 
    ## Operation
-P=10 #bar
+P=2.5 #bar
 Temp=298
 
                                 ##### Prep ####
 radius="stokes"
 radii = ion_data%>%select(c(ion,radius,z))
-X=-10*10^-3
+X=-5*10^-3
 #X=(2*sigma/1000)/(rp*10^-9*Faraday)#mmol
 
 E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
@@ -159,12 +159,12 @@ data$DE = DE
 #f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
 #NaCl
-f = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1] + x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+ X
+f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1] + x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+ X
 
-Donnan = uniroot(f,c(0,100))$root
-Donnan
+Donnan_ind = uniroot(f1,c(0,1000))$root
+Donnan_ind
 
-cm=feed$concentration*Donnan^ion_data$z*steric*DE
+cm=feed$concentration*Donnan_ind^ion_data$z*steric*DE
 data$cm=cm
 
                           ######## ENP ########
@@ -201,11 +201,11 @@ data$c_i_1=data$cm
 #                        )
 ##### Control Volume Approach
 
-dybde=10000
+dybde=5000
 var_kon=1
 var_diff=1
 var_potential=1
-Xd=-10*10^-3
+Xd=-5*10^-3
 N=10 #antal stykker af membran
  dx = (Le*10^-9)/N#længde af stykker
  dn = 0.00001
@@ -260,27 +260,26 @@ for (i in 1:nrow(ion_data)) {
 }
 
 ####### Donnan ud af membran #####
-f = function (x) x^ion_data$z[1]*c_N[1]*ion_data$z[1] + x^ion_data$z[2]*c_N[2]*ion_data$z[2]
+f2 = function (x) x^ion_data$z[1]*c_N[1]*ion_data$z[1] + x^ion_data$z[2]*c_N[2]*ion_data$z[2]
 
-Donnan = uniroot(f,c(0,100))$root
-Donnan
+Donnan_ud = uniroot(f2,c(0,100))$root
+Donnan_ud
 
-cp=c_N*Donnan^ion_data$z
+cp=c_N*Donnan_ud^ion_data$z
 cp
 
 #### noget med at tjekke cp #####
 err=sum((cp-data$cp_guess)^2)
-if (err<0.000001) {
+if (err<1*10^-9) {
   good_cp = T
 }
 data$cp_guess = cp
 g=g+1
 }
 
-
-
 rejection = 1-(cp/feed$concentration)
-
+rejection
+g
 
 
 
@@ -295,5 +294,16 @@ matplot(plot_Na, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 matplot(plot_Cl, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 par(mfrow=c(1,1))
 
+
+ENP_c=data.frame(rbind(total_df[[1]][nrow(total_df[[1]]),-c(1,2,length(total_df[[1]]))],total_df[[2]][nrow(total_df[[2]]),-c(1,2,length(total_df[[2]]))]))
+all_c=data.frame(cbind(feed$concentration,cm,ENP_c,cp))
+all_c=rbind(all_c,1:length(all_c))
+
+all_c=data.frame(t(all_c))
+colnames(all_c)=c("Na","Cl","x")
+plot_all=all_c%>%gather(key="key",value="value",Na,Cl)
+
+ggplotly(ggplot(plot_all,aes(x=x,y=value,color=key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1"))
 
 
