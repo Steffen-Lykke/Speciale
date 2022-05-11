@@ -44,7 +44,7 @@ colors = c(
                             ##### Konstanter #####
 E_b = 78.4
 E_la = 31
-delta = 0.28 #nm
+delta_DE = 0.28*10^-9 #nm
 e = 1.602*10^-19 #C
 E_0 = 8.85*10^-12 #F m^-1
 k_B = 1.3806*10^-23 #J/mol?
@@ -56,20 +56,23 @@ viscosity = 8.9*10^-9 # bar*S
 
                             ##### Parameters #####
     ##Membrane :
-rp=0.5 #nm
-Le = 2000 #nm
-sigma=-1.2#mC m^-2
-delta_x=5
+rp=0.5*10^-9 #nm
+Le = 2000*10^-9 #nm
+sigma=-0.02/1000 #Cm^2
+X=(2*sigma)/(rp*Faraday)/1000#mol/L
 
+## Operation
+P=2.5 #bar
+Temp=298 #kelvin
 
     ##Solutes
 ion_data = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
   Mw=c(23,35,96,60,40,61),
   molar_con = c(50.1, 76.4, 160, NA,119,NA),# Molær konduktivitet[S*cm^2*mol^-1]
-  stokes=c(1.84,1.21,2.3,NA,3.1,NA)*0.1,
-  pauling=c(0.95,1.81,2.9,NA,0.99,NA)*0.1,
-  hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*0.1,
+  stokes=c(1.84,1.21,2.3,NA,3.1,NA)*10^-10,
+  pauling=c(0.95,1.81,2.9,NA,0.99,NA)*10^-10,
+  hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*10^-10,
   z=c(1,-1,-2,-1,2,-1),
   Diff=c(1.33*10^-9,2.03*10^-9,NA,NA,NA,NA)
 )
@@ -81,24 +84,18 @@ feed = data.frame(
 #Kun NaCl
 ion_data=ion_data[1:2,]
 feed=feed[1:2,] 
-   ## Operation
-P=2.5 #bar
-Temp=298
+
 
                                 ##### Prep ####
 radius="stokes"
 radii = ion_data%>%select(c(ion,radius,z))
-X=-5*10^-3
-#X=(2*sigma/1000)/(rp*10^-9*Faraday)#mmol
-
-E_p=E_la+(E_b-E_la)*(1-(delta/rp))^2
-
-
-#c_0 = (y_m*c_m*phi_S*phi_DE*phi_Don)/y_0
+##bruges til DE exclusion
+E_p=E_la+(E_b-E_la)*(1-(delta_DE/rp))^2
 
 
 
-lambda = (1-radii[,2]/rp)
+
+lambda = (radii[,2]/rp)
 
 #dphi(x)=sum((z*J_v/D_P)*K_C*c-c_p)/((F/RT)*sum(z^2*c)) #potential gradient sum er fra i=1 til n
 
@@ -108,13 +105,10 @@ lambda = (1-radii[,2]/rp)
 #   K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)
 #   
 #   }
-K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)
-
-K_a=(1+3.867*lambda-1.907*lambda^2-0.834*lambda^3)/(1+1.867*lambda+0.741*lambda^2)
+K_d=(1+(9/8)*lambda*log(lambda)-1.56*lambda+0.53*lambda^2+1.95*lambda^3-2.82*lambda^4+0.27*lambda^5+1.1*lambda^6-0.44*lambda^7)/(1-lambda)^2
+K_a=(1+3.867*lambda-1.907*lambda^2-0.834*lambda^3)/(1+1.867*lambda-0.741*lambda^2)
 ion_data$kd=K_d
 ion_data$ka=K_a
-
-#c_perm = (y_N*c_N*phi_S*phi_DE*phi_Don)/y_perm
 
 
 data = data.frame(cp_guess=feed$concentration*0.2)
@@ -126,7 +120,7 @@ rownames(data)=c("Na","Cl")
   
 
                       ###### Concentration Polarization ######
-#det må komme senere
+#det må komme senere eller aldrig. 
 
 
                       ###### Steric exclusion #####
@@ -135,25 +129,12 @@ data$steric = steric
 
                        ###### Dielectric exclusion #####
 
-dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2]*10^-9)*(1/E_p-1/E_b)
+dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2])*(1/E_p-1/E_b)
 DE = exp(-dW/(k_B*Temp))
+DE=1
 data$DE = DE
+data$DE=1
                       ###### Donnan exclusion#####
-
-
-#Manual (solver) solution
-# x = 1
-# err = 1
-# while (err>0.001) {
-#   y=x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + 
-#     x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
-#   err = abs(y)
-#   x = x+0.00001
-# }
-
-#Using Uniroot
-##Set up function and find current donnan potential
-#f = function (x) x^z_Na*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
 #med de rigtige udtryk for ion data
 #f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
@@ -171,44 +152,21 @@ data$cm=cm
 g=1
 good_cp=F
 while (good_cp==F) {
-#J=J_v*c_perm # Simpel flux for ioner
-
-#J_diff=-K_d*D_infty*dc/dx
-#J_convec = K_a*c*J_v #Convection term for flux through pore
-#J_electro = (z*c*K_d*D_infty*F)/R*T*dphi(x)/dx
-#J_ENP=J_diff+J_convec-J_electro
 
 osmotisk=R_gas*10^-2*Temp*(sum(feed$concentration)-sum(data$cp_guess))
 
-J_volumen = ((rp*10^-9)^2*(P-osmotisk))/(8*viscosity*Le*10^-9)  #m/S
+J_volumen = ((rp)^2*(P-osmotisk))/(8*viscosity*Le)  #m/S
 
-data$c_i_1=data$cm
-#laaaangt udtryk hvor vi gerne vil løse for c_i
-#c_i skal være en vector. 
-#c_i_na=3
-#c_i_cl=3
-
-#d_potential=((ion_data$z[1]*J_volumen/ion_data$Diff[1])*(ion_data$ka[1]*(c_i_na)-data$cp_guess[1]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[1]^2*c_i_na))+
-#  ((ion_data$z[2]*J_volumen/ion_data$Diff[2])*(ion_data$ka[2]*(c_i_cl)-data$cp_guess[2]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[2]^2*c_i_cl))
-
-
-#data$cp_guess[1]*J_volumen = 
-#  (-ion_data$kd[1]*ion_data$Diff[1]*((data$c_i_1[1]-c_i_na)/(Le*10^-9/delta_x)))+
-#                        (ion_data$ka[1]*c_i_na*J_volumen)-
-#                        ((ion_data$z[1]*c_i_na*ion_data$kd[1]*ion_data$Diff[1]*Faraday)/(R_gas*Temp))*
-#  (((ion_data$z[1]*J_volumen/ion_data$Diff[1])*(ion_data$ka[1]*(c_i_na)-data$cp_guess[1]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[1]^2*c_i_na))+
-#                                                                                             ((ion_data$z[2]*J_volumen/ion_data$Diff[2])*(ion_data$ka[2]*(c_i_cl)-data$cp_guess[2]/1000))/((Faraday/R_gas*Temp)*(ion_data$z[2]^2*c_i_cl))
-#                        )
 ##### Control Volume Approach
 
-dybde=5000
+dybde=7000
 var_kon=1
 var_diff=1
 var_potential=1
-Xd=-5*10^-3
 N=10 #antal stykker af membran
- dx = (Le*10^-9)/N#længde af stykker
- dn = 0.00001
+ dx = (Le)/N#længde af stykker
+ dn = 0.00002 #den virker med 0.00001 
+
 
 vec=c("n","j.0")
 for (number in 1:N) {
@@ -231,6 +189,8 @@ pot=ENP_df
 ENP_df_Na[1:(dybde),2]=cm[1]
 ENP_df_Cl[1:(dybde),2]=cm[2]
 pot[1:dybde,2]=0
+pot[1,-c(1,2,ncol(pot))]=X
+
 
 total_df=list(ENP_df_Na,ENP_df_Cl)
 n=2
@@ -247,7 +207,7 @@ while (n<=dybde) {
 
    total_df[[ion]]=ENP_df
    for (j in 1:N+2) {
-     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]+Xd
+     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]+X
    }    
   }
   total_df[[1]][["n"]][n]=total_df[[1]][["n"]][n-1]+dn
@@ -270,7 +230,7 @@ cp
 
 #### noget med at tjekke cp #####
 err=sum((cp-data$cp_guess)^2)
-if (err<1*10^-9) {
+if (err<1*10^-15) {
   good_cp = T
 }
 data$cp_guess = cp
@@ -305,5 +265,4 @@ plot_all=all_c%>%gather(key="key",value="value",Na,Cl)
 
 ggplotly(ggplot(plot_all,aes(x=x,y=value,color=key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1"))
-
 
