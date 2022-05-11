@@ -58,7 +58,7 @@ viscosity = 8.9*10^-9 # bar*S
     ##Membrane :
 rp=0.5*10^-9 #nm
 Le = 2000*10^-9 #nm
-sigma=-0.02/1000 #Cm^2
+sigma=-0.2/1000 #Cm^2
 X=(2*sigma)/(rp*Faraday)/1000#mol/L
 
 ## Operation
@@ -159,13 +159,13 @@ J_volumen = ((rp)^2*(P-osmotisk))/(8*viscosity*Le)  #m/S
 
 ##### Control Volume Approach
 
-dybde=7000
+dybde=5000
 var_kon=1
 var_diff=1
 var_potential=1
 N=10 #antal stykker af membran
  dx = (Le)/N#længde af stykker
- dn = 0.00002 #den virker med 0.00001 
+ dn = 0.00001 #den virker med 0.00001 
 
 
 vec=c("n","j.0")
