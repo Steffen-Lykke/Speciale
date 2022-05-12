@@ -51,9 +51,10 @@ ion_values = data.frame(
   #Grænseværdier [mM]
   molar_con = c(50.1, 76.4, 160, NA)
 )#[S*cm^2*mol^-1]
+c_ini=c(6,2.25,1.88,1.5)
 
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
-con_ini = sum(c_makeup*ion_values[,3],na.rm=T)+600
+con_ini = sum(c_ini*ion_values[,3],na.rm=T)
 con=con_ini
 con_lim = 1000#conductivity grænseværdi [uS/cm]
 
@@ -71,7 +72,7 @@ paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
 ##### Model Parameters #####
 dt=10 #minutes
 dt=dt/1440 #minutter i dage
-run_time = 60 #days
+run_time = 14 #days
 max_time = run_time*60*24 #i minutter
 n_time_step = run_time/dt+1
 tid = 0
@@ -111,7 +112,7 @@ nf[1:n_time_step,]=0
 cf[1:n_time_step,]=0
 
 df[1,]=c(tid,V_CT,con_ini)
-cf[1,]=c(tid,c_makeup)
+cf[1,]=c(tid,c_ini)
 nf[1,]=cf[1,]*df$V_CT[1]
 num_bd=0
 i=2
@@ -161,13 +162,23 @@ cf.long = cf %>%
   gather(key,value,Na,Cl,SO4,SiO2)
 df.long = df %>% 
   gather(key,value,V_CT,con)
-
+plot_data = rbind(cf.long,df.long)%>%filter(key!="V_CT"& key!="con")
 level_order = c('Na','Cl','SO4','SiO2')
-ggplot(cf.long,aes(x=tid,y=value,color=factor(key,level=level_order)))+geom_line()+
+
+ion_plot==ggplot(cf.long,aes(x=tid,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1",labels = level_order)+
   theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]", color = "Ion")
 
-ggplot(df,aes(x=tid,y=con))+geom_line()+
+conductivity_plot=ggplot(df,aes(x=tid,y=con))+geom_line()+
   scale_color_brewer(palette="Set1")+
   theme_bw()+labs(y = "Conductivity [uS/cm]", x = "Time [days]")+ylim(c(0,NA))
+
 para(num_bd)
+
+totplot=ggplot(plot_data,aes(x=tid,y=value,color=key))+geom_line()+
+  scale_color_brewer(palette="Set1")+
+  theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]")+ylim(c(0,NA))
+
+
+
+totplot + facet_grid(cols=vars(key))

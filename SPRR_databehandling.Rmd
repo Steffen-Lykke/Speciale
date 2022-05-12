@@ -1,0 +1,336 @@
+---
+title: "ICR phase 2"
+author: "Steffen"
+date: "12/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Loading af pakker 
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(visdat)
+library(GGally)
+library(Hmisc)
+library(DMwR2)
+library(data.table)
+library(mltools)
+library(ggfortify)
+library(ggiraphExtra)
+library(coronavirus)
+library(lubridate)
+library(plotly)
+#library(naniar)
+library(readxl)
+require(readr)
+library(zoo)
+library(latex2exp)
+library(fs)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+)
+
+```
+
+## 
+
+
+
+```{r import en masse data, include=FALSE}
+Ion_data_frame = data.frame()
+## SPRR data håndtering
+SPRR = read.table(file='data/SPRR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+SPRR_pH= c(NA,9.37,9.26,NA,9.26,9.35,NA,9.67,9.68,NA,9.56,9.66,NA,9.83,9.89,NA,9.81,9.87)
+SPRR_con= c(NA,2350,1670,NA,2330,1680,NA,2440,1750,NA,2510,1760,NA,2450,1840,NA,2540,1830)
+#SPRR_type=rep(c("SPRR"),each=18)
+SPRR_names = c("SPRR_1","SPRR_2","SPRR_3","SPRR_4","SPRR_5","SPRR_6","SPRR_7","SPRR_8","SPRR_9","SPRR_10","SPRR_11","SPRR_12","SPRR_13","SPRR_14","SPRR_15","SPRR_16","SPRR_17","SPRR_18")
+
+
+SPRR_wrangle = cbind(SPRR%>%filter(Stream == "Feed"),SPRR%>%filter(Stream == "Rejection")%>%select("Na","Ca","Cl","SO4","SiO2","HCO3"))
+SPRR_wrangle$pH = SPRR_pH
+SPRR_wrangle$con = SPRR_con
+#SPRR_wrangle$type = SPRR_type
+
+
+colnames(SPRR_wrangle) = c("name","Stream","Cl_ratio","SiO2_teo","pH","Ca","Na","Cl","SO4","SiO2_mgL","HCO3","Rej_Na","Rej_Ca","Rej_Cl","Rej_SO4","Rej_SiO2","Rej_HCO3","Conductivity")
+SPRR_wrangle$name = SPRR_names
+SPRR_clean = SPRR_wrangle%>%select(-c("Stream","SiO2_teo","HCO3","Rej_HCO3","Cl_ratio"))
+SPRR_clean$state = "Steady State"
+SPRR_clean$type = "SPRR"
+SPRR_clean$pH[1]=9.33
+SPRR_clean$time=NA
+SPRR_clean$start_vol = NA
+
+###multisalt håndtering
+M_9.2 = read.table(file='data/M9.2_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_9.2_clean = M_9.2%>%select(-c("time","conductivity"))
+M_9.2_clean$Conductivity = c(1560,1730,1880,2080,2390,2700)
+M_9.2_clean$state = "Batch"
+M_9.2_clean$type = "M_9.2"
+M_9.2_clean$name = c("M_9.2_3.5h","M_9.2_5h","M_9.2_6h","M_9.2_7h","M_9.2_8h","M_9.2_8.7h")
+M_9.2_clean$time = c(3.5,5,6,7,8,8.7)
+M_9.2_clean$start_vol = 10
+
+M_10 = read.table(file='data/M10_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_10_clean = M_10%>%select(-c("time"))
+M_10_clean$Conductivity = c(1830,2050,2350,2550,2830,3250)
+M_10_clean$state = "Batch"
+M_10_clean$type = "M_10"
+M_10_clean$pH = c(10.13,10.15,10.17,10.19,10.21,10.24)
+M_10_clean$name = c("M_10_3h","M_10_4h","M_10_5h","M_10_5.5h","M_10_6h","M_10_6.5h")
+M_10_clean$time = c(3,4,5,5.5,6,6.5)
+M_10_clean$start_vol = 8.5
+
+M_10.5 = read.table(file='data/M10.5_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_10.5_clean = M_10.5%>%select(-c("time"))
+M_10.5_clean$Conductivity = c(2080,2390,2660,3020,3570,4470)
+M_10.5_clean$state = "Batch"
+M_10.5_clean$type = "M_10.5"
+M_10.5_clean$pH = c(10.5,10.52,10.54,10.56,10.59,10.63)
+M_10.5_clean$name = c("M_10.5_2.5h","M_10.5_4h","M_10.5_5h","M_10.5_6h","M_10.7h","M_10.5_8h")
+M_10.5_clean$time = c(2.5,4,5.5,6,7,8)
+M_10.5_clean$start_vol = 10
+
+### ICR data
+ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
+ICR_clean = ICR_1
+ICR_clean$Conductivity = c(2477,2517,2570,2625,2685,2740,2810,2881,2951,3040,3126,3221,3376,3568,4019)
+SPRR_clean$Conductivity[1]=4210
+ICR_clean$type = "ICR"
+ICR_clean$time = c(20/60,40/60,60/60,80/60,100/60,2,140/60,160/60,3,200/60,220/60,240/60,270/60,300/60,360/60)
+ICR_clean$start_vol = 10
+
+###Sættes sammen
+col_order <- c("name","Na","Cl","SO4","Ca","SiO2_mgL","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state","type","time","start_vol")
+M_9.2_clean = M_9.2_clean[,col_order]
+M_10_clean = M_10_clean[,col_order]
+M_10.5_clean = M_10.5_clean[,col_order]
+SPRR_clean = SPRR_clean[,col_order]
+ICR_clean = ICR_clean[,col_order]
+
+Ion_data_frame = rbind(M_9.2_clean,M_10_clean,M_10.5_clean,SPRR_clean,ICR_clean)
+Ion_data_frame[1:18,8:12] = Ion_data_frame[1:18,8:12]*100
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
+Ion_data_frame = Ion_data_frame%>%mutate("Na_mmol"=Na/Mw_Na)
+Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Ca/Mw_Ca)
+Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Cl/Mw_Cl)
+Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=SO4/Mw_SO4)
+Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
+
+
+### noget med recovery
+Ion_data_frame = Ion_data_frame%>%mutate("perm_vol"=time*1.02)
+Ion_data_frame = Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
+Ion_data_frame=Ion_data_frame[19:36,]
+```
+
+## Silica Rejection
+
+We assume that pH is the major variable that controls silica rejection.
+A liniear regression between the two shows correlation to some degree.
+```{r Silica rej mod pH , echo=FALSE}
+
+#Udtryk for ladning af silica som funk af pH, jeg kan ikkehuske hvor det kommer fra
+a=1.00016
+b=2.314233
+c=9.831689
+Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet =  a/(1+exp(-b*(pH-c))))
+#Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet1=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74) #Gammelt udtryk for samme
+#Funktion der laver plots af ens model:
+ggplotRegression <- function (fit) {
+
+require(ggplot2)
+
+ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red") +
+  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                     "Intercept =",signif(fit$coef[[1]],5 ),
+                     " Slope =",signif(fit$coef[[2]], 5),
+                     " P =",signif(summary(fit)$coef[2,4], 5)))
+}
+
+#SiO2 Rejection mod pH
+fit_SiO2_pH = lm(Rej_SiO2~pH, data = Ion_data_frame)
+ggplotRegression(fit_SiO2_pH)+ylab("SiO2 Rejection [%]")
+#plot(fit_SiO2_pH)
+
+
+cooksD <- cooks.distance(fit_SiO2_pH)
+influential <- cooksD[(cooksD > (3 * mean(cooksD, na.rm = TRUE)))]
+influential
+#Number 23 (SPRR 5) has cooks distance >3x avg, if we exclude it our model is now:
+
+fit_SiO2_pH_cook = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(name!="SPRR_5"))
+ggplotRegression(fit_SiO2_pH_cook)+ylab("SiO2 Rejection [%]")
+#plot(fit_SiO2_pH_cook)
+#Which is a slightly better fit R2=0.87 vs 0.83. Can you just do that? who knows?
+
+fit_SiO2_pH2 = lm(Rej_SiO2~pH+SiO2_mmol, data = Ion_data_frame)
+ggplotRegression(fit_SiO2_pH2)+ylab("SiO2 Rejection [%]")
+#plot(fit_SiO2_pH2)
+summary(fit_SiO2_pH2)
+
+plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+plot(x=predict(fit_SiO2_pH2), y=na.omit(Ion_data_frame$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH and SiO2 Concentration',
+     abline(a=0, b=1))
+
+
+#Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet=((fit_SiO2_pH$coef)[2]*pH+(fit_SiO2_pH$coef)[1])/100*SiO2_mmol) #regn ladning fraction ud fra rejection?? we don't do this
+
+```
+Conclusion: Silica rejection can be predicted from pH and concentration of silica on these samples.
+
+
+
+
+
+
+
+
+
+
+## Cl rejection
+We assume that pH does not play a significant role in Cl rejection, at least not to the same degree as for SiO2.
+Instead the chemical environment i.e. which other species are present and in what amounts are theorized to have a greater influence.
+
+We check if [Cl],[anion],[Cl]/[anion] has a significant role
+Anion fraktion udregneds udfra Cl/[SO4]+[SiO2_ladet]+[Cl]
+
+```{r Cl rejection against anion ration  , echo=FALSE}
+Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
+
+
+
+ggplotly(ggplot(Ion_data_frame, aes(x=Cl_mmol, y=Rej_Cl,color=name))+geom_point())
+
+
+###Different fittings
+fit_Clrej_cl= lm(Rej_Cl~Cl_mmol, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_cl)
+
+fit_Clrej_anion= lm(Rej_Cl~anion_total, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_anion)
+
+fit_Clrej_cl_anion = lm(Rej_Cl~Cl_anion, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_cl_anion)
+
+fit_Clrej_so4 = lm(Rej_Cl~SO4_mmol, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_so4)
+
+
+
+###Without point where [Cl] is very low:
+Ion_data_frame_no8=Ion_data_frame%>%filter(name!="SPRR_8")
+fit_Clrej_cl_no8= lm(Rej_Cl~Cl_mmol, data = Ion_data_frame_no8)
+ggplotRegression(fit_Clrej_cl_no8)
+
+fit_Clrej_anion_no8= lm(Rej_Cl~anion_total, data = Ion_data_frame_no8)
+ggplotRegression(fit_Clrej_anion_no8)
+
+fit_Clrej_cl_anion_no8 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame_no8)
+ggplotRegression(fit_Clrej_cl_anion_no8)
+
+### Without point where [SO4] is very high
+Ion_data_frame_no1=Ion_data_frame%>%filter(name!="SPRR_1")
+fit_Clrej_cl_no1= lm(Rej_Cl~Cl_mmol, data = Ion_data_frame_no1)
+ggplotRegression(fit_Clrej_cl_no1)
+
+fit_Clrej_anion_no1= lm(Rej_Cl~anion_total, data = Ion_data_frame_no1)
+ggplotRegression(fit_Clrej_anion_no1)
+
+fit_Clrej_cl_anion_no1 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame_no1)
+ggplotRegression(fit_Clrej_cl_anion_no1)
+
+### Cl rejection multiple regression
+fit_Clrej_multi = lm(Rej_Cl~Cl_anion+pH, data = Ion_data_frame)
+summary(fit_Clrej_multi)
+plot(fit_Clrej_multi)
+
+plot(x=predict(fit_Clrej_multi), y=na.omit(Ion_data_frame$Rej_Cl),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values',
+     abline(a=0, b=1))
+
+cooksD <- cooks.distance(fit_Clrej_multi)
+influential <- cooksD[(cooksD > (3 * mean(cooksD, na.rm = TRUE)))]
+influential
+#Number 30 (SPRR 12) has cooks distance >3x avg, if we exclude it our model is now:
+
+fit_Clrej_multi_cook = lm(Rej_Cl~Cl_anion+pH, data = Ion_data_frame%>%filter(name!="SPRR_12"))
+plot(fit_Clrej_multi_cook)
+plot(x=predict(fit_Clrej_multi_cook), y=na.omit(Ion_data_frame$Rej_Cl[-12]),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values',
+     abline(a=0, b=1))
+
+summary(fit_Clrej_multi_cook)
+#Which is a slightly better fit R2=0.79 vs 0.63, Can you just do that? who knows? probably not
+
+
+```
+Conclusion: [Cl] not useful to predict Rejection of Cl
+neither is [anion] or [SO4]
+[Cl]/[Anion] has a weak correlation to Rejection R2 0.53 (significant P>0.003)
+
+[Cl/Anion]+pH R2 0.63 Cl/Anion P>0.00225 **,pH P>0.07329 . .
+
+
+
+
+
+```{r fri leg}
+fit_Clrej_test1 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_test1)
+
+plot(x=predict(fit_Clrej_test1), y=na.omit(Ion_data_frame$Rej_Cl),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values',
+     abline(a=0, b=1))
+
+fit2 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame%>%filter(state=="Steady State"))
+
+#pred.int <- predict(model, interval = "prediction")
+ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point())
+
+ggplotRegression(fit_Clrej_test1)
+```
+
+
+

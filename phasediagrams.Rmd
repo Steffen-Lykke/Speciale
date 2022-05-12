@@ -58,13 +58,20 @@ silica = silica %>% mutate(`pH2SiO4-2` = `H2SiO4-2`/Ct)%>%mutate(pH4SiO4 = H4SiO
 
 ### Noget Silica ladning model
 x=silica$pH
-y=silica$ladet
-plot(y~x)
+y1=silica$ladet
+plot(y1~x)
 a=1.00016
 b=2.314233
 c=9.831689
 silica = silica%>%mutate(frac_ladet_model =  a/(1+exp(-b*(pH-c))))
 names(silica)[7:9]=c("H_2SiO_4^2-","H_3SiO_4^-","H_4SiO4")  
+y2=silica$frac_ladet_model
+
+ladning_plot=data.frame(x,y1,y2)
+ggplot(ladning_plot,aes(x = x,y=y1))+geom_point()+geom_line(aes(x=x,y=y2))
+
+
+plot(y~x)
 
 carbonat = read_excel("data/minteq/pH_pC_carbonat.xlsx")
 carbonat = carbonat%>%mutate(Ct=`CO3-2`+`HCO3-`+`H2CO3* (aq)`)
