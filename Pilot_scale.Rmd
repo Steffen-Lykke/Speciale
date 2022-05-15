@@ -55,7 +55,7 @@ colors = c(
   '#17becf'   # blue-teal
 )
 ```
-## Summary of Multi salt experiments. {.tabset}
+## Summary of Pilot scale experiments. {.tabset}
 ### PLC Data 
 
 ```{r pilot PLC 8A, echo=FALSE}
@@ -192,3 +192,557 @@ plc_8B
 
 
 ```
+### IC data 
+ 
+
+```{R import IC data, echo=FALSE, message=FALSE}
+
+#Imort af CL_IC data. 
+Cl_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx")
+
+old_names_IC=colnames(Cl_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Cl_1_mg_L","Cl_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Cl_ID8A_8B_IC_data = Cl_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Cl_ID8A_8B_IC_data <- as.data.frame(Cl_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+Cl_ID8A_8B_IC_data$Cl_1_mg_L=Cl_ID8A_8B_IC_data$Cl_1_mg_L*Cl_ID8A_8B_IC_data$Dilution
+Cl_ID8A_8B_IC_data$Cl_2_mg_L=Cl_ID8A_8B_IC_data$Cl_2_mg_L*Cl_ID8A_8B_IC_data$Dilution
+  
+Cl_ID8A_8B_IC_data <-Cl_ID8A_8B_IC_data%>%mutate(Cl_mgL=(rowMeans(Cl_ID8A_8B_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Cl_std_mgL=(rowSds(as.matrix(Cl_ID8A_8B_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(CL_Std_p=((Cl_std_mgL/Cl_mgL)))
+
+#Imort af SO4_IC data. 
+SO4_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx",2)
+
+old_names_IC=colnames(SO4_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","SO4_1_mg_L","SO4_2_mg_L") #Vi finder på nogle lidt bedre nogle
+SO4_ID8A_8B_IC_data = SO4_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SO4_ID8A_8B_IC_data <- as.data.frame(SO4_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+SO4_ID8A_8B_IC_data$SO4_1_mg_L=SO4_ID8A_8B_IC_data$SO4_1_mg_L*SO4_ID8A_8B_IC_data$Dilution
+SO4_ID8A_8B_IC_data$SO4_2_mg_L=SO4_ID8A_8B_IC_data$SO4_2_mg_L*SO4_ID8A_8B_IC_data$Dilution
+  
+SO4_ID8A_8B_IC_data <-SO4_ID8A_8B_IC_data%>%mutate(SO4_mgL=(rowMeans(SO4_ID8A_8B_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(SO4_std_mgL=(rowSds(as.matrix(SO4_ID8A_8B_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(SO4_Std_p=((SO4_std_mgL/SO4_mgL)))
+
+#Imort af Na_IC data. 
+Na_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx",3)
+
+old_names_IC=colnames(Na_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Na_1_mg_L","Na_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Na_ID8A_8B_IC_data = Na_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Na_ID8A_8B_IC_data <- as.data.frame(Na_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+Na_ID8A_8B_IC_data$Na_1_mg_L=Na_ID8A_8B_IC_data$Na_1_mg_L*Na_ID8A_8B_IC_data$Dilution
+Na_ID8A_8B_IC_data$Na_2_mg_L=Na_ID8A_8B_IC_data$Na_2_mg_L*Na_ID8A_8B_IC_data$Dilution
+  
+Na_ID8A_8B_IC_data <-Na_ID8A_8B_IC_data%>%mutate(Na_mgL=(rowMeans(Na_ID8A_8B_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Na_std_mgL=(rowSds(as.matrix(Na_ID8A_8B_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Na_Std_p=((Na_std_mgL/Na_mgL)))
+
+#Imort af Ca_IC data. 
+Ca_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx",4)
+
+old_names_IC=colnames(Ca_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Ca_1_mg_L","Ca_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Ca_ID8A_8B_IC_data = Ca_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Ca_ID8A_8B_IC_data <- as.data.frame(Ca_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+Ca_ID8A_8B_IC_data$Ca_1_mg_L=Ca_ID8A_8B_IC_data$Ca_1_mg_L*Ca_ID8A_8B_IC_data$Dilution
+Ca_ID8A_8B_IC_data$Ca_2_mg_L=Ca_ID8A_8B_IC_data$Ca_2_mg_L*Ca_ID8A_8B_IC_data$Dilution
+  
+Ca_ID8A_8B_IC_data <-Ca_ID8A_8B_IC_data%>%mutate(Ca_mgL=(rowMeans(Ca_ID8A_8B_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Ca_std_mgL=(rowSds(as.matrix(Ca_ID8A_8B_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Ca_Std_p=((Ca_std_mgL/Ca_mgL)))
+
+
+#Imort af Mg_IC data. 
+Mg_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx",5)
+
+old_names_IC=colnames(Mg_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Mg_1_mg_L","Mg_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Mg_ID8A_8B_IC_data = Mg_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Mg_ID8A_8B_IC_data <- as.data.frame(Mg_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+Mg_ID8A_8B_IC_data$Mg_1_mg_L=Mg_ID8A_8B_IC_data$Mg_1_mg_L*Mg_ID8A_8B_IC_data$Dilution
+Mg_ID8A_8B_IC_data$Mg_2_mg_L=Mg_ID8A_8B_IC_data$Mg_2_mg_L*Mg_ID8A_8B_IC_data$Dilution
+  
+Mg_ID8A_8B_IC_data <-Mg_ID8A_8B_IC_data%>%mutate(Mg_mgL=(rowMeans(Mg_ID8A_8B_IC_data[,c("Mg_1_mg_L","Mg_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Mg_std_mgL=(rowSds(as.matrix(Mg_ID8A_8B_IC_data[,c("Mg_1_mg_L","Mg_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Mg_Std_p=((Mg_std_mgL/Mg_mgL)))
+
+#Imort af K_IC data. 
+K_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx",6)
+
+old_names_IC=colnames(K_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","K_1_mg_L","K_2_mg_L") #Vi finder på nogle lidt bedre nogle
+K_ID8A_8B_IC_data = K_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+K_ID8A_8B_IC_data <- as.data.frame(K_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+K_ID8A_8B_IC_data$K_1_mg_L=K_ID8A_8B_IC_data$K_1_mg_L*K_ID8A_8B_IC_data$Dilution
+K_ID8A_8B_IC_data$K_2_mg_L=K_ID8A_8B_IC_data$K_2_mg_L*K_ID8A_8B_IC_data$Dilution
+  
+K_ID8A_8B_IC_data <-K_ID8A_8B_IC_data%>%mutate(K_mgL=(rowMeans(K_ID8A_8B_IC_data[,c("K_1_mg_L","K_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(K_std_mgL=(rowSds(as.matrix(K_ID8A_8B_IC_data[,c("K_1_mg_L","K_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(K_Std_p=((K_std_mgL/K_mgL)))
+#Imort af NO3_IC data. 
+NO3_ID8A_8B_IC_data <- read_excel("data/Pilot_scale/IC_data_pilot.xlsx",7)
+
+old_names_IC=colnames(NO3_ID8A_8B_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","NO3_1_mg_L","NO3_2_mg_L") #Vi finder på nogle lidt bedre nogle
+NO3_ID8A_8B_IC_data = NO3_ID8A_8B_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+NO3_ID8A_8B_IC_data <- as.data.frame(NO3_ID8A_8B_IC_data)
+#noget med gennemsnit. 
+
+
+NO3_ID8A_8B_IC_data$NO3_1_mg_L=NO3_ID8A_8B_IC_data$NO3_1_mg_L*NO3_ID8A_8B_IC_data$Dilution
+NO3_ID8A_8B_IC_data$NO3_2_mg_L=NO3_ID8A_8B_IC_data$NO3_2_mg_L*NO3_ID8A_8B_IC_data$Dilution
+  
+NO3_ID8A_8B_IC_data <-NO3_ID8A_8B_IC_data%>%mutate(NO3_mgL=(rowMeans(NO3_ID8A_8B_IC_data[,c("NO3_1_mg_L","NO3_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(NO3_std_mgL=(rowSds(as.matrix(NO3_ID8A_8B_IC_data[,c("NO3_1_mg_L","NO3_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(NO3_Std_p=((NO3_std_mgL/NO3_mgL)))
+
+```
+
+plot of concentraiton in mM 8A
+
+```{R plot conc 8A, echo=FALSE, message=FALSE}
+
+
+Mw_Cl=35.45
+Mw_SO4=96.06
+Mw_Ca=40.078
+Mw_Na=22.99
+Mw_Br=79.904
+Mw_Mg=24.305
+Mw_K=39.0983
+Mw_SiO2=60.08
+Mw_NO3=62.0049
+
+ID_8A_8B_data = cbind(Cl_ID8A_8B_IC_data[,c(1:3,7,9)],
+                      SO4_ID8A_8B_IC_data[,c(7,9)],
+                      Na_ID8A_8B_IC_data[,c(7,9)],
+                      Ca_ID8A_8B_IC_data[,c(7,9)],
+                      Mg_ID8A_8B_IC_data[,c(7,9)],
+                      K_ID8A_8B_IC_data[,c(7,9)],
+                      NO3_ID8A_8B_IC_data[,c(7,9)])
+                      
+ID_8A_8B_data$start_vol=c(rep(900,20),rep(800,13))                       
+ID_8A_8B_data$perm_vol = ID_8A_8B_data$Time*280
+ID_8A_8B_data$Recovery = 100*(1-(ID_8A_8B_data$start_vol-ID_8A_8B_data$perm_vol)/ID_8A_8B_data$start_vol)   
+
+ID_8A_8B_mM=ID_8A_8B_data
+ID_8A_8B_mM$Cl_mgL=ID_8A_8B_mM$Cl_mgL/Mw_Cl
+ID_8A_8B_mM$SO4_mgL=ID_8A_8B_mM$SO4_mgL/Mw_SO4
+ID_8A_8B_mM$Na_mgL=ID_8A_8B_mM$Na_mgL/Mw_Na
+ID_8A_8B_mM$Ca_mgL=ID_8A_8B_mM$Ca_mgL/Mw_Ca
+ID_8A_8B_mM$Mg_mgL=ID_8A_8B_mM$Mg_mgL/Mw_Mg
+ID_8A_8B_mM$K_mgL=ID_8A_8B_mM$K_mgL/Mw_K
+ID_8A_8B_mM$NO3_mgL=ID_8A_8B_mM$NO3_mgL/Mw_NO3
+
+
+
+plot_8A_Cl=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=Cl_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Cl_mgL-(Cl_mgL*CL_Std_p), ymax=Cl_mgL+(Cl_mgL*CL_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, Cl")
+
+plot_8A_SO4=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=SO4_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=SO4_mgL-(SO4_mgL*SO4_Std_p), ymax=SO4_mgL+(SO4_mgL*SO4_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, SO4")
+
+plot_8A_Na=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=Na_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Na_mgL-(Na_mgL*Na_Std_p), ymax=Na_mgL+(Na_mgL*Na_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, Na")
+
+plot_8A_Ca=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=Ca_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Ca_mgL-(Ca_mgL*Ca_Std_p), ymax=Ca_mgL+(Ca_mgL*Ca_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, Ca")
+
+plot_8A_Mg=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=Mg_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Mg_mgL-(Mg_mgL*Mg_Std_p), ymax=Mg_mgL+(Mg_mgL*Mg_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, Mg")
+
+plot_8A_K=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=K_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=K_mgL-(K_mgL*K_Std_p), ymax=K_mgL+(K_mgL*K_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, K")
+
+plot_8A_NO3=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8A"), aes(x=Recovery, y=NO3_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=NO3_mgL-(NO3_mgL*NO3_Std_p), ymax=NO3_mgL+(NO3_mgL*NO3_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8A, NO3")
+
+
+
+
+ggarrange(plot_8A_Cl, plot_8A_SO4,plot_8A_Na,plot_8A_Ca ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_8A_Mg, plot_8A_K,plot_8A_NO3 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+``` 
+
+
+```{R plot conc 8B , echo=FALSE, message=FALSE}
+
+
+
+plot_8B_Cl=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Cl_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Cl_mgL-(Cl_mgL*CL_Std_p), ymax=Cl_mgL+(Cl_mgL*CL_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Cl")
+
+plot_8B_SO4=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=SO4_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=SO4_mgL-(SO4_mgL*SO4_Std_p), ymax=SO4_mgL+(SO4_mgL*SO4_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, SO4")
+
+plot_8B_Na=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Na_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Na_mgL-(Na_mgL*Na_Std_p), ymax=Na_mgL+(Na_mgL*Na_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Na")
+
+plot_8B_Ca=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Ca_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Ca_mgL-(Ca_mgL*Ca_Std_p), ymax=Ca_mgL+(Ca_mgL*Ca_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Ca")
+
+plot_8B_Mg=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Mg_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Mg_mgL-(Mg_mgL*Mg_Std_p), ymax=Mg_mgL+(Mg_mgL*Mg_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Mg")
+
+plot_8B_K=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=K_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=K_mgL-(K_mgL*K_Std_p), ymax=K_mgL+(K_mgL*K_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, K")
+
+plot_8B_NO3=ggplot(ID_8A_8B_mM%>%filter(Name=="ID:8B"), aes(x=Recovery, y=NO3_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=NO3_mgL-(NO3_mgL*NO3_Std_p), ymax=NO3_mgL+(NO3_mgL*NO3_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, NO3")
+
+
+
+ggarrange(plot_8B_Cl, plot_8B_SO4,plot_8B_Na,plot_8B_Ca ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_8B_Mg, plot_8B_K,plot_8B_NO3 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+``` 
+Det ligner der er byttet rundt på en perm of feed prøve for 8B 1 h, dem vælger jeg at bytte rundt. 
+
+
+```{R plot conc 8B ny, echo=FALSE, message=FALSE}
+ID_8A_8B_mM_ny=ID_8A_8B_mM
+ID_8A_8B_mM_ny[24,-3]=ID_8A_8B_mM[25,-3]
+ID_8A_8B_mM_ny[25,-3]=ID_8A_8B_mM[24,-3]
+
+plot_8B_Cl=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Cl_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Cl_mgL-(Cl_mgL*CL_Std_p), ymax=Cl_mgL+(Cl_mgL*CL_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Cl")
+
+plot_8B_SO4=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=SO4_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=SO4_mgL-(SO4_mgL*SO4_Std_p), ymax=SO4_mgL+(SO4_mgL*SO4_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, SO4")
+
+plot_8B_Na=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Na_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Na_mgL-(Na_mgL*Na_Std_p), ymax=Na_mgL+(Na_mgL*Na_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Na")
+
+plot_8B_Ca=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Ca_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Ca_mgL-(Ca_mgL*Ca_Std_p), ymax=Ca_mgL+(Ca_mgL*Ca_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Ca")
+
+plot_8B_Mg=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=Mg_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=Mg_mgL-(Mg_mgL*Mg_Std_p), ymax=Mg_mgL+(Mg_mgL*Mg_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, Mg")
+
+plot_8B_K=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=K_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=K_mgL-(K_mgL*K_Std_p), ymax=K_mgL+(K_mgL*K_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, K")
+
+plot_8B_NO3=ggplot(ID_8A_8B_mM_ny%>%filter(Name=="ID:8B"), aes(x=Recovery, y=NO3_mgL,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+geom_errorbar(aes(ymin=NO3_mgL-(NO3_mgL*NO3_Std_p), ymax=NO3_mgL+(NO3_mgL*NO3_Std_p)), width=5,
+                 position=position_dodge(0.05))+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  # scale_y_continuous(limits=c(0, 3.5))+
+  scale_x_continuous(limits=c(0, 110))+
+ ggtitle("ID:8B, NO3")
+
+
+ggarrange(plot_8B_Cl, plot_8B_SO4,plot_8B_Na,plot_8B_Ca ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_8B_Mg, plot_8B_K,plot_8B_NO3 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+
+
+``` 
+### Rejection
+
+```{R rejection_calc, message=FALSE, include=FALSE}
+
+
+ID_8A_mM = ID_8A_8B_mM_ny %>% filter(Name == "ID:8A")
+ID_8B_mM = ID_8A_8B_mM_ny %>% filter(Name == "ID:8B")
+
+#kun 8A fordi den er nedern. 
+ID_8A_feed_1= ID_8A_mM %>% filter(Stream %in%"Feed")
+ID_8A_feed=ID_8A_feed_1[-c(1,7,8),]
+ID_8A_retentate= ID_8A_mM %>% filter(Stream %in%"Retentate")
+
+ID_8A_Inlet  =  ID_8A_retentate
+ID_8A_Inlet$Cl_mgL=(ID_8A_retentate$Cl_mgL[1]+ID_8A_feed$Cl_mgL)/2
+ID_8A_Inlet$CL_Std_p=(ID_8A_retentate$CL_Std_p[1]+ID_8A_feed$CL_Std_p)
+ID_8A_Inlet$SO4_mgL=(ID_8A_retentate$SO4_mgL[1]+ID_8A_feed$SO4_mgL)/2
+ID_8A_Inlet$SO4_Std_p=(ID_8A_retentate$SO4_Std_p[1]+ID_8A_feed$SO4_Std_p)
+ID_8A_Inlet$Na_mgL=(ID_8A_retentate$Na_mgL[1]+ID_8A_feed$Na_mgL)/2
+ID_8A_Inlet$Na_Std_p=(ID_8A_retentate$Na_Std_p[1]+ID_8A_feed$Na_Std_p)
+ID_8A_Inlet$Ca_mgL=(ID_8A_retentate$Ca_mgL[1]+ID_8A_feed$Ca_mgL)/2
+ID_8A_Inlet$Ca_Std_p=(ID_8A_retentate$Ca_Std_p[1]+ID_8A_feed$Ca_Std_p)
+ID_8A_Inlet$Mg_mgL=(ID_8A_retentate$Mg_mgL[1]+ID_8A_feed$Mg_mgL)/2
+ID_8A_Inlet$Mg_Std_p=(ID_8A_retentate$Mg_Std_p[1]+ID_8A_feed$Mg_Std_p)
+ID_8A_Inlet$K_mgL=(ID_8A_retentate$K_mgL[1]+ID_8A_feed$K_mgL)/2
+ID_8A_Inlet$K_Std_p=(ID_8A_retentate$K_Std_p[1]+ID_8A_feed$K_Std_p)
+ID_8A_Inlet$NO3_mgL=(ID_8A_retentate$NO3_mgL[1]+ID_8A_feed$NO3_mgL)/2
+ID_8A_Inlet$NO3_Std_p=(ID_8A_retentate$NO3_Std_p[1]+ID_8A_feed$NO3_Std_p)
+
+ID_8A_Inlet=rbind(ID_8A_Inlet,ID_8A_feed_1[7,])
+ID_8A_perm= ID_8A_mM %>% filter(Stream %in%"Permeate")
+
+#kun 8B
+ID_8A_8B_Feed=rbind(ID_8A_Inlet,ID_8B_mM[-c(1,12,13),]%>%filter(Stream== "Feed" ))
+ID_8A_8B_perm=rbind(ID_8A_mM[-20,]%>%filter(Stream== "Permeate" ),
+                    ID_8B_mM[-13,]%>%filter(Stream== "Permeate" ))
+
+
+ID_8A_8B_rej=cbind(ID_8A_8B_Feed[,-3],ID_8A_8B_perm[,-c(1:3,18:20)])
+colnames(ID_8A_8B_rej) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','SO4_Feed','SO4_Feed_Std_p','Na_Feed','Na_Feed_Std_p','Ca_Feed','Ca_Feed_Std_p','Mg_Feed','Mg_Feed_Std_p','K_Feed','K_Feed_Std_p','NO3_Feed','NO3_Feed_Std_p','start_vol', 'perm_vol','Recovery',
+                       'Cl_perm','Cl_perm_std_p','SO4_perm','SO4_perm_std_p','Na_perm','Na_perm_std_p','Ca_perm','Ca_perm_std_p','Mg_perm','Mg_perm_std_p','K_perm','K_perm_std_p','NO3_perm','NO3_perm_std_p')
+
+
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Cl"=((1-(Cl_perm/Cl_Feed))*100))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_SO4"=((1-(SO4_perm/SO4_Feed))*100))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Na"=((1-(Na_perm/Na_Feed))*100))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Ca"=((1-(Ca_perm/Ca_Feed))*100))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Mg"=((1-(Mg_perm/Mg_Feed))*100))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_K"=((1-(K_perm/K_Feed))*100))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_NO3"=((1-(NO3_perm/NO3_Feed))*100))
+
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Cl_std"=(Cl_Feed_Std_p+Cl_perm_std_p))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_SO4_std"=(SO4_Feed_Std_p+SO4_perm_std_p))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Na_std"=(Na_Feed_Std_p+Na_perm_std_p))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Ca_std"=(Ca_Feed_Std_p+Ca_perm_std_p))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_Mg_std"=(Mg_Feed_Std_p+Mg_perm_std_p))
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_K_std"=(K_Feed_Std_p+K_perm_std_p)    )                               
+ID_8A_8B_rej=ID_8A_8B_rej%>%mutate("rej_NO3_std"=(NO3_Feed_Std_p+NO3_perm_std_p))
+                                                             
+ 
+
+ID_8A_8B_rej_plot = ID_8A_8B_rej%>%gather(key,value, rej_Cl,rej_SO4,rej_Na,rej_Ca,rej_Mg,rej_K, rej_NO3)
+ID_8A_8B_rej_plot_std_p=c(ID_8A_8B_rej$rej_Cl_std,
+                   ID_8A_8B_rej$rej_SO4_std,
+                   ID_8A_8B_rej$rej_Na_std,
+                   ID_8A_8B_rej$rej_Ca_std,
+                   ID_8A_8B_rej$rej_Mg_std,
+                   ID_8A_8B_rej$rej_K_std,
+                   ID_8A_8B_rej$rej_NO3_std)
+                   
+
+ID_8A_8B_rej_plot$rej_std_p=ID_8A_8B_rej_plot_std_p
+
+```
+
+
+ALLE IONER ikke silica. 
+
+```{R plot alle ioner, echo=FALSE, message=FALSE}
+
+
+plot_8A= ggplot()+
+  geom_line(data=ID_8A_8B_rej_plot%>%filter(Name=="ID:8A"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8A_8B_rej_plot%>%filter(Name=="ID:8A"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+ geom_errorbar(data=ID_8A_8B_rej_plot%>%filter(Name=="ID:8A"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  #geom_point(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ #geom_line(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  #geom_errorbar(data=rej_SiO2%>%filter(name=="ID:1"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+    #             position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:8A")
+
+plot_8B= ggplot()+
+  geom_line(data=ID_8A_8B_rej_plot%>%filter(Name=="ID:8B"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8A_8B_rej_plot%>%filter(Name=="ID:8B"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+ geom_errorbar(data=ID_8A_8B_rej_plot%>%filter(Name=="ID:8B"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  #geom_point(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ #geom_line(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  #geom_errorbar(data=rej_SiO2%>%filter(name=="ID:1"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+    #             position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:8B")
+
+
+ggarrange(plot_8A, plot_8B, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+
+``` 
+
+vigtige IONER ikke silica. 
+
+```{R plot nice ioner, echo=FALSE, message=FALSE}
+
+ID_8A_8B_rej_plot_2 = ID_8A_8B_rej%>%gather(key,value, rej_Cl,rej_SO4,rej_Na,rej_Ca,)
+plot_2_std_p=c(ID_8A_8B_rej$rej_Cl_std,
+                   ID_8A_8B_rej$rej_SO4_std,
+                   ID_8A_8B_rej$rej_Na_std,
+                   ID_8A_8B_rej$rej_Ca_std)
+                   
+
+ID_8A_8B_rej_plot_2$rej_std_p=plot_2_std_p
+
+plot_8A= ggplot()+
+  geom_line(data=ID_8A_8B_rej_plot_2%>%filter(Name=="ID:8A"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8A_8B_rej_plot_2%>%filter(Name=="ID:8A"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+ geom_errorbar(data=ID_8A_8B_rej_plot_2%>%filter(Name=="ID:8A"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  #geom_point(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ #geom_line(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  #geom_errorbar(data=rej_SiO2%>%filter(name=="ID:1"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+    #             position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:8A")
+
+plot_8B= ggplot()+
+  geom_line(data=ID_8A_8B_rej_plot_2%>%filter(Name=="ID:8B"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_8A_8B_rej_plot_2%>%filter(Name=="ID:8B"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+ geom_errorbar(data=ID_8A_8B_rej_plot_2%>%filter(Name=="ID:8B"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  #geom_point(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ #geom_line(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  #geom_errorbar(data=rej_SiO2%>%filter(name=="ID:1"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+    #             position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:8B")
+
+
+ggarrange(plot_8A, plot_8B, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+
+``` 
+
