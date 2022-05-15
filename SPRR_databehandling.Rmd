@@ -1,5 +1,5 @@
 ---
-title: "ICR phase 2"
+title: "SPRR Regressions"
 author: "Steffen"
 date: "12/5/2022"
 output: html_document
@@ -232,6 +232,7 @@ Anion fraktion udregneds udfra Cl/[SO4]+[SiO2_ladet]+[Cl]
 ```{r Cl rejection against anion ration  , echo=FALSE}
 Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
 Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_SO4 = Cl_mmol/SO4_mmol)
 
 
 
@@ -275,8 +276,9 @@ ggplotRegression(fit_Clrej_anion_no1)
 fit_Clrej_cl_anion_no1 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame_no1)
 ggplotRegression(fit_Clrej_cl_anion_no1)
 
+
 ### Cl rejection multiple regression
-fit_Clrej_multi = lm(Rej_Cl~Cl_anion+pH, data = Ion_data_frame)
+fit_Clrej_multi = lm(Rej_Cl~SO4_mmol+pH, data = Ion_data_frame)
 summary(fit_Clrej_multi)
 plot(fit_Clrej_multi)
 
@@ -291,15 +293,15 @@ influential <- cooksD[(cooksD > (3 * mean(cooksD, na.rm = TRUE)))]
 influential
 #Number 30 (SPRR 12) has cooks distance >3x avg, if we exclude it our model is now:
 
-fit_Clrej_multi_cook = lm(Rej_Cl~Cl_anion+pH, data = Ion_data_frame%>%filter(name!="SPRR_12"))
-plot(fit_Clrej_multi_cook)
+fit_Clrej_multi_cook = lm(Rej_Cl~SO4_mmol+SiO2_ladet, data = Ion_data_frame%>%filter(name!="SPRR_12"))
+summary(fit_Clrej_multi_cook)
 plot(x=predict(fit_Clrej_multi_cook), y=na.omit(Ion_data_frame$Rej_Cl[-12]),
      xlab='Predicted Values',
      ylab='Actual Values',
      main='Predicted vs. Actual Values',
      abline(a=0, b=1))
+plot(fit_Clrej_multi_cook)
 
-summary(fit_Clrej_multi_cook)
 #Which is a slightly better fit R2=0.79 vs 0.63, Can you just do that? who knows? probably not
 
 
