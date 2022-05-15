@@ -12,7 +12,7 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,warning=F,message=F)
-#Loading af pakker 
+library(plyr)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -27,13 +27,31 @@ library(ggiraphExtra)
 library(coronavirus)
 library(lubridate)
 library(plotly)
+#library(naniar)
 library(readxl)
 require(readr)
 library(zoo)
 library(latex2exp)
 library(fs)
-library(fcuk)
-library(xtable)
+library(plyr)
+library(matrixStats)
+library(haven)
+library(sjmisc)
+require(gridExtra)
+require(ggpubr)
+
+colors = c(
+  '#1f77b4',  # muted blue
+  '#ff7f0e',  # safety orange
+  '#2ca02c',  # cooked asparagus green
+  '#d62728',  # brick red
+  '#9467bd',  # muted purple
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
 ```
 
 ## Summary of Multi salt experiments. {.tabset}
@@ -106,6 +124,9 @@ pH9.2_IC_data <- as.data.frame(pH9.2_IC_data)
 pH9.2_bi_data <- pH9.2_IC_data[c(17:19),c(1:4)] #bicarbonat data
 pH9.2_IC_data <- pH9.2_IC_data[c(1:13),] #IC data 
 
+pH9.2_IC_data$SiO2_rej_std_p <- (2/pH9.2_IC_data$Silica)
+
+
 pH9.2_Permeate <- filter(pH9.2_IC_data, Stream=="Permeate")
 pH9.2_Feed <- filter(pH9.2_IC_data, Stream=="Feed")
    
@@ -116,6 +137,8 @@ pH9.2_Feed <- filter(pH9.2_IC_data, Stream=="Feed")
 #pH9.2_rej_SO4 <- (1-(pH9.2_Permeate$Sulphate/(pH9.2_Feed$Sulphate[-1])))*100
 pH9.2_rej_SiO2 <- (1-(pH9.2_Permeate$Silica/(pH9.2_Feed$Silica[-1])))*100
 
+Rej_SiO2_9.2 = cbind(pH9.2_Feed[-1,c(1,3,8,14)],pH9.2_Permeate[,c(8,14)],pH9.2_rej_SiO2)
+colnames(Rej_SiO2_9.2) <- c('Time','name','SiO2_Feed','SiO2_Feed_Std_p','SiO2_perm','SiO2_perm_std_p','rej_SiO2')
 
 ```
 
@@ -162,6 +185,7 @@ pH10_IC_data <- as.data.frame(pH10_IC_data)
 pH10_bi_data <- pH10_IC_data[c(17:19),c(1:4)] #bicarbonat data
 pH10_IC_data <- pH10_IC_data[c(1:15),] #IC data 
 
+pH10_IC_data$SiO2_rej_std_p <- (2/pH10_IC_data$Silica)
 
 pH10_Permeate <- filter(pH10_IC_data, Stream=="Permeate")
 pH10_Feed <- filter(pH10_IC_data, Stream=="Feed")
@@ -172,6 +196,9 @@ pH10_Feed$Time = as.numeric(pH10_Feed$Time)
 #pH10_rej_Ca <- (1-(pH10_Permeate$Calcium/(pH10_Feed$Calcium[-1])))*100
 #pH10_rej_SO4 <- (1-(pH10_Permeate$Sulphate/(pH10_Feed$Sulphate[-1])))*100
 pH10_rej_SiO2 <- (1-(pH10_Permeate$Silica/(pH10_Feed$Silica[-1])))*100
+
+Rej_SiO2_10 = cbind(pH10_Feed[-1,c(1,3,8,10)],pH10_Permeate[,c(8,10)],pH10_rej_SiO2)
+colnames(Rej_SiO2_10) <- c('Time','name','SiO2_Feed','SiO2_Feed_Std_p','SiO2_perm','SiO2_perm_std_p','rej_SiO2')
 
 ```
 
@@ -218,6 +245,8 @@ pH10.5_IC_data <- as.data.frame(pH10.5_IC_data)
 pH10.5_bi_data <- pH10.5_IC_data[c(17:19),c(1:4)] #bicarbonat data
 pH10.5_IC_data <- pH10.5_IC_data[c(1:15),] #IC data 
 
+pH10.5_IC_data$SiO2_rej_std_p <- (2/pH10.5_IC_data$Silica)
+
 pH10.5_Permeate <- filter(pH10.5_IC_data, Stream=="Permeate")
 pH10.5_Feed <- filter(pH10.5_IC_data, Stream=="Feed")
 pH10.5_Feed$Time = as.numeric(pH10.5_Feed$Time)    
@@ -227,7 +256,10 @@ pH10.5_Feed$Time = as.numeric(pH10.5_Feed$Time)
 #pH10.5_rej_Ca <- (1-(pH10.5_Permeate$Calcium/(pH10.5_Feed$Calcium[-1])))*100
 #pH10_rej_SO4 <- (1-(pH10_Permeate$Sulphate/(pH10_Feed$Sulphate[-1])))*100
 pH10.5_rej_SiO2 <- (1-(pH10.5_Permeate$Silica/(pH10.5_Feed$Silica[-1])))*100
+pH10.5_Permeate$rej=pH10.5_rej_SiO2
 
+Rej_SiO2_10.5 = cbind(pH10.5_Feed[-1,c(1,3,8,12)],pH10.5_Permeate[,c(8,12)],pH10.5_rej_SiO2)
+colnames(Rej_SiO2_10.5) <- c('Time','name','SiO2_Feed','SiO2_Feed_Std_p','SiO2_perm','SiO2_perm_std_p','rej_SiO2')
 ```
 
 The pH was monitored in the feed stream with data logging every 1 sec.
@@ -739,7 +771,7 @@ The ion results were obtained by IC analysis of samples taken at various times f
 
 
 ##### pH 9.2
-```{r Ions 9.2, echo=FALSE}
+```{r Ions 9.2, eval=FALSE, include=FALSE}
 IC_9.2_raw = IC_9.2= as.data.frame(pH9.2_IC_data)
 IC_9.2$Sodium = as.double(IC_9.2$Sodium)
 IC9.2p=IC_9.2 %>% filter(Stream=="Permeate")%>%mutate(Sulphate=5)
@@ -798,7 +830,7 @@ rej_9.2=ggplot(C_9.2, aes(x=time, y=value,color= key))+geom_point()+geom_line()+
 ggplotly(rej_9.2)
 ```
 ##### pH 10
-```{r Ions 10, echo=FALSE}
+```{r Ions 10, eval=FALSE, include=FALSE}
 IC_10_raw = IC_10 = as.data.frame(pH10_IC_data)
 IC_10 = slice(IC_10,-c(2,3))
 IC10p=IC_10 %>% filter(Stream=="Permeate")%>%mutate(Sulphate=5)
@@ -854,7 +886,7 @@ rej_10=ggplot(C_10, aes(x=time, y=value,color= key))+geom_point()+geom_line()+ge
 ggplotly(rej_10)
 ```
 ##### pH 10.5
-```{r Ions 10.5, echo=FALSE}
+```{r Ions 10.5, eval=FALSE, include=FALSE}
 IC_10.5_raw = IC_10.5 = as.data.frame(pH10.5_IC_data)
 IC_10.5 = slice(IC_10.5,-c(14,15))
 IC10.5p=IC_10.5 %>% filter(Stream=="Permeate")%>%mutate(Sulphate=5)
@@ -977,7 +1009,7 @@ fig
 ```
 
 
-```{r plot next to each other, echo=FALSE}
+```{r plot next to each other, eval=FALSE, include=FALSE}
 require(gridExtra)
 require(ggpubr)
 
@@ -985,12 +1017,12 @@ require(ggpubr)
 ggarrange(rej_9.2,rej_10,rejec_10.5, ncol=3, nrow=1, common.legend = TRUE, legend="bottom",align = "v")
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 subplot(p_conc_9.2,p_conc_10,p_conc_10.5,nrows = 1)
 ```
 
 
-```{r Ions + Silica, echo=FALSE}
+```{r Ions + Silica, eval=FALSE, include=FALSE}
 sil_9.2 = data.frame(c(3.5,5,6,7,8,8.7),"Silica",pH9.2_rej_SiO2/100)
 sil_10 = data.frame(c(1.25,3,4,5,5.5,6,6.5),"Silica",pH10_rej_SiO2/100)
 sil_10.5 = data.frame(c(2.5,4,5,6,7,8,8.17),"Silica",pH10.5_rej_SiO2/100)
@@ -1132,7 +1164,223 @@ IC_9.2$value = as.double(IC_9.2$value)
 med_sul = IC_9.2 %>% filter(!is.na(Sulphate))
 med_sul %>% mutate(con = (Sodium*ion_values[1,2]+Chloride*ion_values[2,2]+Sulphate*ion_values[3,2]+Calcium*ion_values[4,2])) %>%mutate(dCOn = Conductivity-con)
 ```
+###Ny IC data nu med errorbars. 
+
+```{R IC_data_errorbars, echo=FALSE, message=FALSE}
+
+#Imort af CL_IC data. 
+Cl_ID1_3_IC_data <- read_excel("data/Multisalt/IC_data_multisalt.xlsx")
+
+old_names_IC=colnames(Cl_ID1_3_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Cl_1_mg_L","Cl_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Cl_ID1_3_IC_data = Cl_ID1_3_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Cl_ID1_3_IC_data <- as.data.frame(Cl_ID1_3_IC_data)
+#noget med gennemsnit. 
+
+
+Cl_ID1_3_IC_data$Cl_1_mg_L=Cl_ID1_3_IC_data$Cl_1_mg_L*Cl_ID1_3_IC_data$Dilution
+Cl_ID1_3_IC_data$Cl_2_mg_L=Cl_ID1_3_IC_data$Cl_2_mg_L*Cl_ID1_3_IC_data$Dilution
+  
+Cl_ID1_3_IC_data <-Cl_ID1_3_IC_data%>%mutate(Cl_mgL=(rowMeans(Cl_ID1_3_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Cl_std_mgL=(rowSds(as.matrix(Cl_ID1_3_IC_data[,c("Cl_1_mg_L","Cl_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(CL_Std_p=((Cl_std_mgL/Cl_mgL)))
+
+
+
+#Imort af CL_IC data. 
+SO4_ID1_3_IC_data <- read_excel("data//Multisalt/IC_data_multisalt.xlsx",2)
+
+old_names_IC=colnames(SO4_ID1_3_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","SO4_1_mg_L","SO4_2_mg_L") #Vi finder på nogle lidt bedre nogle
+SO4_ID1_3_IC_data = SO4_ID1_3_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+SO4_ID1_3_IC_data <- as.data.frame(SO4_ID1_3_IC_data)
+#noget med gennemsnit. 
+
+
+SO4_ID1_3_IC_data$SO4_1_mg_L=SO4_ID1_3_IC_data$SO4_1_mg_L*SO4_ID1_3_IC_data$Dilution
+SO4_ID1_3_IC_data$SO4_2_mg_L=SO4_ID1_3_IC_data$SO4_2_mg_L*SO4_ID1_3_IC_data$Dilution
+  
+SO4_ID1_3_IC_data <-SO4_ID1_3_IC_data%>%mutate(SO4_mgL=(rowMeans(SO4_ID1_3_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(SO4_std_mgL=(rowSds(as.matrix(SO4_ID1_3_IC_data[,c("SO4_1_mg_L","SO4_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(SO4_Std_p=((SO4_std_mgL/SO4_mgL)))
+
+
+
+Ca_ID1_3_IC_data <- read_excel("data//Multisalt/IC_data_multisalt.xlsx",4)
+
+old_names_IC=colnames(Ca_ID1_3_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Ca_1_mg_L","Ca_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Ca_ID1_3_IC_data = Ca_ID1_3_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Ca_ID1_3_IC_data <- as.data.frame(Ca_ID1_3_IC_data)
+#noget med gennemsnit. 
+
+
+Ca_ID1_3_IC_data$Ca_1_mg_L=Ca_ID1_3_IC_data$Ca_1_mg_L*Ca_ID1_3_IC_data$Dilution
+Ca_ID1_3_IC_data$Ca_2_mg_L=Ca_ID1_3_IC_data$Ca_2_mg_L*Ca_ID1_3_IC_data$Dilution
+  
+Ca_ID1_3_IC_data <-Ca_ID1_3_IC_data%>%mutate(Ca_mgL=(rowMeans(Ca_ID1_3_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Ca_std_mgL=(rowSds(as.matrix(Ca_ID1_3_IC_data[,c("Ca_1_mg_L","Ca_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Ca_Std_p=((Ca_std_mgL/Ca_mgL)))
+
+
+Na_ID1_3_IC_data <- read_excel("data//Multisalt/IC_data_multisalt.xlsx",3)
+
+old_names_IC=colnames(Na_ID1_3_IC_data) #Vi finder de latterlige navne kolonnerne i dataen har 
+new_names_IC=c("Name", "Time","Stream","Dilution","Na_1_mg_L","Na_2_mg_L") #Vi finder på nogle lidt bedre nogle
+Na_ID1_3_IC_data = Na_ID1_3_IC_data %>% rename_at(vars(old_names_IC),~new_names_IC) #Vi ændrer navnene til de nye
+Na_ID1_3_IC_data <- as.data.frame(Na_ID1_3_IC_data)
+#noget med gennemsnit. 
+
+
+Na_ID1_3_IC_data$Na_1_mg_L=Na_ID1_3_IC_data$Na_1_mg_L*Na_ID1_3_IC_data$Dilution
+Na_ID1_3_IC_data$Na_2_mg_L=Na_ID1_3_IC_data$Na_2_mg_L*Na_ID1_3_IC_data$Dilution
+  
+Na_ID1_3_IC_data <-Na_ID1_3_IC_data%>%mutate(Na_mgL=(rowMeans(Na_ID1_3_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE)))%>%
+                          mutate(Na_std_mgL=(rowSds(as.matrix(Na_ID1_3_IC_data[,c("Na_1_mg_L","Na_2_mg_L")],na.rm=TRUE))))%>%
+                          mutate(Na_Std_p=((Na_std_mgL/Na_mgL)))
+
+
+
+```
+
+
+```{R ID: 1_3 Rejection IC, echo=FALSE, message=FALSE}
+
+Feed_Cl = Cl_ID1_3_IC_data %>% filter(Stream %in%"Feed")%>%filter(Time != "0")
+Perm_Cl = Cl_ID1_3_IC_data %>% filter(Stream %in%"Permeate")%>%filter(Time != "0")
+
+Feed_SO4 = SO4_ID1_3_IC_data %>% filter(Stream %in%"Feed")%>%filter(Time != "0")
+Perm_SO4 = SO4_ID1_3_IC_data %>% filter(Stream %in%"Permeate")%>%filter(Time != "0")
+
+Feed_Na = Na_ID1_3_IC_data %>% filter(Stream %in%"Feed")%>%filter(Time != "0")
+Perm_Na = Na_ID1_3_IC_data %>% filter(Stream %in%"Permeate")%>%filter(Time != "0")
+
+Feed_Ca = Ca_ID1_3_IC_data %>% filter(Stream %in%"Feed")%>%filter(Time != "0")
+Perm_Ca = Ca_ID1_3_IC_data %>% filter(Stream %in%"Permeate")%>%filter(Time != "0")
+
+
+#sammel resterne 
+ID_1_3=cbind(Feed_Cl[,c(1:2,7,9)],Perm_Cl[,c(7,9)],
+              Feed_SO4[,c(7,9)],Perm_SO4[,c(7,9)],
+              Feed_Ca[,c(7,9)],Perm_Ca[,c(7,9)],
+              Feed_Na[,c(7,9)],Perm_Na[,c(7,9)])
+#først Col = feed anden = perm for alle respektive ioner.   
+
+colnames(ID_1_3) <- c('Name','Time','Cl_Feed','Cl_Feed_Std_p','Cl_perm','Cl_perm_std_p','SO4_Feed','SO4_Feed_Std_p','SO4_perm','SO4_perm_std_p','Ca_Feed','Ca_Feed_Std_p','Ca_perm','Ca_perm_std_p','Na_Feed','Na_Feed_Std_p','Na_perm','Na_perm_std_p')
+
+              
+ID_1_3$start_vol=c(10,10,10,10, 10, 10 
+                    ,8.5,8.5,8.5,8.5,8.5,8.5,
+                    10,10,10,10, 10, 10)
+ID_1_3$perm_vol = ID_1_3$Time*1.02
+ID_1_3$Recovery = 100*(1-(ID_1_3$start_vol-ID_1_3$perm_vol)/ID_1_3$start_vol)
+
+ID_1_3=ID_1_3%>%mutate("rej_Cl"=((1-(Cl_perm/Cl_Feed))*100))
+ID_1_3=ID_1_3%>%mutate("rej_SO4"=((1-(SO4_perm/SO4_Feed))*100))
+ID_1_3=ID_1_3%>%mutate("rej_Ca"=((1-(Ca_perm/Ca_Feed))*100))
+ID_1_3=ID_1_3%>%mutate("rej_Na"=((1-(Na_perm/Na_Feed))*100))
+
+
+
+ID_1_3$rej_Cl_std_p=(ID_1_3$Cl_Feed_Std_p+ID_1_3$Cl_perm_std_p)
+ID_1_3$rej_SO4_std_p=(ID_1_3$SO4_Feed_Std_p)
+ID_1_3$rej_Ca_std_p=(ID_1_3$Ca_Feed_Std_p+ID_1_3$Ca_perm_std_p)
+ID_1_3$rej_Na_std_p=(ID_1_3$Na_Feed_Std_p+ID_1_3$Na_perm_std_p)
+
+
+
+#vi hygger lidt med silica rejection data.
+
+rej_SiO2=rbind(Rej_SiO2_9.2,Rej_SiO2_10,Rej_SiO2_10.5)
+rej_SiO2$name=c("ID:1","ID:1","ID:1","ID:1","ID:1","ID:1",
+               "ID:2","ID:2","ID:2","ID:2","ID:2","ID:2","ID:2",
+               "ID:3","ID:3","ID:3","ID:3","ID:3","ID:3","ID:3")
+
+
+#rej_SiO2$Time = as.numeric(rej_SiO2$Time)
+rej_SiO2$start_vol=c(10,10,10,10, 10, 10 
+                    ,8.5,8.5,8.5,8.5,8.5,8.5,8.5,
+                    10,10,10,10, 10, 10,10)
+rej_SiO2$perm_vol = rej_SiO2$Time*1.02
+rej_SiO2$Recovery = 100*(1-(rej_SiO2$start_vol-rej_SiO2$perm_vol)/rej_SiO2$start_vol)
+
+rej_SiO2$SiO2_rej_std_p <- (rej_SiO2$SiO2_Feed_Std_p+rej_SiO2$SiO2_perm_std_p)
+
+
+ID_1_3_rej_alle = ID_1_3%>%gather(key,value, rej_Cl,rej_SO4,rej_Ca,rej_Na)
+ID_1_3_rej_alle_std_p=c(ID_1_3$rej_Cl_std_p,
+                    ID_1_3$rej_SO4_std_p,
+                    ID_1_3$rej_Ca_std_p,
+                    ID_1_3$rej_Na_std_p)
+
+ID_1_3_rej_alle$rej_std_p=ID_1_3_rej_alle_std_p
+``` 
+
+
+```{R plot af rejection ALLE, echo=FALSE, message=FALSE}
+
+
+  plot_1_alle= ggplot()+
+  geom_line(data=ID_1_3_rej_alle%>%filter(Name=="ID:1"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_1_3_rej_alle%>%filter(Name=="ID:1"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(data=ID_1_3_rej_alle%>%filter(Name=="ID:1"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  geom_point(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=rej_SiO2%>%filter(name=="ID:1"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=rej_SiO2%>%filter(name=="ID:1"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:1 - pH 9.2")
+
+
+ plot_2_alle= ggplot()+
+  geom_line(data=ID_1_3_rej_alle%>%filter(Name=="ID:2"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_1_3_rej_alle%>%filter(Name=="ID:2"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(data=ID_1_3_rej_alle%>%filter(Name=="ID:2"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  geom_point(data=rej_SiO2%>%filter(name=="ID:2"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=rej_SiO2%>%filter(name=="ID:2"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=rej_SiO2%>%filter(name=="ID:2"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:2 - pH 10")
+
+
+
+ plot_3_alle= ggplot()+
+  geom_line(data=ID_1_3_rej_alle%>%filter(Name=="ID:3"), aes(x=Recovery, y=value,color= key))+
+  geom_point(data=ID_1_3_rej_alle%>%filter(Name=="ID:3"), aes(x=Recovery, y=value,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(data=ID_1_3_rej_alle%>%filter(Name=="ID:3"),aes(x=Recovery, ymin=value-(value*rej_std_p), ymax=value+(value*rej_std_p),color= key), width=4,
+                 position=position_dodge(0.5))+
+  geom_point(data=rej_SiO2%>%filter(name=="ID:3"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+ geom_line(data=rej_SiO2%>%filter(name=="ID:3"), aes(x=Recovery, y=rej_SiO2,color='rej_SiO2'))+
+  geom_errorbar(data=rej_SiO2%>%filter(name=="ID:3"),aes(x=Recovery,ymin=rej_SiO2-(rej_SiO2*SiO2_rej_std_p), ymax=rej_SiO2+(rej_SiO2*SiO2_rej_std_p),color='rej_SiO2'), width=1,
+                 position=position_dodge(0.05))+
+      labs(x="Water Recovery %",y="Rejection %", color="")+  
+  scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+  scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:3 - pH 10.5")
+
+ggarrange(plot_1_alle,plot_2_alle,plot_3_alle, ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+
+```
+
+
 ###Comparison to SPRR
+
+Jeg ved ikke lige hvad der foregår her ???
+
+
 ```{r Estimation of ionic ratios 2, eval=FALSE, include=FALSE}
 IC_9.2_B = IC_9.2_raw %>% filter(Stream == "Feed") %>% select(-c(3, 9, 10, 11, 12, 13))
 IC_9.2_B = na.omit(IC_9.2_B)
