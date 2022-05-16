@@ -784,5 +784,45 @@ plot_8B= ggplot()+
 
 ggarrange(plot_8A, plot_8B, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 
+subplot(ggplotly(plot_8A),ggplotly(plot_8B),nrows = 1)
+
 ``` 
+```{R rejection_calc, message=FALSE, include=FALSE}
+
+
+ID_8A_mM = ID_8A_8B_mM_ny %>% filter(Name == "ID:8A")
+ID_8B_mM = ID_8A_8B_mM_ny %>% filter(Name == "ID:8B")
+
+Rejection_total_8A = (1-(ID_8A_mM[21,c(4,6,8,10,12,14,16,18)]/ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]))*100
+Rejection_total_8B = (1-(ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/ID_8B_mM[1,c(4,6,8,10,12,14,16,18)]))*100
+
+Rejection_total=(1-(ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]))*100
+
+Rejection_total_g=(1-(ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]))*100
+
+Cl_g_rej=(1-((ID_8B_mM$Cl_mgL[13]/1000*Mw_Cl*800*0.875)
+             /(ID_8A_mM$Cl_mgL[1]/1000*Mw_Cl*900)))*100
+
+Mw_row=c(Mw_Cl, Mw_SO4, Mw_Na, Mw_Ca, Mw_Mg, Mw_K, Mw_NO3, Mw_SiO2)
+
+Rejection_total_g=(1-((ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/1000*Mw_row*800*0.875)/(ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]/1000*Mw_row*900)))*100
+
+
+mol_udvikling= rbind(ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]/1000*900, ID_8A_mM[21,c(4,6,8,10,12,14,16,18)]/1000*800,ID_8B_mM[1,c(4,6,8,10,12,14,16,18)]/1000*800, ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/1000*800*0.875 )
+
+mol_udvikling$Plads=c("8A Feed","8A Permeat","8B Feed","8B Permeat")
+
+mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl_mgL, SO4_mgL, Na_mgL, Ca_mgL)
+                                            
+                                            
+
+ion_plot=ggplot(mol_udvikling_plot, aes(x=Plads, y=value, color=key)) +geom_bar()
+
+
+ion_plot_bar=ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Plads, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())
+
+ion_plot_bar
+
+```
+
 

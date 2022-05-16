@@ -949,7 +949,7 @@ p_conc_10.5
 ```
 ### Comparison of results
 
-```{r Silica pH}
+```{r Silica pH, eval=FALSE, include=FALSE}
 by <- list(
       tickfont = list(color = "red"),
       overlaying = "y",
@@ -1373,6 +1373,7 @@ ID_1_3_rej_alle$rej_std_p=ID_1_3_rej_alle_std_p
 
 ggarrange(plot_1_alle,plot_2_alle,plot_3_alle, ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 
+subplot(ggplotly(plot_1_alle),ggplotly(plot_2_alle),ggplotly(plot_3_alle),nrows = 1)
 ```
 
 
