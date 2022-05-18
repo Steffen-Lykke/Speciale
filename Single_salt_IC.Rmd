@@ -109,7 +109,22 @@ fig_NaCl <- plot_ly(x=~NaCl_Feed$time[-1]/6*100,
 #fig_NaCl
 
 
-
+Data=cbind(NaCl_IC_data%>%filter(Stream=="Feed"),NaCl_IC_data%>%filter(Stream=="Permeate")%>%select(c(2,3)))
+colnames(Data)=c("time","f_Na","f_Cl","exp","p_Na","p_Cl")
+Data[7,]=NA
+Data$time[7]=4.5
+Data$p_Na[2:7]=Data$p_Na[1:6]
+Data$p_Cl[2:7]=Data$p_Cl[1:6]
+Data$p_Cl[1]=Data$p_Na[1]=NA
+Data$exp="NaCl"
+Data$Rej_Na=c(NA,NaCl_rej_Na,NA)
+Data$Rej_Cl=c(NA,NaCl_rej_Cl,NA)
+Data$f_Ca=NA
+Data$p_Ca=NA
+Data$f_SiO2=NA
+Data$p_SiO2=NA
+Data$Rej_Ca=NA
+Data$Rej_SiO2=NA
 ```
 
 #### CaCl2
@@ -166,6 +181,31 @@ fig_CaCL2 <- plot_ly(x=~CaCl2_Feed$time[-1]/6*100,
          yaxis=list(title="Rejection %",range=c(0,100)),
          xaxis=list(title="Water Recovery [%]")) 
 #fig_CaCL2
+
+cacl2=cbind(CaCl2_IC_data%>%filter(Stream=="Feed"),CaCl2_IC_data%>%filter(Stream=="Permeate"))
+cacl2=cacl2[,c(1,2,3,4,6,7)]
+colnames(cacl2)=c("time","f_Ca","f_Cl","exp","p_Ca","p_Cl")
+
+tst=Data
+tst[,]=NA
+
+tst$time=c(cacl2$time,4.5)
+
+
+tst$exp="CaCl2"
+tst$f_Cl=c(cacl2$f_Cl,NA)
+tst$p_Cl=c(NA,cacl2$p_Cl)
+tst$f_Ca=c(cacl2$f_Ca,NA)
+tst$p_Ca=c(NA,cacl2$p_Ca)
+tst$Rej_Ca=c(NA,CaCl2_rej_Ca,NA)
+tst$Rej_Cl=c(NA,CaCl2_rej_Cl,NA)
+
+SS=rbind(Data,tst)
+
+
+
+
+
 
 ```
 #### SiO2
@@ -224,6 +264,23 @@ fig_SiO2 <- plot_ly(x=~SiO2_Feed$time[-1]/6*100,
          xaxis=list(title="Water Recovery [%]")) 
 
 #fig_SiO2
+sio2=cbind(SiO2_IC_data%>%filter(Stream=="Feed"),SiO2_IC_data%>%filter(Stream=="Permeate"))
+sio2=sio2[,c(1,2,3,4,6,7)]
+colnames(sio2)=c("time","f_SiO2","f_Na","exp","p_SiO2","p_Na")
+
+tst2=Data
+tst2[,]=NA
+
+tst2$time=c(sio2$time,4.5)
+tst2$exp="SiO2"
+tst2$f_SiO2=c(sio2$f_SiO2,NA)
+tst2$p_SiO2=c(NA,sio2$p_SiO2)
+tst2$f_Na=c(sio2$f_Na,NA)
+tst2$p_Na=c(NA,sio2$p_Na)
+tst2$Rej_SiO2=c(NA,SiO2_rej_Si,NA)
+tst2$Rej_Na=c(NA,SiO2_rej_Na,NA)
+
+
 
 ```
 #### MgSO4
@@ -678,5 +735,44 @@ fig_B
 
 ```
 
+### We back in single salt databehandling
+```{r We out here}
+SS=rbind(Data,tst,tst2)
+SS$recovery=SS$time/6
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
+SS = SS%>%mutate("f_Na_mmol"=f_Na/Mw_Na)
+SS = SS%>%mutate("f_Ca_mmol"=f_Ca/Mw_Ca)
+SS = SS%>%mutate("f_Cl_mmol"=f_Cl/Mw_Cl)
+SS = SS%>%mutate("f_SiO2_mmol"=f_SiO2/Mw_SiO2)
+
+SS = SS%>%mutate("p_Na_mmol"=p_Na/Mw_Na)
+SS = SS%>%mutate("p_Ca_mmol"=p_Ca/Mw_Ca)
+SS = SS%>%mutate("p_Cl_mmol"=p_Cl/Mw_Cl)
+SS = SS%>%mutate("p_SiO2_mmol"=p_SiO2/Mw_SiO2)
+
+SS_plot=SS%>%gather(key="key",value="value",f_Na_mmol,f_Cl_mmol,f_SiO2_mmol,f_Ca_mmol)
+SS_plot$ion=c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21))
+SS_plot$var="Concentration"
+
+ggplot(SS_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp))
+
+SS_rej=SS%>%gather(key="key",value="value",Rej_Na,Rej_Cl,Rej_SiO2,Rej_Ca)
+SS_rej$ion=c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21))
+SS_rej$var="Rejection"
+
+ggplot(SS_rej,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp))
+
+SS_tot_plot=SS%>%gather(key="key",value="value",f_Na_mmol,f_Cl_mmol,f_SiO2_mmol,f_Ca_mmol,Rej_Na,Rej_Cl,Rej_SiO2,Rej_Ca)
+SS_tot_plot$ion=c(rep("Na",42),rep("Cl",42),rep("SiO2",42),rep("Ca",42))
+SS_tot_plot$var=c(rep("Concentration",84),rep("Rejection",84))
+
+ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp),row =vars(var))
+
+
+```
 
 
