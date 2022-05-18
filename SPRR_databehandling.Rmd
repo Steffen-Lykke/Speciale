@@ -354,7 +354,7 @@ ggplotRegression(fit_Clrej_cl_anion_no1)
 
 
 ### Cl rejection multiple regression
-fit_Clrej_multi = lm(Rej_Cl~SO4_mmol*Cl_mmol, data = Ion_data_frame)
+fit_Clrej_multi = lm(Rej_Cl~Cl_anion+Rej_SiO2, data = Ion_data_frame)
 summary(fit_Clrej_multi)
 plot(fit_Clrej_multi)
 
@@ -367,18 +367,18 @@ plot(x=predict(fit_Clrej_multi), y=na.omit(Ion_data_frame$Rej_Cl),
 cooksD <- cooks.distance(fit_Clrej_multi)
 influential <- cooksD[(cooksD > (3 * mean(cooksD, na.rm = TRUE)))]
 influential
-#Number 30 (SPRR 12) has cooks distance >3x avg, if we exclude it our model is now:
+#Number 26 (SPRR 8) has cooks distance >3x avg, if we exclude it our model is now:
 
-fit_Clrej_multi_cook = lm(Rej_Cl~Cl_anion+pH, data = Ion_data_frame%>%filter(name!="SPRR_1"&name!="SPRR_8"))
+fit_Clrej_multi_cook = lm(Rej_Cl~Cl_anion+Rej_SiO2, data = Ion_data_frame%>%filter(name!="SPRR_8"))
 summary(fit_Clrej_multi_cook)
-plot(x=predict(fit_Clrej_multi_cook),y=(Ion_data_frame%>%filter(name!="SPRR_1"&name!="SPRR_8")),
+plot(x=predict(fit_Clrej_multi_cook),y=t(Ion_data_frame%>%filter(name!="SPRR_8")%>%select("Rej_Cl")),
      xlab='Predicted Values',
      ylab='Actual Values',
      main='Predicted vs. Actual Values',
      abline(a=0, b=1))
 plot(fit_Clrej_multi_cook)
 
-#Which is a slightly better fit R2=0.79 vs 0.63, Can you just do that? who knows? probably not
+#As It is the one with too low cl it may be ok
 
 
 ```
@@ -388,7 +388,7 @@ neither is [anion] or [SO4]
 
 [Cl/Anion]+pH R2 0.63 Cl/Anion P>0.00225 **,pH P>0.07329 . .
 
-
+Removing the high SO4 point shows how wack the correlations otherwise are.
 
 
 
@@ -415,5 +415,65 @@ fwd.model = step(model, direction='forward', scope=biggest)
 
 ```
 ### 3D Representation
+```{r cl 3d}
+
+#SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
+
+library(reshape2)
+
+Ion_data_frame=Ion_data_frame[!is.na(Ion_data_frame$Na),]
+
+
+
+#Vores linear model:
+Rejection_lm <- lm(Rej_SiO2 ~ pH + SiO2_mmol,data=Ion_data_frame)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.05
+
+#Setup Axis
+axis_x <- seq(min(Ion_data_frame$pH), max(Ion_data_frame$pH), by = graph_reso)
+axis_y <- seq(min(Ion_data_frame$SiO2_mmol), max(Ion_data_frame$SiO2_mmol), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(pH = axis_x,SiO2_mmol = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Rej_SiO2 <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2_mmol ~ pH, value.var = "Rej_SiO2") #y ~ x
+
+
+R_plot <- plot_ly(
+ Ion_data_frame,
+  x = ~ pH,
+  y = ~ SiO2_mmol,
+  z = ~ Rej_SiO2,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ Rej_SiO2,
+    colorscale = 'magma',
+    line = list(
+        color = 'rgb(0, 0, 0)',
+        width = 1
+    )
+    )
+)%>%layout(title = 'Silica Rejection')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> pH: %{x}',
+                                                '<br> SiO2 concentration: %{y} mg/L'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'SiO2 Rejection'),
+  colorscale = 'magma',
+  opacity=0.7
+)
+
+R_plot
+```
 
 
