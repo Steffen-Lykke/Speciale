@@ -767,10 +767,10 @@ SS_rej$var="Rejection"
 ggplot(SS_rej,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp))
 
 SS_tot_plot=SS%>%gather(key="key",value="value",f_Na_mmol,f_Cl_mmol,f_SiO2_mmol,f_Ca_mmol,Rej_Na,Rej_Cl,Rej_SiO2,Rej_Ca)
-SS_tot_plot$ion=c(rep("Na",42),rep("Cl",42),rep("SiO2",42),rep("Ca",42))
+SS_tot_plot$ion=rep(c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21)),2)
 SS_tot_plot$var=c(rep("Concentration",84),rep("Rejection",84))
 
-ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp),row =vars(var))
+ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp),row =vars(var),scale="free")
 
 
 ```
