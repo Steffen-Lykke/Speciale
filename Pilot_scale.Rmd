@@ -787,7 +787,7 @@ ggarrange(plot_8A, plot_8B, ncol=2, nrow=1, common.legend = TRUE, legend="bottom
 subplot(ggplotly(plot_8A),ggplotly(plot_8B),nrows = 1)
 
 ``` 
-```{R rejection_calc, message=FALSE, include=FALSE}
+```{R Concentration mM, echo=FALSE, message=FALSE}
 
 
 ID_8A_mM = ID_8A_8B_mM_ny %>% filter(Name == "ID:8A")
@@ -809,17 +809,21 @@ Rejection_total_g=(1-((ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/1000*Mw_row*800*0.87
 
 
 mol_udvikling= rbind(ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]/1000*900, ID_8A_mM[21,c(4,6,8,10,12,14,16,18)]/1000*800,ID_8B_mM[1,c(4,6,8,10,12,14,16,18)]/1000*800, ID_8B_mM[13,c(4,6,8,10,12,14,16,18)]/1000*800*0.875 )
+colnames(mol_udvikling) <- c("Cl", "SO4", "Na", "Ca", "Mg","K","NO3", "SiO2")
 
-mol_udvikling$Plads=c("8A Feed","8A Permeat","8B Feed","8B Permeat")
+mol_udvikling$Stream=c("8A Feed","8A Permeat","8B Feed","8B Permeat")
 
-mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl_mgL, SO4_mgL, Na_mgL, Ca_mgL)
+mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl, SO4, Na, Ca, SiO2)
                                             
                                             
 
-ion_plot=ggplot(mol_udvikling_plot, aes(x=Plads, y=value, color=key)) +geom_bar()
+ion_plot=ggplot(mol_udvikling_plot, aes(x=Stream, y=value, color=key)) +geom_bar()
 
 
-ion_plot_bar=ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Plads, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())
+ion_plot_bar=ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Stream, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Ion",y="mol")+  
+  #scale_y_continuous(limits=c(-50, 100), breaks=c(-40,-20, 0, 20, 40,60,80,100 ))+
+  #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:8A/8B")
 
 ion_plot_bar
 
