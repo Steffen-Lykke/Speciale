@@ -270,7 +270,7 @@ summary(fit_SiO2_pH)
 #plot(fit_SiO2_pH$residuals, pch = 16, col = "red")
 #plot(cooks.distance(fit_SiO2_pH), pch = 16, col = "red")
 
-multisalt_plot = multisalt_rej
+multisalt_plot = multisalt_conc
 
 rej_9.2=ggplot(multisalt_plot%>%filter(type=="M_9.2"), aes(x=Recovery, y=value,color= key))+geom_point()+geom_line()+geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
