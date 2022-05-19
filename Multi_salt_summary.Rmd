@@ -516,7 +516,7 @@ The Bicarbonate content also increases almost linearly as the concentration of s
 
 
 Here are the bicarbonate results as given by alkalinity, note the limit of ~1200 of the analysis
-```{R Bicarbonate Feed,  echo=FALSE, message=FALSE}
+```{R Bicarbonate Feed, echo=FALSE, message=FALSE}
 hline <- function(y = 0, color = "black") {
   list(
     type = "line", 
@@ -1351,21 +1351,44 @@ plot_3_Feed= ggplot()+
 ggarrange(plot_1_Feed, plot_2_Feed, plot_3_Feed ,ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 
 subplot(ggplotly(plot_1_Feed),ggplotly(plot_2_Feed),ggplotly(plot_3_Feed),nrows = 1)
+IC_raa_silica$ion="SiO2"
+
+Facet_IC=IC_data_sammlet_raa_plot[,c(1:3,14:17)]
+Facet_SIO2=IC_raa_silica[,c(3,1,2,9,10,6,5)]
+colnames(Facet_IC)=c("Name","Time","Stream","Recovery","ion","Value","Std")
+colnames(Facet_SIO2)=c("Name","Time","Stream","Recovery","ion","Value","Std")
+Facet_data= rbind(Facet_IC,Facet_SIO2)
+Facet_data$plot=c(rep("Ca, Cl, SiO2, SO4 " ,117),rep("Na",39),rep("Ca, Cl, SiO2, SO4 ",43))
+
+
+
+nice_plot = ggplot(data=Facet_data%>%filter(Stream=="Feed",Name=="ID:1"),aes(x=Recovery,y=Value,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+
+    geom_errorbar(data=Facet_data%>%filter(Stream=="Feed",Name=="ID:1"),aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),row=vars(plot),scale="free")+labs(x="Water Recovery %",y="Concentration mM", color="Species")
+
+
+nice_plot
+
+ggplotly(nice_plot)
+
+#mtext(expression(paste(D[h],'  [nm]')),2,line=2.5) fra morten. 
 
 ```
 
 
-```{R teo mod exp  IC, message=FALSE, include=FALSE}
+```{R teo mod exp  IC, eval=FALSE, message=FALSE, include=FALSE}
 Silica_Nul=IC_raa_silica%>%filter(Time=="0")
 
 IC_nul_data_feed= cbind(IC_data_sammlet_raa[,c(1,2,3,15:18)]%>%filter(Time=="0"),Silica_Nul[,6] )
 
-IC_nul_data_feed$Stream=c(rep("Experimental",3))
+IC_nul_data_feed$Stream=c(rep("Measured",3))
+IC_nul_data_feed$HCO2=c(7.620852,6.113070,6.293349)
 
 
-IC_nul_data_feed_4=c("ID:1",0,"Theoretical", 2.5,0.7,11.77,0.4,0.7)
-IC_nul_data_feed_5=c("ID:2",0,"Theoretical", 2.5,0.7,14.76,0.4,0.7)
-IC_nul_data_feed_6=c("ID:3",0,"Theoretical", 2.5,0.7,16.63,0.4,0.7)
+IC_nul_data_feed_4=c("ID:1",0,"Theoretical", 2.5,0.7,11.77,0.4,0.7,6.07)
+IC_nul_data_feed_5=c("ID:2",0,"Theoretical", 2.5,0.7,14.76,0.4,0.7,3.08)
+IC_nul_data_feed_6=c("ID:3",0,"Theoretical", 2.5,0.7,16.63,0.4,0.7,1.21)
 IC_nul_data_feed=rbind(IC_nul_data_feed, IC_nul_data_feed_4,IC_nul_data_feed_5,IC_nul_data_feed_6)
 
 IC_nul_data_feed[,4]=as.numeric(IC_nul_data_feed[,4])
@@ -1373,25 +1396,27 @@ IC_nul_data_feed[,5]=as.numeric(IC_nul_data_feed[,5])
 IC_nul_data_feed[,6]=as.numeric(IC_nul_data_feed[,6])
 IC_nul_data_feed[,7]=as.numeric(IC_nul_data_feed[,7])
 IC_nul_data_feed[,8]=as.numeric(IC_nul_data_feed[,8])
-colnames(IC_nul_data_feed) = c("Name", "Time", "Type", "Cl", "SO4", "Na", "Ca", "SiO2")
+colnames(IC_nul_data_feed) = c("Name", "Time", "Type", "Cl", "SO4", "Na", "Ca", "SiO2","HCO3")
 
-IC_nul_data_feed_plot = IC_nul_data_feed%>%gather(key,value, Cl, SO4, Na, Ca, SiO2)
+IC_nul_data_feed_plot = IC_nul_data_feed%>%gather(key,value, Cl, SO4, Na, Ca, SiO2,HCO3)
+IC_nul_data_feed_plot$value=as.numeric(IC_nul_data_feed_plot$value)
+
 ``` 
 
 ```{R teo mod exp 2 IC, eval=FALSE, message=FALSE, include=FALSE}
 
 ID_1_feed_start=ggplot(IC_nul_data_feed_plot%>%filter(Name=="ID:1"), aes(x=key, y=value, fill=Type, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration mM")+ 
-  scale_y_continuous(limits=c(0, 15.5),breaks=c(0, 2, 4,6,8,10,12,14 ))+
+  scale_y_continuous(limits=c(0, 17),breaks=c(0, 2, 4,6,8,10,12,14,16 ))+
   #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
   ggtitle("ID:1 - pH 9.2")
 
 ID_2_feed_start=ggplot(IC_nul_data_feed_plot%>%filter(Name=="ID:2"), aes(x=key, y=value, fill=Type, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration mM")+  
-  scale_y_continuous(limits=c(0, 15.5),breaks=c(0, 2, 4,6,8,10,12,14 ))+
+  scale_y_continuous(limits=c(0, 17),breaks=c(0, 2, 4,6,8,10,12,14,16 ))+
   #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
   ggtitle("ID:2 - pH 10 ")
 
 ID_3_feed_start=ggplot(IC_nul_data_feed_plot%>%filter(Name=="ID:3"), aes(x=key, y=value, fill=Type, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration mM")+  
-  scale_y_continuous(limits=c(0, 15.5),breaks=c(0, 2, 4,6,8,10,12,14 ))+
+  scale_y_continuous(limits=c(0, 17),breaks=c(0, 2, 4,6,8,10,12,14,16 ))+
   #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
   ggtitle("ID:3 - pH 10.5 ")
 
@@ -1427,6 +1452,94 @@ IC_data_sammlet_raa_plot$norm=IC_data_sammlet_raa_plot$value/IC_data_sammlet_raa
 
 plot_1_norm= ggplot()+
   geom_line(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:1", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
+  geom_point(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:1", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:1", Stream=="Feed"),aes(x=Recovery, ymin=norm-(norm*std_p), ymax=norm+(norm*std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  geom_point(data=IC_raa_silica%>%filter(Name=="ID:1", Stream=="Feed"), aes(x=Recovery, y=SiO2_norm,color='SiO2'))+
+ geom_line(data=IC_raa_silica%>%filter(Name=="ID:1", Stream=="Feed"), aes(x=Recovery, y=SiO2_norm,color='SiO2'))+
+  geom_errorbar(data=IC_raa_silica%>%filter(Name=="ID:1",Stream=="Feed"),aes(x=Recovery,ymin=SiO2_norm-(SiO2_norm*SiO2_std), ymax=SiO2_norm+(SiO2_norm*SiO2_std),color='SiO2'), width=1,position=position_dodge(0.05))+
+        labs(x="Water Recovery %",y="Concentration normalized mM", color="")+  
+ scale_y_continuous(limits=c(0, 6), breaks=c(0, 1,2,3,4,5,6 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:1 - pH 9.2")
+
+plot_2_norm= ggplot()+
+  geom_line(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:2", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
+  geom_point(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:2", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:2", Stream=="Feed"),aes(x=Recovery, ymin=norm-(norm*std_p), ymax=norm+(norm*std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  geom_point(data=IC_raa_silica%>%filter(Name=="ID:2", Stream=="Feed"), aes(x=Recovery, y=SiO2_norm,color='SiO2'))+
+ geom_line(data=IC_raa_silica%>%filter(Name=="ID:2", Stream=="Feed"), aes(x=Recovery, y=SiO2_norm,color='SiO2'))+
+  geom_errorbar(data=IC_raa_silica%>%filter(Name=="ID:2",Stream=="Feed"),aes(x=Recovery,ymin=SiO2_norm-(SiO2_norm*SiO2_std), ymax=SiO2_norm+(SiO2_norm*SiO2_std),color='SiO2'), width=1,position=position_dodge(0.05))+
+        labs(x="Water Recovery %",y="Concentration normalized mM", color="")+  
+ scale_y_continuous(limits=c(0, 6), breaks=c(0, 1,2,3,4,5,6 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:2 - pH 10")
+
+plot_3_norm= ggplot()+
+  geom_line(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:3", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
+  geom_point(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:3", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
+  geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+  geom_errorbar(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:3", Stream=="Feed"),aes(x=Recovery, ymin=norm-(norm*std_p), ymax=norm+(norm*std_p),color= key), width=4,
+                 position=position_dodge(0.05))+
+  geom_point(data=IC_raa_silica%>%filter(Name=="ID:3", Stream=="Feed"), aes(x=Recovery, y=SiO2_norm,color='SiO2'))+
+ geom_line(data=IC_raa_silica%>%filter(Name=="ID:3", Stream=="Feed"), aes(x=Recovery, y=SiO2_norm,color='SiO2'))+
+  geom_errorbar(data=IC_raa_silica%>%filter(Name=="ID:3",Stream=="Feed"),aes(x=Recovery,ymin=SiO2_norm-(SiO2_norm*SiO2_std), ymax=SiO2_norm+(SiO2_norm*SiO2_std),color='SiO2'), width=1,position=position_dodge(0.05))+
+        labs(x="Water Recovery %",y="Concentration normalized mM", color="")+  
+  scale_y_continuous(limits=c(0, 6), breaks=c(0, 1,2,3,4,5,6 ))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:3- pH 10.5")
+
+ggarrange(plot_1_norm, plot_2_norm, plot_3_norm ,ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
+
+
+```
+
+```{R ID: 1_3 charge neutrality IC, echo=FALSE, message=FALSE}
+
+
+IC_raa_silica$charge=c(rep(-1,43))
+
+IC_raa_silica$ladning=IC_raa_silica$SiO2_mM*IC_raa_silica$charge
+
+IC_data_sammlet_raa_plot$charge=c(rep(-1,39),
+                                  rep(-2,39),
+                                  rep(+2,39),
+                                  rep(+1,39)  )
+                            
+
+IC_data_sammlet_raa_plot$ladning=IC_data_sammlet_raa_plot$value*IC_data_sammlet_raa_plot$charge
+  
+
+ID_1_Cl_Ladning=IC_data_sammlet_raa_plot%>%filter( key =="Cl")
+
+ID_1_SO4_Ladning=IC_data_sammlet_raa_plot%>%filter(key =="SO4")
+ID_1_Ca_Ladning=IC_data_sammlet_raa_plot%>%filter(key =="Ca")
+ID_1_Na_Ladning=IC_data_sammlet_raa_plot%>%filter(key =="Na")
+ID_1_SIO2_ladning=IC_raa_silica
+
+Mw_HCO3=61.0168
+IC_bicarbonat=rbind(pH9.2_bi_data,pH10_bi_data,pH10.5_bi_data)
+IC_bicarbonat[9,1]=8
+IC_bicarbonat$HCO3_mM = IC_bicarbonat$Sodium/Mw_HCO3
+IC_bicarbonat$ladning=IC_bicarbonat$HCO3_mM*-1
+
+
+ID_1_ladning=cbind(ID_1_Cl_Ladning[c(1,6,12,14,17,25,27,34,38),c(1:3,14,21)],ID_1_SO4_Ladning[c(1,6,12,14,17,25,27,34,38),21],ID_1_Ca_Ladning[c(1,6,12,14,17,25,27,34,38),21],ID_1_Na_Ladning[c(1,6,12,14,17,25,27,34,38),21], ID_1_SIO2_ladning$ladning[c(1,6,12,14,19,25,29,36,40)], IC_bicarbonat$ladning)
+colnames(ID_1_ladning)=c("Name","Time", "Stream","recovery", "Cl","SO4","Ca","Na","SiO2","HCO3")
+ID_1_ladning= ID_1_ladning%>%mutate("total"=Cl+SO4+Ca+Na+SiO2+HCO3)
+  
+  
+  
+  
+
+plot_1_norm= ggplot()+
+  geom_line(data=ID_1_ladning, aes(x=Time, y=total, color=Name))+
   geom_point(data=IC_data_sammlet_raa_plot%>%filter(Name=="ID:1", Stream=="Feed"), aes(x=Recovery, y=norm,color= key))+
   geom_hline(yintercept=0)+
   scale_color_brewer(palette= "Set1")+
@@ -1610,8 +1723,36 @@ ID_1_3_rej_alle$rej_std_p=ID_1_3_rej_alle_std_p
 ggarrange(plot_1_alle,plot_2_alle,plot_3_alle, ncol=3, nrow=1, common.legend = TRUE, legend="bottom")#,align = "v")
 
 subplot(ggplotly(plot_1_alle),ggplotly(plot_2_alle),ggplotly(plot_3_alle),nrows = 1)
+
+rej_SiO2$ion="SiO2"
+
+Facet_rej=ID_1_3_rej_alle[,c(1:2,21,26:28)]
+Facet_SIO2_rej=rej_SiO2[,c(2,1,10,12,7,11)]
+colnames(Facet_rej)=c("Name","Time","Recovery","ion","Value","Std")
+colnames(Facet_SIO2_rej)=c("Name","Time","Recovery","ion","Value","Std")
+Facet_data_rej= rbind(Facet_rej,Facet_SIO2_rej)
+Facet_data_rej$ion=c(rep("Cl",18),rep("SO4",18),rep("Ca",18),rep("Na",18),rep("SiO2",20))
+
+
+
+nice_plot_rej = ggplot(data=Facet_data_rej,aes(x=Recovery,y=Value,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),scale="free")+labs(x="Water Recovery %",y="Concentration mM", color="Species")
+
+
+nice_plot_rej
+
+ggplotly(nice_plot_rej)
 ```
 
+```{r facit plot, echo=FALSE}
+
+
+
+
+
+```
 
 ###Comparison to SPRR
 
