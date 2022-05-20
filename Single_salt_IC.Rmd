@@ -762,15 +762,15 @@ ggplot(SS_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet
 
 SS_rej=SS%>%gather(key="key",value="value",Rej_Na,Rej_Cl,Rej_SiO2,Rej_Ca)
 SS_rej$ion=c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21))
-SS_rej$var="Rejection"
+SS_rej$var="Rejection [%]"
 
 ggplot(SS_rej,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp))
 
 SS_tot_plot=SS%>%gather(key="key",value="value",f_Na_mmol,f_Cl_mmol,f_SiO2_mmol,f_Ca_mmol,Rej_Na,Rej_Cl,Rej_SiO2,Rej_Ca)
 SS_tot_plot$ion=rep(c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21)),2)
-SS_tot_plot$var=c(rep("Concentration",84),rep("Rejection",84))
+SS_tot_plot$var=c(rep("Feed Concentration [mM]",84),rep("Rejection",84))
 
-ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_grid(cols=vars(exp),row =vars(var),scale="free")
+ggplotly(ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+facet_grid(cols=vars(exp),row =vars(var),scale="free",switch=NULL))
 
 
 ```
