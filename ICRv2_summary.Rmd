@@ -357,6 +357,29 @@ add_lines(x=~Time,
          ) 
 
 ``` 
+```{r PLC pH  data , echo=FALSE}
+
+
+#ggplot()+geom_line(data=dat_ICR_1,aes(x=sek/60/60,y=pH0201,color="ID:4A"))+
+#  geom_line(data=ICR_ID_5,aes(x=sek/60/60,y=pH0201,color="ID:4B"))+
+#  geom_line(data=ICR_vol2_A,aes(x=sek/60/60,y=pH0201,color="ID:5A"))+
+#scale_color_brewer(palette= "Set1")
+
+
+ggplot()+geom_line(data=dat_ICR_1,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:4A"))+
+  geom_line(data=ICR_ID_5,aes(x=100*(1-(8.5-sek/60/60*1.02)/8.5),y=pH0201,color="ID:4B"))+
+  geom_line(data=ICR_vol2_A,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:5A"))+
+scale_color_brewer(palette= "Set1")+
+  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  scale_y_continuous(limits=c(7.5, 10), breaks=c(7.5,8,8.5,9,9.5,10 ))+
+    labs(x="Water Recovery %",y="pH", color="Filtration")
+
+
+
+
+
+
+```
 
 
 
@@ -431,7 +454,7 @@ SiO2_IC_data$std=2
 
 ```
 
-```{R ID: 4 plot af conc , include=FALSE, message=FALSE}
+```{R ID: 4 plot af conc, echo=FALSE, message=FALSE}
 
 Mw_Cl=35.45
 Mw_Na=22.99
@@ -496,13 +519,15 @@ layout( yaxis=list(title=" SiO2 mg/L", range=c(0,1.8)),
          xaxis=list(title="Time [h]"))
 fig_SiO2
 
-      
+Cl_IC_data$avg_mgL[1]/Mw_Cl
+SO4_IC_data$avg_mgL[1]/Mw_SO4 
+
 
 ```
 
 ID:4 plottet med error bars etc. 
 
-```{R ID: 4 rejection , echo=FALSE, message=FALSE}
+```{R ID: 4 rejection, echo=FALSE, message=FALSE}
 
 
 #Cl
@@ -984,6 +1009,14 @@ hejmeddig_1
 
 ```
 
+
+
+
+
+
+
+
+
 ### Concentration
 ```{r Concetration, echo=FALSE}
 library(xtable)
@@ -1096,7 +1129,72 @@ ion_plot2 +
 
 
 
+```{R ID: facet plot, echo=FALSE, message=FALSE}
 
+
+ICR_all$Std_p[141:175]=ICR_all$std_mgL[141:175]/ICR_all$avg_mgL[141:175]
+ICR_all$Std_p[300:330]=ICR_all$std_mgL[300:330]/ICR_all$avg_mgL[300:330]
+ICR_all$ion[c(141:175,300:330)]="SiO2"
+ICR_all$Recovery=100*(1-(10-ICR_all$time*1.02)/10)
+ICR_all[ICR_all == "4A"] <- "ID:4A"
+ICR_all[ICR_all == "4B"] <- "ID:4B"
+ICR_all[ICR_all == "5A"] <- "ID:5A"
+ICR_all[ICR_all == "5B"] <- "ID:5B"
+ICR_all$plot=ICR_all$ion
+ICR_all$plot[ICR_all$plot == "Ca"] <- "Ca, Cl, SiO2, SO4 "
+ICR_all$plot[ICR_all$plot == "Cl"] <- "Ca, Cl, SiO2, SO4 "
+ICR_all$plot[ICR_all$plot == "SiO2"] <- "Ca, Cl, SiO2, SO4 "
+ICR_all$plot[ICR_all$plot == "SO4"] <- "Ca, Cl, SiO2, SO4 "
+#ICR_all$avg_mgL[]=0
+#ICR_all%>%filter(Name=="ID:4B", Stream=="Permeate", ion == "SO4")
+
+nice_plot_2 = ggplot(data=ICR_all%>%filter(Stream=="Feed", Name!= "ID:5B"),aes(x=Recovery,y=mM,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+
+    geom_errorbar(data=ICR_all%>%filter(Stream=="Feed", Name!= "ID:5B"),aes(x=Recovery,ymin=mM-(mM*Std_p), ymax=mM+(mM*Std_p),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),row=vars(plot),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+ #scale_y_continuous(limits=c(0, 60), breaks=c(0,10,20,30, 40,50,60 ))+
+  labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
+
+nice_plot_1 = ggplot(data=ICR_all%>%filter(Stream=="Feed", Name!= "ID:5B"),aes(x=Recovery,y=mM,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+
+    geom_errorbar(data=ICR_all%>%filter(Stream=="Feed", Name!= "ID:5B"),aes(x=Recovery,ymin=mM-(mM*Std_p), ymax=mM+(mM*Std_p),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+ scale_y_continuous(limits=c(0, 60), breaks=c(0,10,20,30, 40,50,60 ))+
+  labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
+nice_plot_1
+nice_plot_2
+
+
+##Rejection: 
+
+Facet_data_4A=ICR_ID4_rej[,c(1,14,17,18,19,20)]
+Facet_data_4B_5A=ICR_2_rej[,c(1,2,23,29,30,31)]
+colnames(Facet_data_4A)=c("Name","Time","Recovery","ion","Value","Std")
+colnames(Facet_data_4B_5A)=c("Name","Time","Recovery","ion","Value","Std")
+Facet_data_4A$Name="ID:4A"
+Facet_data_4B_5A[Facet_data_4B_5A == "ID:5"] <- "ID:4B"
+Facet_data_4B_5A[Facet_data_4B_5A == "ID:6"] <- "ID:5A"
+Facet_data_ICR= rbind(Facet_data_4A,Facet_data_4B_5A)
+Facet_data_ICR$ion=c(rep("Cl",15),rep("SO4",15),rep("SiO2",15),rep("Ca",15),rep("Na",15),
+                     rep("Cl",8),rep("SO4",8),rep("SiO2",8),rep("Ca",8),rep("Na",8))
+#Facet_data$plot=c(rep("Ca, Cl, SiO2, SO4 " ,117),rep("Na",39),rep("Ca, Cl, SiO2, SO4 ",43))
+#Facet_data_ICR[55,c(5,6)]=NA
+Facet_data_ICR$Value[84:87]=100
+Facet_data_ICR$Std[84:87]=c(0.006958724, 0.009032540, 0.001413271, 0.003305727)
+
+rej_plot_1 = ggplot(data=Facet_data_ICR,aes(x=Recovery,y=Value,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    geom_errorbar(data=Facet_data_ICR,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+ scale_y_continuous(limits=c(-30, 120), breaks=c(-20,0,20,40,60,80,100 ))+
+  labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
+rej_plot_1
+
+
+```
 
 
 
