@@ -293,6 +293,16 @@ add_lines(x=~(dat_M_10.5$sek)/3600,
          xaxis=list(title="Time [h]",range=c(0,8))
          ) #Her plottet TMP
 
+
+ggplot()+geom_line(data=dat_M_9.2,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:1 - pH 9.3"))+
+  geom_line(data=dat_M_10,aes(x=100*(1-(8.5-sek/60/60*1.02)/8.5),y=pH0201,color="ID:2 - pH 10.1"))+
+  geom_line(data=dat_M_10.5,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:3 - pH 10.5"))+
+scale_color_brewer(palette= "Set1")+
+  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  scale_y_continuous(limits=c(9, 10.75), breaks=c(9,9.5,10,10.5 ))+
+    labs(x="Water Recovery [%]",y="pH", color="Filtration")
+
+
 ```
 
 ```{R Recovery , include = FALSE, echo=FALSE, message=FALSE}
@@ -1359,14 +1369,15 @@ colnames(Facet_IC)=c("Name","Time","Stream","Recovery","ion","Value","Std")
 colnames(Facet_SIO2)=c("Name","Time","Stream","Recovery","ion","Value","Std")
 Facet_data= rbind(Facet_IC,Facet_SIO2)
 Facet_data$plot=c(rep("Ca, Cl, SiO2, SO4 " ,117),rep("Na",39),rep("Ca, Cl, SiO2, SO4 ",43))
-
-
+Facet_data[Facet_data == "ID:1"] <- "ID:1 - pH 9.3"
+Facet_data[Facet_data == "ID:2"] <- "ID:2 - pH 10.2"
+Facet_data[Facet_data == "ID:3"] <- "ID:3 - pH 10.5"
 
 nice_plot = ggplot(data=Facet_data%>%filter(Stream=="Feed"),aes(x=Recovery,y=Value,color=ion))+
   geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+
     geom_errorbar(data=Facet_data%>%filter(Stream=="Feed"),aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
     facet_grid(cols=vars(Name),row=vars(plot),scale="free")+
-   scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+labs(x="Water Recovery %",y="Concentration mM", color="Species")
+   scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
 
 
 nice_plot
@@ -1374,6 +1385,19 @@ nice_plot
 ggplotly(nice_plot)
 
 #mtext(expression(paste(D[h],'  [nm]')),2,line=2.5) fra morten. 
+
+
+
+perm_plot = ggplot(data=Facet_data%>%filter(Stream=="Permeate"),aes(x=Recovery,y=Value,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+
+    geom_errorbar(data=Facet_data%>%filter(Stream=="Permeate"),aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),row=vars(plot),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+labs(x="Water Recovery %",y="Concentration mM", color="Species")
+
+
+perm_plot
+
+ggplotly(perm_plot)
 
 ```
 
@@ -1735,6 +1759,9 @@ colnames(Facet_SIO2_rej)=c("Name","Time","Recovery","ion","Value","Std")
 Facet_data_rej= rbind(Facet_rej,Facet_SIO2_rej)
 Facet_data_rej$ion=c(rep("Cl",18),rep("SO4",18),rep("Ca",18),rep("Na",18),rep("SiO2",20))
 
+Facet_data_rej[Facet_data_rej == "ID:1"] <- "ID:1 - pH 9.3"
+Facet_data_rej[Facet_data_rej == "ID:2"] <- "ID:2 - pH 10.2"
+Facet_data_rej[Facet_data_rej == "ID:3"] <- "ID:3 - pH 10.5"
 
 
 nice_plot_rej = ggplot(data=Facet_data_rej,aes(x=Recovery,y=Value,color=ion))+
@@ -1742,7 +1769,7 @@ nice_plot_rej = ggplot(data=Facet_data_rej,aes(x=Recovery,y=Value,color=ion))+
     geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
   scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+
   scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
-    facet_grid(cols=vars(Name))+labs(x="Water Recovery %",y="Rejection %", color="Species")
+    facet_grid(cols=vars(Name))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
 
 
 nice_plot_rej
@@ -1754,6 +1781,57 @@ ggplotly(nice_plot_rej)
 
 
 
+Anion_data=Facet_data$Value[40:78]+Facet_data$Value[c(157:170,173:197)]
+Cl_data=Facet_data[1:39,]
+SO4_SIO2=Cl_data
+SO4_SIO2$Value=Anion_data
+SO4_SIO2$ion="SO4, SiO2"
+
+CL_anion_data=rbind(Cl_data,SO4_SIO2)
+
+anion_plot = ggplot(data=CL_anion_data%>%filter(Stream=="Feed"),aes(x=Recovery,y=Value,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    #geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+  #scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+
+ # scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+    facet_grid(cols=vars(Name),scale="free")+labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
+anion_plot
+
+ratio_data=CL_anion_data$Value[1:39]/(CL_anion_data$Value[1:39]+CL_anion_data$Value[40:78])
+
+ratio_CL_data=Cl_data
+ratio_CL_data$ratio=ratio_data
+
+ratio_plot = ggplot(data=ratio_CL_data%>%filter(Stream=="Feed"),aes(x=Recovery,y=ratio*100, color=Name))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    #geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  scale_y_continuous(limits=c(0, 80), breaks=c( 0, 20, 40,60,80 ))+
+    labs(x="Water Recovery [%]",y="Cl / SO4+SIO2 ratio [%]", color="Filtration")
+ratio_plot
+
+
+
+#nu kun med sulphate. 
+
+Cl_SO4_ratio=CL_anion_data$Value[1:39]/(CL_anion_data$Value[1:39]+Facet_data$Value[40:78])
+ratio_CL_data$ratio_SO4=Cl_SO4_ratio
+
+SO4_ratio_plot = ggplot(data=ratio_CL_data%>%filter(Stream=="Feed"),aes(x=Recovery,y=ratio_SO4*100, color=Name))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    #geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  scale_y_continuous(limits=c(0, 90), breaks=c( 0, 20, 40,60,80 ))+
+    labs(x="Water Recovery [%]",y="Cl / SO4 ratio [%]", color="Filtration")
+SO4_ratio_plot
+
+
+ggplot(data=Facet_data_rej%>%filter(ion=="Cl"),aes(x=Recovery,y=Value, color=Name))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    #geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  scale_y_continuous(limits=c(0, 90), breaks=c( 0, 20, 40,60,80 ))+
+    labs(x="Water Recovery [%]",y="Cl rejection [%]", color="Filtration")
 
 
 ```

@@ -367,7 +367,7 @@ add_lines(x=~Time,
 
 
 ggplot()+geom_line(data=dat_ICR_1,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:4A"))+
-  geom_line(data=ICR_ID_5,aes(x=100*(1-(8.5-sek/60/60*1.02)/8.5),y=pH0201,color="ID:4B"))+
+  geom_line(data=ICR_ID_5,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:4B"))+
   geom_line(data=ICR_vol2_A,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:5A"))+
 scale_color_brewer(palette= "Set1")+
   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
