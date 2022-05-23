@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 #Loading af pakker 
 library(plyr)
 library(dplyr)
@@ -161,18 +161,22 @@ Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet =  a/(1+exp(-b*(pH-c))))
 #Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet1=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74) #Gammelt udtryk for samme
 
 
-Ion_data_frame = Ion_data_frame%>%mutate(anion_total = SiO2_ladet+SO4_mmol+Cl_mmol)
-Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
-Ion_data_frame = Ion_data_frame%>%mutate(Cl_SO4 = Cl_mmol/SO4_mmol)
 
+
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_SO4 = Cl_mmol/(Cl_mmol+SO4_mmol))
+Ion_data_frame = Ion_data_frame%>%mutate(total_sio2_ladet=SiO2_mmol*SiO2_ladet)
+Ion_data_frame = Ion_data_frame%>%mutate(anion_total = total_sio2_ladet+2*SO4_mmol+Cl_mmol)
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
 Ion_data_frame=Ion_data_frame[!is.na(Ion_data_frame$Na),]
 
+Ion_data_frame_both=Ion_data_frame%>%filter(name!="SPRR_1")%>%filter(name!="SPRR_8")
+Ion_data_frame=Ion_data_frame_both
 
 ```
 
-## Silica Rejection  {.tabset}
+# Silica Rejection  {.tabset}
 
-### 2D Multiple Linear Regression
+## 2D Multiple Linear Regression
 We assume that pH is the major variable that controls silica rejection.
 A liniear regression between the two shows correlation to some degree.
 ```{r Silica rej , echo=FALSE}
@@ -199,6 +203,8 @@ ggplotRegression(fit_SiO2_pH)+ylab("SiO2 Rejection [%]")
 summary(fit_SiO2_pH)
 #plot(fit_SiO2_pH)
 
+
+
 ## noget med nogle Residuals
 cooksD <- cooks.distance(fit_SiO2_pH)
 influential <- cooksD[(cooksD > (3 * mean(cooksD, na.rm = TRUE)))]
@@ -223,7 +229,7 @@ summary(fit_SiO2_sio2)
 
 #### TWO VARIABLES ####
 fit_SiO2_pH_sio2 = lm(Rej_SiO2~pH+SiO2_mmol, data = Ion_data_frame)
-#ggplotRegression(fit_SiO2_pH_sio2)+ylab("SiO2 Rejection [%]")
+ggplotRegression(fit_SiO2_pH_sio2)+ylab("SiO2 Rejection [%]")
 #plot(fit_SiO2_pH2)
 summary(fit_SiO2_pH_sio2)
 
@@ -264,8 +270,8 @@ summary(fit_SiO2_pH_Cl_SO4_sio2)
 ```
 Conclusion: Silica rejection can be predicted from pH and concentration of silica on these samples.
 
-### 3D Representation
-#### Silica as function of pH and silica concentration
+## 3D Representation
+### Silica as function of pH and silica concentration
 ```{R 3D Silica_pH_SiO2mmol, echo=FALSE, message=FALSE, warning=FALSE, , echo=FALSE}
 
 #SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
@@ -335,7 +341,7 @@ R_plot
 ```
 
 
-#### Silica as function of pH and Cl/SO4 ratio
+### Silica as function of pH and Cl/SO4 ratio
 ```{R 3D Silica_pH_Cl_anion, echo=FALSE, message=FALSE, warning=FALSE, , echo=FALSE}
 
 #SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
@@ -403,7 +409,7 @@ R_plot
 
 
 
-#### Silica as function of Cl/SO4 ratio and silica concentration
+### Silica as function of Cl/SO4 ratio and silica concentration
 ```{R 3D Silica_Cl_anion_SiO2mmol, echo=FALSE, message=FALSE, warning=FALSE, , echo=FALSE}
 
 #SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
@@ -476,8 +482,8 @@ R_plot
 
 
 
-## Cl rejection  {.tabset}
-### 2D Multiple Linear Regression
+# Cl rejection  {.tabset}
+## 2D Multiple Linear Regression
 We assume that pH does not play a significant role in Cl rejection, at least not to the same degree as for SiO2.
 Instead the chemical environment i.e. which other species are present and in what amounts are theorized to have a greater influence.
 
@@ -489,14 +495,11 @@ Anion fraktion udregneds udfra Cl/[SO4]+[SiO2_ladet]+[Cl]
 ggplotly(ggplot(Ion_data_frame, aes(x=SO4_mmol, y=Rej_Cl,color=name))+geom_point())
 
 
-###Different fittings ###
-fit_Clrej_cl= lm(Rej_Cl~Cl_mmol, data = Ion_data_frame)
-summary(fit_Clrej_cl)
-ggplotRegression(fit_Clrej_cl)
+###Different models ###
 
-fit_Clrej_anion= lm(Rej_Cl~anion_total, data = Ion_data_frame)
-ggplotRegression(fit_Clrej_anion)
-summary(fit_Clrej_anion)
+fit_Clrej_ratio= lm(Rej_Cl~Cl_SO4, data = Ion_data_frame)
+ggplotRegression(fit_Clrej_ratio)
+summary(fit_Clrej_ratio)
 
 fit_Clrej_cl_anion = lm(Rej_Cl~Cl_anion, data = Ion_data_frame)
 ggplotRegression(fit_Clrej_cl_anion)
@@ -507,44 +510,10 @@ ggplotRegression(fit_Clrej_so4)
 summary(fit_Clrej_so4)
 
 
-###Without point where [Cl] is very low: ###
-Ion_data_frame_no8=Ion_data_frame%>%filter(name!="SPRR_8")
-fit_Clrej_cl_no8= lm(Rej_Cl~Cl_mmol, data = Ion_data_frame_no8)
-ggplotRegression(fit_Clrej_cl_no8)
 
-fit_Clrej_anion_no8= lm(Rej_Cl~anion_total, data = Ion_data_frame_no8)
-ggplotRegression(fit_Clrej_anion_no8)
-
-fit_Clrej_cl_anion_no8 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame_no8)
-ggplotRegression(fit_Clrej_cl_anion_no8)
-
-
-### Without point where [SO4] is very high ###
-Ion_data_frame_no1=Ion_data_frame%>%filter(name!="SPRR_1")
-fit_Clrej_cl_no1= lm(Rej_Cl~Cl_mmol, data = Ion_data_frame_no1)
-ggplotRegression(fit_Clrej_cl_no1)
-
-fit_Clrej_anion_no1= lm(Rej_Cl~anion_total, data = Ion_data_frame_no1)
-ggplotRegression(fit_Clrej_anion_no1)
-
-fit_Clrej_cl_anion_no1 = lm(Rej_Cl~Cl_anion, data = Ion_data_frame_no1)
-ggplotRegression(fit_Clrej_cl_anion_no1)
-
-
-
-### Without both points ###
-Ion_data_frame_both=Ion_data_frame%>%filter(name!="SPRR_1")%>%filter(name!="SPRR_8")
-fit_Clrej_cl_both_so4= lm(Rej_Cl~SO4_mmol, data = Ion_data_frame_both)
-fit_Clrej_cl_both_cl_anion= lm(Rej_Cl~Cl_anion, data = Ion_data_frame_both)
-
-summary(fit_Clrej_cl_both_so4)
-summary(fit_Clrej_cl_both_cl_anion)
-
-ggplotRegression(fit_Clrej_cl_both_so4)
-ggplotRegression(fit_Clrej_cl_both_cl_anion)
 
 #### Cl rejection multiple regression ####
-fit_Clrej_multi = lm(Rej_Cl~Cl_anion+Rej_SiO2, data = Ion_data_frame)
+fit_Clrej_multi = lm(Rej_Cl~SO4_mmol+total_sio2_ladet, data = Ion_data_frame)
 summary(fit_Clrej_multi)
 plot(fit_Clrej_multi)
 
@@ -554,28 +523,20 @@ plot(x=predict(fit_Clrej_multi), y=na.omit(Ion_data_frame$Rej_Cl),
      main='Predicted vs. Actual Values',
      abline(a=0, b=1))
 
-cooksD <- cooks.distance(fit_Clrej_multi)
-influential <- cooksD[(cooksD > (3 * mean(cooksD, na.rm = TRUE)))]
-influential
-#Number 26 (SPRR 8) has cooks distance >3x avg, if we exclude it our model is now:
 
-fit_Clrej_multi_cook = lm(Rej_Cl~SO4_mmol+SiO2_mmol+Cl_mmol, data = Ion_data_frame%>%filter(name!="SPRR_8"))
-summary(fit_Clrej_multi_cook)
-plot(x=predict(fit_Clrej_multi_cook),y=t(Ion_data_frame%>%filter(name!="SPRR_8")%>%select("Rej_Cl")),
+
+fit_Clrej_both_multi = lm(Rej_Cl~SO4_mmol+Cl_mmol+SiO2_mmol, data = Ion_data_frame_both)
+summary(fit_Clrej_both_multi)
+plot(x=predict(fit_Clrej_both_multi), y=na.omit(Ion_data_frame_both$Rej_Cl),
      xlab='Predicted Values',
      ylab='Actual Values',
      main='Predicted vs. Actual Values',
      abline(a=0, b=1))
-#plot(fit_Clrej_multi_cook)
 
-#As It is the one with too low cl it may be ok
 
-### Without the excluded points (1 and 8)
-fit_Clrej_both_multi = lm(Rej_Cl~SO4_mmol+SiO2_mmol+Cl_mmol, data = Ion_data_frame_both)
-summary(fit_Clrej_both_multi)
-#plot(fit_Clrej_both_multi)
-
-plot(x=predict(fit_Clrej_both_multi), y=na.omit(Ion_data_frame_both$Rej_Cl),
+fit_Clrej_both_multi_2 = lm(Rej_Cl~SO4_mmol+Cl_mmol+SiO2_mmol, data = Ion_data_frame_both)
+summary(fit_Clrej_both_multi_2)
+plot(x=predict(fit_Clrej_both_multi_2), y=na.omit(Ion_data_frame_both$Rej_Cl),
      xlab='Predicted Values',
      ylab='Actual Values',
      main='Predicted vs. Actual Values',
@@ -627,7 +588,8 @@ ggplotRegression(fit_test)
 
 
 ```
-### 3D Representation
+## 3D Representation {.tabset}
+### All Data Points
 #### Cl rejection as function of Cl/SO4 ratio pH
 ```{r cl Cl/SO4 + pH, echo=FALSE}
 #Ion_data_frame=Ion_data_frame[-1,] #Include to remove the point with high sulphate (NB! careful not to run line multiple times)
@@ -803,4 +765,178 @@ R_plot
 ```
 
 
+### Removing of two outliers
+#### Cl rejection as function of Cl/SO4 ratio pH
+```{r cl Cl/SO4 + pH both, echo=FALSE}
+#Ion_data_frame=Ion_data_frame[-1,] #Include to remove the point with high sulphate (NB! careful not to run line multiple times)
+
+
+
+
+#Vores linear model:
+Rejection_lm <- lm(Rej_Cl ~ Cl_SO4 + pH,data=Ion_data_frame)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.01
+
+#Setup Axis
+axis_x <- seq(min(Ion_data_frame$Cl_SO4), max(Ion_data_frame$Cl_SO4), by = graph_reso)
+axis_y <- seq(min(Ion_data_frame$pH), max(Ion_data_frame$pH), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(Cl_SO4 = axis_x,pH = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Rej_Cl <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, pH ~ Cl_SO4, value.var = "Rej_Cl") #y ~ x
+
+
+R_plot <- plot_ly(
+ Ion_data_frame,
+  x = ~ Cl_SO4,
+  y = ~ pH,
+  z = ~ Rej_Cl,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ Rej_Cl,
+    colorscale = 'magma',
+    line = list(
+        color = 'rgb(0, 0, 0)',
+        width = 1
+    )
+    )
+)%>%layout(title = 'Chloride Rejection')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> Cl/SO4 ratio: %{x}',
+                                                '<br> pH: %{y}'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'magma',
+  opacity=0.7
+)
+
+R_plot
+```
+
+#### Cl rejection as function of Cl/SO4 ratio and SiO2
+```{r cl Cl/SO4 + [SiO2] both, echo=FALSE}
+
+
+
+
+#Vores linear model:
+Rejection_lm <- lm(Rej_Cl ~ Cl_SO4 + SiO2_mmol,data=Ion_data_frame)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.01
+
+#Setup Axis
+axis_x <- seq(min(Ion_data_frame$Cl_SO4), max(Ion_data_frame$Cl_SO4), by = graph_reso)
+axis_y <- seq(min(Ion_data_frame$SiO2_mmol), max(Ion_data_frame$SiO2_mmol), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(Cl_SO4 = axis_x,SiO2_mmol = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Rej_Cl <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2_mmol ~ Cl_SO4, value.var = "Rej_Cl") #y ~ x
+
+
+R_plot <- plot_ly(
+ Ion_data_frame,
+  x = ~ Cl_SO4,
+  y = ~ SiO2_mmol,
+  z = ~ Rej_Cl,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ Rej_Cl,
+    colorscale = 'magma',
+    line = list(
+        color = 'rgb(0, 0, 0)',
+        width = 1
+    )
+    )
+)%>%layout(title = 'Chloride Rejection')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> Cl/SO4 ratio: %{x}',
+                                                '<br> SiO2_mmol: %{y}'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'magma',
+  opacity=0.7
+)
+
+R_plot
+```
+
+
+#### Cl rejection as function of sio2 and pH
+```{r cl SiO2 + pH both, echo=FALSE}
+
+#SPRR_rejection <- na.omit((SPRR_data%>%filter(Stream == "Rejection")))
+
+
+
+#Vores linear model:
+Rejection_lm <- lm(Rej_Cl ~ SiO2_mmol + pH,data=Ion_data_frame)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.01
+
+#Setup Axis
+axis_x <- seq(min(Ion_data_frame$SiO2_mmol), max(Ion_data_frame$SiO2_mmol), by = graph_reso)
+axis_y <- seq(min(Ion_data_frame$pH), max(Ion_data_frame$pH), by = graph_reso)
+
+#Sample points
+Rejection_lm_surface <- expand.grid(SiO2_mmol = axis_x,pH = axis_y,KEEP.OUT.ATTRS = F)
+Rejection_lm_surface$Rej_Cl <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
+Rejection_lm_surface <- acast(Rejection_lm_surface, pH ~ SiO2_mmol, value.var = "Rej_Cl") #y ~ x
+
+
+R_plot <- plot_ly(
+ Ion_data_frame,
+  x = ~ SiO2_mmol,
+  y = ~ pH,
+  z = ~ Rej_Cl,
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(
+    color = ~ Rej_Cl,
+    colorscale = 'magma',
+    line = list(
+        color = 'rgb(0, 0, 0)',
+        width = 1
+    )
+    )
+)%>%layout(title = 'Chloride Rejection')
+R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
+                                                '<br> SiO2 concentration: %{x}',
+                                                '<br> pH: %{y}'
+                                                )
+                          )
+
+R_plot <- add_trace(
+  p = R_plot,
+  z = Rejection_lm_surface,
+  x = axis_x,
+  y = axis_y,
+  type = "surface",
+  colorbar = list(title = 'Cl Rejection'),
+  colorscale = 'magma',
+  opacity=0.7
+)
+
+R_plot
+```
 
