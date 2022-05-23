@@ -694,6 +694,15 @@ fig_pH <- plot_ly(data=dat_NaCl,x=~sek/3600/6*100,
          xaxis=list(title="Water Recovery [%]"))
 fig_pH  
 
+
+ggplot()+geom_line(data=dat_NaCl,aes(x=100*(1-(6-sek/60/60*1.02)/6),y=pH0201,color="NaCl"))+
+  geom_line(data=dat_CaCl2,aes(x=100*(1-(6-sek/60/60*1.02)/6),y=pH0201,color="CaCl"))+
+  geom_line(data=dat_SiO2,aes(x=100*(1-(6-sek/60/60*1.02)/6),y=pH0201,color="Na2OSiO2"))+
+scale_color_brewer(palette= "Set1")+
+  scale_x_continuous(limits=c(0, 70), breaks=c(0,20, 40,60 ))+
+  scale_y_continuous(limits=c(7.0, 8.75), breaks=c(7,7.5,8,8.5))+
+    labs(x="Water Recovery [%]",y="pH", color="Filtration")
+
 ```
 
 ```{r Summary bicarbonat, echo=FALSE, message=FALSE}
@@ -768,9 +777,25 @@ ggplot(SS_rej,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+facet_
 
 SS_tot_plot=SS%>%gather(key="key",value="value",f_Na_mmol,f_Cl_mmol,f_SiO2_mmol,f_Ca_mmol,Rej_Na,Rej_Cl,Rej_SiO2,Rej_Ca)
 SS_tot_plot$ion=rep(c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21)),2)
-SS_tot_plot$var=c(rep("Feed Concentration [mM]",84),rep("Rejection",84))
+SS_tot_plot$var=c(rep("Feed Concentration [mM]",84),rep("Rejection [%]",84))
 
-ggplotly(ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+facet_grid(cols=vars(exp),row =vars(var),scale="free",switch=NULL))
+ggplotly(ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+
+           facet_grid(cols=vars(exp),row =vars(var),scale="free",switch=NULL))
+
+
+#bud på at lave den pæn, no worky
+#ggplotly(ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+
+#           facet_grid(cols=vars(exp),row =vars(var),scale="free"))+
+#scale_color_brewer(palette= "Set1")
+
+#ggplot()+geom_line(data=dat_M_9.2,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:1 - pH 9.3"))+
+#  geom_line(data=dat_M_10,aes(x=100*(1-(8.5-sek/60/60*1.02)/8.5),y=pH0201,color="ID:2 - pH 10.1"))+
+#  geom_line(data=dat_M_10.5,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:3 - pH 10.5"))+
+#+
+#  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+#  scale_y_continuous(limits=c(9, 10.75), breaks=c(9,9.5,10,10.5 ))+
+    
+
 
 
 ```
