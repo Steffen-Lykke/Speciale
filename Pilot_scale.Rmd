@@ -829,4 +829,27 @@ ion_plot_bar
 
 ```
 
+```{r echo=FALSE}
+ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+  '#2ca02c',  # cooked asparagus green
+  '#9467bd',  # muted purple  
+  '#ff7f0e',  # safety orange
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+ggplot(ID_8A_8B_rej_plot_2,aes(x=Recovery,y=value,color=key))+geom_line(size = 1)+geom_point()+xlab("Water Recovery [%]")+ylab("Rejection [%]")+labs(colour = "Species")+scale_color_manual(labels = ioner, values =colors2)+xlim(0,100)+ylim(-50,100)+theme(legend.text.align=0)+facet_grid(cols=vars(Name),switch=NULL)+theme(panel.spacing = unit(2, "lines"))
+
+ID_8A_8B_feed_plot=ID_8A_8B_rej%>%gather(key="key",value="value",Ca_Feed,Cl_Feed,Na_Feed,SiO2_Feed,SO4_Feed)
+
+ggplot(ID_8A_8B_feed_plot,aes(x=Recovery,y=value,color=key))+geom_line(size = 1)+geom_point()+xlab("Water Recovery [%]")+ylab("Concentration [mM]")+labs(colour = "Species")+scale_color_manual(labels = ioner, values =colors2)+xlim(0,100)+ylim(0,8)+theme(legend.text.align=0)+facet_grid(cols=vars(Name),switch=NULL)+theme(panel.spacing = unit(2, "lines"))
+```
+```{r eval=FALSE, include=FALSE}
+#ggsave(filename='test.png',plot=pilot,device="png",width=10,height=6,dpi=300)
+```
 
