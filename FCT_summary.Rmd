@@ -362,6 +362,21 @@ plc_2B
 
 ```
 
+```{R pH plot, echo=FALSE}
+
+ggplot()+geom_line(data=FCT_1A_plc,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:6A"))+
+  geom_line(data=FCT_1B,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:6B"))+
+  geom_line(data=FCT_2A,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:7A"))+
+  geom_line(data=FCT_2B,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:7B"))+
+  scale_color_brewer(palette= "Set1")+
+  scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+  scale_y_continuous(limits=c(8, 10.1), breaks=c(8.0,8.5,9,9.5,10 ))+
+    labs(x="Water Recovery [%]",y="pH", color="Filtration")
+
+
+```
+
+
 ### Rejection (Silica + Cl )
 Lav errorbars for silica. 
 
@@ -865,7 +880,111 @@ print(Feed_0_2A/Feed_0_1A)
 
 print(Feed_0)
 print(Feed_0_std)
+
+
+
+
+
 ``` 
+```{R Feed facet plot, echo=FALSE, message=FALSE}
+#først tager vi os af IC data og laver til en nice samlet matrice. 
+Mw_Cl=35.45
+Mw_SO4=96.06
+Mw_Ca=40.078
+Mw_Na=22.99
+Mw_Br=79.904
+Mw_Mg=24.305
+Mw_K=39.0983
+Mw_SiO2=60.08
+ID_6_7_facet=ID_6_7_data
+
+ID_6_7_facet_data = ID_6_7_facet%>%gather(key,value, Cl_mgL,SO4_mgL,Ca_mgL,Na_mgL,
+                                        Mg_mgL)
+std_p=c(ID_6_7_facet$CL_Std_p,
+                    ID_6_7_facet$SO4_Std_p,
+                    ID_6_7_facet$Ca_Std_p,
+                    ID_6_7_facet$Na_Std_p,
+                    ID_6_7_facet$Mg_Std_p)
+
+ID_6_7_facet_data$std_p=std_p
+ID_6_7_facet_data=ID_6_7_facet_data[,c(1:3,13:15)]
+ID_6_7_facet_data$Mw=c(rep(Mw_Cl,29),rep(Mw_SO4,29),rep(Mw_Ca,29),rep(Mw_Na,29),rep(Mw_Mg,29))
+ID_6_7_facet_data$Concentration=ID_6_7_facet_data$value/ID_6_7_facet_data$Mw
+ID_6_7_facet_data$key=c(rep("Cl",29),rep("SO4",29),rep("Ca",29),rep("Na",29),rep("Mg",29))
+start_volume=c(rep(10,8),rep(10,7),rep(8.5,7),rep(8.45,7)) 
+ID_6_7_facet_data$start_vol=c(rep(start_volume,5))
+ID_6_7_facet_data$Recovery=100*(1-(ID_6_7_facet_data$start_vol-ID_6_7_facet_data$Time*1.02)/ID_6_7_facet_data$start_vol)
+ID_6_7_facet_data[ID_6_7_facet_data == "1A"] <- "ID:6A"
+ID_6_7_facet_data[ID_6_7_facet_data == "2A"] <- "ID:7A"
+ID_6_7_facet_data[ID_6_7_facet_data == "1B"] <- "ID:6B"
+ID_6_7_facet_data[ID_6_7_facet_data == "2B"] <- "ID:7B"
+
+#så kommer silica. 
+#FCT_Dunk
+#FCT_Ion_data_frame
+
+
+Silica_facet_feed=FCT_Ion_data_frame[,c(1:3,15,19,20)]
+Silica_facet_perm=FCT_Ion_data_frame[,c(1:2,9,15,19,20)]
+
+
+colnames(Silica_facet_feed) <- c('Name','Time','SiO2_mgL','start_vol','Recovery', 'std') 
+colnames(Silica_facet_perm) <- c('Name','Time','SiO2_mgL','start_vol','Recovery', 'std')
+Silica_facet=rbind(Silica_facet_feed,Silica_facet_perm)
+Silica_facet$Stream=c(rep("Feed",20),rep("Permeate",20))
+Silica_facet_Dunk=FCT_Dunk[,c(3,2,6,1)] #jeg er kommet her til med noget DUNK data RIP
+Silica_facet_Dunk$start_vol=c(rep(10,4), rep(8.5,4),rep(10,4), rep(8.45,4))
+Silica_facet_Dunk$Recovery=100*(1-(Silica_facet_Dunk$start_vol-Silica_facet_Dunk$time*1.02)/Silica_facet_Dunk$start_vol)
+Silica_facet_Dunk$std=2
+Silica_facet_Dunk=Silica_facet_Dunk[,c(1:3,5,6,7,4)]
+colnames(Silica_facet_Dunk) <-c('Name','Time', 'SiO2_mgL','start_vol','Recovery','std','Stream') 
+Silica_facet_Dunk$Stream="Perm spand"
+Silica_facet_Dunk$Time[c(3,7,11,15)]=6.1764
+Silica_facet=rbind(Silica_facet,Silica_facet_Dunk)
+
+Silica_facet$std_p=Silica_facet$std/Silica_facet$SiO2_mgL
+
+Silica_facet[Silica_facet == "FCT_1A"] <- "ID:6A"
+Silica_facet[Silica_facet == "FCT_2A"] <- "ID:7A"
+Silica_facet[Silica_facet == "FCT_1B"] <- "ID:6B"
+Silica_facet[Silica_facet == "FCT_2B"] <- "ID:7B"
+
+
+Silica_facet$key="SiO2"
+Silica_facet$Mw=Mw_SiO2
+Silica_facet$Concentration=Silica_facet$SiO2_mgL/Silica_facet$Mw
+
+Silica_facet_data=Silica_facet[,c(1,2,
+                                  7,
+                                  9,
+                                  3,
+                                  8,10,11, 4,5)]
+colnames(Silica_facet_data) <-c('Name','Time','Stream','key','value','std_p','Mw','Concentration','start_vol','Recovery') 
+
+Facet_data_FCT=rbind(ID_6_7_facet_data,Silica_facet_data)
+Facet_data_FCT$plot=c(rep("Ca, Cl, Mg, SiO2, SO4",87),rep("Na",29),rep("Ca, Cl, Mg, SiO2, SO4",85))
+
+library(RColorBrewer)
+my_palette = c(brewer.pal(9, "Set1")[c(1,2,9,3,4,5)])
+
+pølz<- ggplot(data=Facet_data_FCT%>%filter(Stream=="Feed"),aes(x=Recovery,y=Concentration,color=key))+
+  geom_point()+geom_line()+scale_colour_manual(values = palette(my_palette))+geom_hline(yintercept=0)+
+    geom_errorbar(data=Facet_data_FCT%>%filter(Stream=="Feed"),aes(x=Recovery,ymin=Concentration-(Concentration*std_p), ymax=Concentration+(Concentration*std_p),color=key), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name), rows=vars(plot),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
+
+pølz1<- ggplot(data=Facet_data_FCT%>%filter(Stream=="Feed"),aes(x=Recovery,y=Concentration,color=key))+
+  geom_point()+geom_line()+scale_colour_manual(values = palette(my_palette))+geom_hline(yintercept=0)+
+    geom_errorbar(data=Facet_data_FCT%>%filter(Stream=="Feed"),aes(x=Recovery,ymin=Concentration-(Concentration*std_p), ymax=Concentration+(Concentration*std_p),color=key), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name), rows=vars(plot),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
+
+pølz
+pølz1
+   
+```
+
+
 ### IC rejection of ions. 
 
 ```{R plot af rejection ALLE, echo=FALSE, message=FALSE}
@@ -913,6 +1032,9 @@ plot_2B_alle=ggplot(ID_8_11_rej_alle%>%filter(Name=="2B"), aes(x=Recovery, y=val
 ggarrange(plot_1A_alle,plot_1B_alle,plot_2A_alle,plot_2B_alle, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
 
 ```
+
+
+ 
 ```{R plot af rejection, echo=FALSE, message=FALSE}
 
 ID_8_11$rrej_Mg=ID_8_11$rej_Mg
@@ -1014,6 +1136,47 @@ hejmeddig_1
 
 ```
 
+```{R facet rejection ALLE, echo=FALSE, message=FALSE}
+
+#FCT_Ion_data_frame
+#ID_8_11_rej
+
+ioner_data=ID_8_11_rej[,c(1,2,33,44:46)]
+Silica_data_rej=FCT_Ion_data_frame[,c(1,2,19,16,21)]
+Silica_data_rej$key="SiO2"
+Silica_data_rej=Silica_data_rej[,c(1,2,3,6,4,5)]
+colnames(Silica_data_rej) <-c('Name','Time','Recovery','ion','Rejection','std_p') 
+colnames(ioner_data) <-c('Name','Time','Recovery','ion','Rejection','std_p') 
+ioner_data$ion=c(rep("Cl",8),rep("SO4",8),rep("Ca",8),rep("Na",8),rep("Mg",8))
+
+
+Silica_data_rej[Silica_data_rej == "FCT_1A"] <- "ID:6A"
+Silica_data_rej[Silica_data_rej == "FCT_2A"] <- "ID:7A"
+Silica_data_rej[Silica_data_rej == "FCT_1B"] <- "ID:6B"
+Silica_data_rej[Silica_data_rej == "FCT_2B"] <- "ID:7B"
+
+ioner_data[ioner_data == "1A"] <- "ID:6A"
+ioner_data[ioner_data == "2A"] <- "ID:7A"
+ioner_data[ioner_data == "1B"] <- "ID:6B"
+ioner_data[ioner_data == "2B"] <- "ID:7B"
+
+
+rej_facet_data=rbind(ioner_data,Silica_data_rej)
+
+
+pølz2<- ggplot(data=rej_facet_data,aes(x=Recovery,y=Rejection,color=ion))+
+  geom_point()+geom_line()+scale_colour_manual(values = palette(my_palette))+geom_hline(yintercept=0)+
+    geom_errorbar(data=rej_facet_data,aes(x=Recovery,ymin=Rejection-(Rejection*std_p), ymax=Rejection+(Rejection*std_p),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),scale="free")+
+  scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
+
+pølz2
+ggplotly(pølz2)
+
+```
+
+
 ```{R Cl sammenligning, echo=FALSE, message=FALSE}
 FCT_Ion_data_frame$rej_Cl_hach
 ID_8_11$rej_Cl
@@ -1046,5 +1209,62 @@ geom_line(data=FCT_Ion_data_frame%>%filter(name=="FCT_2B"), aes(x=Recovery, y=re
   scale_color_brewer(palette= "Set1")
 
 ggarrange(plot_1A,plot_1B,plot_2A,plot_2B, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+```
+
+
+```{R conc magic, echo=FALSE, message=FALSE}
+
+feed_nul=Facet_data_FCT%>%filter(Stream=="Feed", Time==0)
+Perm_spand=Facet_data_FCT%>%filter(Stream=="Perm spand")
+
+
+accum_permeate=aggregate(Perm_spand$Concentration, by=list(Category=Perm_spand$Name,Perm_spand$key), FUN=sum)
+accum_permeate=as.data.frame(accum_permeate)
+feed_nul_sej=feed_nul[,c(1,4,8)]
+colnames(accum_permeate) <-c('Name','key','Concentration') 
+feed_nul_sej[feed_nul_sej == "ID:6A" ] <- "ID:6A - Feed"
+feed_nul_sej[feed_nul_sej == "ID:7A" ] <- "ID:7A - Feed"
+feed_nul_sej[feed_nul_sej == "ID:6B" ] <- "ID:6B - Feed"
+feed_nul_sej[feed_nul_sej == "ID:7B" ] <- "ID:7B - Feed"
+
+accum_permeate[accum_permeate == "ID:6A"] <- "ID:6A - Permeate"
+accum_permeate[accum_permeate == "ID:7A"] <- "ID:7A - Permeate"
+accum_permeate[accum_permeate == "ID:6B"] <- "ID:6A - Permeate"
+accum_permeate[accum_permeate == "ID:7B"] <- "ID:7B - Permeate"
+
+vigtig_conc_data=rbind(accum_permeate,feed_nul_sej)
+vigtig_conc_data$filtration=vigtig_conc_data$Name
+
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:6A - Feed"]<- "ID:6"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:7A - Feed"]<- "ID:7"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:6B - Feed"]<- "ID:6"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:7B - Feed"]<- "ID:7"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:6A - Permeate"]<- "ID:6"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:7A - Permeate"]<- "ID:7"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:6B - Permeate"]<- "ID:6"
+vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:7B - Permeate"]<- "ID:7"
+
+FCT_ion_plot=ggplot(vigtig_conc_data%>%filter(filtration=="ID:6"), aes(x=key, y=Concentration, color=key)) +geom_bar(stat="identity",width = 0.5, position=position_dodge())
+
+
+FCT_conc_6=ggplot(vigtig_conc_data%>%filter(filtration=="ID:6"), aes(x=key, y=Concentration, fill=Name, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration [mM]")+  
+  ggtitle("ID:6A/6B")
+
+FCT_conc_6
+
+FCT_conc_7=ggplot(vigtig_conc_data%>%filter(filtration=="ID:7"), aes(x=key, y=Concentration, fill=Name, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration [mM]")+  
+  ggtitle("ID:6A/6B")
+
+FCT_conc_7
+
+ppølz<- ggplot(data=Facet_data_FCT%>%filter(Stream=="Permeate"),aes(x=Recovery,y=Concentration,color=key))+
+  geom_point()+geom_line()+scale_colour_manual(values = palette(my_palette))+geom_hline(yintercept=0)+
+    geom_errorbar(data=Facet_data_FCT%>%filter(Stream=="Permeate"),aes(x=Recovery,ymin=Concentration-(Concentration*std_p), ymax=Concentration+(Concentration*std_p),color=key), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name), rows=vars(plot),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [mM]", color="Species")
+
+ppølz
+
 
 ```
