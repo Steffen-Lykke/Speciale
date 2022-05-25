@@ -119,7 +119,6 @@ ggplot(steric.long,aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_l
 
 ```{r Dielectric exclusion}
 
-
 radius_navne = c("stokes","pauling","hydrated")
 E_b = 78.4
 E_la = 31
@@ -140,7 +139,7 @@ df_DE=data.frame(
   Ca=double(),
   HCO3=double()
 )
-store_df_steric = data.frame()
+store_df_DE = data.frame()
 for (j in 1:3) {
   radius=radius_navne[j]
   ioner = ion_data%>%select(c(ion,radius,z))
@@ -159,19 +158,26 @@ for (i in 1:100) {
   df_DE[i,2:7]=phi_DE
   df_DE[i,1]=rp
 }
-store_df_steric = rbind(store_df_steric,df_steric %>%mutate(type = radius_navne[j]))
+store_df_DE = rbind(store_df_DE,df_DE %>%mutate(type = radius_navne[j]))
 }
 
 
 
-DE.long = df_DE %>% 
+DE.long = store_df_DE %>% 
   gather(key,value,Na,Cl,SO4,SiO2,Ca,HCO3)
 level_order = c('Na','Cl','SO4','SiO2','Ca','HCO3')
 
-ggplot(DE.long,aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+ggplot(DE.long%>%filter(type=="stokes"),aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1",labels = level_order)+
   theme_bw()+labs(y = "Phi DE", x = "rp [nm]", color = "Ion")
 
+ggplot(DE.long%>%filter(type=="pauling"),aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = level_order)+
+  theme_bw()+labs(y = "Phi DE", x = "rp [nm]", color = "Ion")
+
+ggplot(DE.long%>%filter(type=="hydrated"),aes(x=rp,y=value,color=factor(key,level=level_order)))+geom_line()+
+  scale_color_brewer(palette="Set1",labels = level_order)+
+  theme_bw()+labs(y = "Phi DE", x = "rp [nm]", color = "Ion")
 
 ```
 
