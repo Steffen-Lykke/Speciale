@@ -26,6 +26,7 @@ library(haven)
 library(sjmisc)
 require(gridExtra)
 require(ggpubr)
+library(beepr)
 
 colors = c(
   '#1f77b4',  # muted blue
@@ -56,7 +57,7 @@ viscosity = 8.9*10^-9 # bar*S
 
                             ##### Parameters #####
     ##Membrane :
-rp=0.7*10^-9 #nm
+rp=1.0*10^-9 #nm
 Le = 2000*10^-9 #nm
 sigma=-0.2/1000 #Cm^2
 X=(2*sigma)/(rp*Faraday)/1000#mol/L
@@ -87,15 +88,16 @@ feed=feed[1:2,]
 
 
                                 ##### Prep ####
-radius="stokes"
-radii = ion_data%>%select(c(ion,radius,z))
+#radius="stokes"
+radii = ion_data%>%select(c(ion,"stokes","pauling","hydrated",z))
 ##bruges til DE exclusion
 E_p=E_la+(E_b-E_la)*(1-(delta_DE/rp))^2
 
 
 
+radius_diff="stokes"
+lambda = (radii%>%select(radius_diff)/rp)
 
-lambda = (radii[,2]/rp)
 
 #dphi(x)=sum((z*J_v/D_P)*K_C*c-c_p)/((F/RT)*sum(z^2*c)) #potential gradient sum er fra i=1 til n
 
@@ -124,12 +126,12 @@ rownames(data)=c("Na","Cl")
 
 
                       ###### Steric exclusion #####
-steric=(1-(radii[,2]/rp))^2
+steric=(1-(radii$stokes/rp))^2
 data$steric = steric
 
                        ###### Dielectric exclusion #####
 
-dW = (radii$z^2*e^2)/(8*pi*E_0*radii[,2])*(1/E_p-1/E_b)
+dW = (radii$z^2*e^2)/(8*pi*E_0*radii$hydrated)*(1/E_p-1/E_b)
 DE = exp(-dW/(k_B*Temp))
 data$DE = DE
                       ###### Donnan exclusion#####
@@ -143,7 +145,7 @@ f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1
 Donnan_ind = uniroot(f1,c(0,1000))$root
 Donnan_ind
 
-cm=feed$concentration*Donnan_ind^ion_data$z*steric*DE
+cm=feed$concentration*(Donnan_ind^ion_data$z)*steric*DE
 data$cm=cm
 
                           ######## ENP ########
@@ -153,7 +155,7 @@ while (good_cp==F) {
 
 osmotisk=R_gas*10^-2*Temp*(sum(feed$concentration)-sum(data$cp_guess))
 
-J_volumen = ((rp)^2*(P-osmotisk))/(8*viscosity*Le)  #m/S
+J_volumen = ((rp)^2/(8*viscosity*Le)*(P-osmotisk))  #m/S
 
 ##### Control Volume Approach
 
@@ -197,8 +199,8 @@ while (n<=dybde) {
    ENP_df=total_df[[ion]]
    
     for (j in 1:N+2) {
-      ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[ion]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
-        ion_data$Diff[ion]*ion_data$kd[ion]*(dn/(dx^2))*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))+
+      ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[ion,]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
+        ion_data$Diff[ion]*ion_data$kd[ion,]*(dn/(dx^2))*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))+
         var_potential*(((ion_data$z[ion]*ENP_df[n-1,j]*ion_data$Diff[ion]*Faraday)/(R_gas*Temp))*dn/(dx)^2)*(pot[n-1,j+1]-2*pot[n-1,j]+pot[n-1,j-1])
      
     }
@@ -218,7 +220,7 @@ for (i in 1:nrow(ion_data)) {
 }
 
 ####### Donnan ud af membran #####
-f2 = function (x) x^ion_data$z[1]*c_N[1]*ion_data$z[1] + x^ion_data$z[2]*c_N[2]*ion_data$z[2] #husk cm
+f2 = function (x) (x^ion_data$z[1])*c_N[1]*ion_data$z[1] + (x^ion_data$z[2])*c_N[2]*ion_data$z[2] #husk cm
 
 Donnan_ud = uniroot(f2,c(0,100))$root
 Donnan_ud
@@ -263,4 +265,4 @@ plot_all=all_c%>%gather(key="key",value="value",Na,Cl)
 
 ggplotly(ggplot(plot_all,aes(x=x,y=value,color=key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1"))
-
+beep(4)
