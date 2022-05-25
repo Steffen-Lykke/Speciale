@@ -85,7 +85,7 @@ feed = data.frame(
 #uden sio2 and bicarb
 ion_data=ion_data[c(1,2,3,5),]
 feed=feed[c(1,2,3,5),] 
-feed$concentration=feed$concentration*100
+feed$concentration=feed$concentration
 
 
 
@@ -148,7 +148,8 @@ f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1
 Donnan_ind = uniroot(f1,c(0,1000))$root
 Donnan_ind
 
-cm=feed$concentration*(Donnan_ind^ion_data$z)*steric*DE
+cm=feed$concentration*(Donnan_ind^ion_data$z) #better results
+#cm=feed$concentration*(Donnan_ind^ion_data$z)*steric*DE    #include for worse results I guess
 data$cm=cm
 
                           ######## ENP ########
@@ -162,7 +163,7 @@ J_volumen = ((rp)^2/(8*viscosity*Le)*(P-osmotisk))  #m/S
 
 ##### Control Volume Approach
 
-dybde=5000
+dybde=1000
 var_kon=1
 var_diff=1
 var_potential=1
@@ -190,12 +191,14 @@ ENP_df_Na=ENP_df
 ENP_df_Cl=ENP_df
 ENP_df_SO4=ENP_df
 ENP_df_Ca=ENP_df
-#pot=ENP_df
+pot=ENP_df
 ENP_df_Na[1:(dybde),2]=cm[1]
 ENP_df_Cl[1:(dybde),2]=cm[2]
 ENP_df_SO4[1:(dybde),2]=cm[3]
 ENP_df_Ca[1:(dybde),2]=cm[4]
-pot=-((log(data$cp_guess/feed$concentration)*R_gas*Temp)/(ion_data$z*Faraday))
+#pot=-((log(data$cp_guess/feed$concentration)*R_gas*Temp)/(ion_data$z*Faraday))
+pot[1:dybde,2]=0
+pot[1,-c(1,2,ncol(pot))]=X
 
 
 total_df=list(ENP_df_Na,ENP_df_Cl,ENP_df_SO4,ENP_df_Ca)
@@ -207,10 +210,13 @@ while (n<=dybde) {
     for (j in 1:N+2) {
       ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[ion,]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
         ion_data$Diff[ion]*ion_data$kd[ion,]*(dn/(dx^2))*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))+
-        var_potential*(Faraday*ion_data$z[ion]*ion_data$Diff[ion])/(R_gas*Temp)*(dn/dx^2)*(pot[ion]/Le)*dx
-     
+        var_potential*(((ion_data$z[ion]*ENP_df[n-1,j]*ion_data$Diff[ion]*Faraday)/(R_gas*Temp))*dn/(dx)^2)*(pot[n-1,j+1]-2*pot[n-1,j]+pot[n-1,j-1])
+      
     }
    total_df[[ion]]=ENP_df
+   for (j in 1:N+2) {
+     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]+ion_data$z[3]*total_df[[3]][[c(j,n)]]+ion_data$z[4]*total_df[[4]][[c(j,n)]]+X
+   }
   }
   total_df[[1]][["n"]][n]=total_df[[1]][["n"]][n-1]+dn
   n=n+1
@@ -220,9 +226,20 @@ c_N=vector()
 for (i in 1:nrow(ion_data)) {
   c_N[i]=total_df[[i]][[c(ncol(total_df[[i]])-1,nrow(total_df[[i]]))]]
 }
-
+# if (any(c_N<0)) {
+#   print("Error Negative Concentrations")
+#   break
+# }
+# if (any(is.nan(c_N))) {
+#   print("Error No Number")
+#   break
+# }
+# if (any(is.na(c_N))) {
+#   print("Error No Data")
+#   break
+#}
 ####### Donnan ud af membran #####
-f2 = function (x) (x^ion_data$z[1])*c_N[1]*ion_data$z[1] + (x^ion_data$z[2])*c_N[2]*ion_data$z[2] #husk cm
+f2 = function (x) (x^ion_data$z[1])*c_N[1]*ion_data$z[1] + (x^ion_data$z[2])*c_N[2]*ion_data$z[2]+(x^ion_data$z[3])*c_N[3]*ion_data$z[3]+(x^ion_data$z[4])*c_N[4]*ion_data$z[4] #husk cm
 
 Donnan_ud = uniroot(f2,c(0,100))$root
 Donnan_ud
@@ -238,7 +255,7 @@ if (any(is.nan(cp))) {
 }
 #### noget med at tjekke cp #####
 err=sum((cp-data$cp_guess)^2)
-if (err<1*10^-15) {
+if (err<1*10^-31) {
   good_cp = T
 }
 data$cp_guess = cp
@@ -248,7 +265,7 @@ g=g+1
 rejection = 1-(cp/feed$concentration)
 rejection
 g
-beep(4)
+beep()
 
 
 ##Plotting of CVM
@@ -274,6 +291,8 @@ all_c=data.frame(t(all_c))
 colnames(all_c)=c("Na","Cl","SO4","Ca","x")
 plot_all=all_c%>%gather(key="key",value="value",Na,Cl,SO4,Ca)
 
-ggplotly(ggplot(plot_all,aes(x=x,y=value,color=key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1"))
+ggplotly(
+  ggplot(plot_all,aes(x=x,y=value*10^3,color=key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+ylab("Concentration [mM]")+xlab("x")+geom_vline(xintercept=c(2,12),linetype = "longdash")
+  )
 
