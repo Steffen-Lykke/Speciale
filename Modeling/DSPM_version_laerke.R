@@ -82,7 +82,7 @@ feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
   concentration = c(3*10^-3,3*10^-3,5*10^-3,1.25*10^-3,0.5*10^-3,NA)
 )
-#Kun NaCl
+#Uden silca (og bicarb)
 ion_data=ion_data[1:2,]
 feed=feed[1:2,] 
 
@@ -188,8 +188,7 @@ ENP_df_Cl=ENP_df
 pot=ENP_df
 ENP_df_Na[1:(dybde),2]=cm[1]
 ENP_df_Cl[1:(dybde),2]=cm[2]
-pot[1:dybde,2]=0
-pot[1,-c(1,2,ncol(pot))]=X
+pot=-((log(data$cp_guess/feed$concentration)*R_gas*Temp)/(ion_data$z*Faraday))
 
 
 total_df=list(ENP_df_Na,ENP_df_Cl)
@@ -201,14 +200,10 @@ while (n<=dybde) {
     for (j in 1:N+2) {
       ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[ion,]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
         ion_data$Diff[ion]*ion_data$kd[ion,]*(dn/(dx^2))*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))+
-        var_potential*(((ion_data$z[ion]*ENP_df[n-1,j]*ion_data$Diff[ion]*Faraday)/(R_gas*Temp))*dn/(dx)^2)*(pot[n-1,j+1]-2*pot[n-1,j]+pot[n-1,j-1])
+        var_potential*(Faraday*ion_data$z[ion]*ion_data$Diff[ion])/(R_gas*Temp)*(dn/dx^2)*pot[ion]
      
     }
-
    total_df[[ion]]=ENP_df
-   for (j in 1:N+2) {
-     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]+X
-   }    
   }
   total_df[[1]][["n"]][n]=total_df[[1]][["n"]][n-1]+dn
   n=n+1
