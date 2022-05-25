@@ -57,9 +57,9 @@ viscosity = 8.9*10^-9 # bar*S
 
                             ##### Parameters #####
     ##Membrane :
-rp=1.0*10^-9 #nm
+rp=0.7*10^-9 #nm
 Le = 2000*10^-9 #nm
-sigma=-0.2/1000 #Cm^2
+sigma=-0.5/1000 #Cm^2
 X=(2*sigma)/(rp*Faraday)/1000#mol/L
 
 ## Operation
@@ -116,7 +116,7 @@ ion_data$kd=K_d
 ion_data$ka=K_a
 
 
-data = data.frame(cp_guess=feed$concentration*0.2)
+data = data.frame(cp_guess=feed$concentration*c(0.5,0.8,0.1,0.5))
 rownames(data)=c("Na","Cl","SO4","Ca")
 
 
@@ -148,12 +148,12 @@ f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1
 Donnan_ind = uniroot(f1,c(0,1000))$root
 Donnan_ind
 
-cm=feed$concentration*(Donnan_ind^ion_data$z) #better results
-#cm=feed$concentration*(Donnan_ind^ion_data$z)*steric*DE    #include for worse results I guess
+#cm=feed$concentration*(Donnan_ind^ion_data$z) #some times better results
+cm=feed$concentration*(Donnan_ind^ion_data$z)*steric*DE    #idk man 
 data$cm=cm
 
                           ######## ENP ########
-g=1
+g=0
 good_cp=F
 while (good_cp==F) {
 
@@ -166,7 +166,7 @@ J_volumen = ((rp)^2/(8*viscosity*Le)*(P-osmotisk))  #m/S
 dybde=1000
 var_kon=1
 var_diff=1
-var_potential=1
+var_potential=3
 N=10 #antal stykker af membran
  dx = (Le)/N#længde af stykker
  dn = 0.00001 #den virker med 0.00001 
@@ -265,7 +265,7 @@ g=g+1
 rejection = 1-(cp/feed$concentration)
 rejection
 g
-beep()
+
 
 
 ##Plotting of CVM
@@ -286,13 +286,16 @@ ENP_c=data.frame(rbind(total_df[[1]][nrow(total_df[[1]]),-c(1,2,length(total_df[
                        total_df[[4]][nrow(total_df[[4]]),-c(1,2,length(total_df[[4]]))]))
 all_c=data.frame(cbind(feed$concentration,cm,ENP_c,cp))
 all_c=rbind(all_c,1:length(all_c))
+all_c=rbind(all_c,c(0,rep(X,length(all_c)-2),0))
 
 all_c=data.frame(t(all_c))
-colnames(all_c)=c("Na","Cl","SO4","Ca","x")
+colnames(all_c)=c("Na","Cl","SO4","Ca","pos","X")
+all_c=all_c%>%mutate(ladning=Na-Cl+2*Ca-2*SO4-X)
 plot_all=all_c%>%gather(key="key",value="value",Na,Cl,SO4,Ca)
 
 ggplotly(
-  ggplot(plot_all,aes(x=x,y=value*10^3,color=key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+ylab("Concentration [mM]")+xlab("x")+geom_vline(xintercept=c(2,12),linetype = "longdash")
+  ggplot(plot_all,aes(x=pos,y=value*10^3,color=key))+geom_point()+geom_line()+
+  scale_color_brewer(palette= "Set1")+ylab("Concentration [mM]")+xlab("x")+geom_vline(xintercept=c(2,12),linetype = "longdash")+
+    geom_line(aes(pos, ladning*10^3, color="total charge"), all_c,color="black")
   )
 
