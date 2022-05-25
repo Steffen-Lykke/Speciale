@@ -75,16 +75,19 @@ ion_data = data.frame(
   pauling=c(0.95,1.81,2.9,NA,0.99,NA)*10^-10,
   hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*10^-10,
   z=c(1,-1,-2,-1,2,-1),
-  Diff=c(1.33*10^-9,2.03*10^-9,NA,NA,NA,NA)
+  Diff=c(1.33*10^-9,2.03*10^-9,1.065*10^-9,NA,0.792*10^-9,NA)
 )
 
 feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
-  concentration = c(3*10^-3,3*10^-3,5*10^-3,1.25*10^-3,0.5*10^-3,NA)
+  concentration = c(6*10^-3,4*10^-3,1.5*10^-3,1.25*10^-3,0.5*10^-3,NA)
 )
-#Uden silca (og bicarb)
-ion_data=ion_data[1:2,]
-feed=feed[1:2,] 
+#uden sio2 and bicarb
+ion_data=ion_data[c(1,2,3,5),]
+feed=feed[c(1,2,3,5),] 
+feed$concentration=feed$concentration*100
+
+
 
 
                                 ##### Prep ####
@@ -114,7 +117,7 @@ ion_data$ka=K_a
 
 
 data = data.frame(cp_guess=feed$concentration*0.2)
-rownames(data)=c("Na","Cl")
+rownames(data)=c("Na","Cl","SO4","Ca")
 
 
                             ##### Modeling start #####
@@ -140,7 +143,7 @@ data$DE = DE
 #f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
 #NaCl
-f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1] + x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+ X
+f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1] + x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+x^ion_data$z[3]*data$steric[3]*data$DE[3]*feed$concentration[3]*ion_data$z[3]+x^ion_data$z[4]*data$steric[4]*data$DE[4]*feed$concentration[4]*ion_data$z[4] +X
 
 Donnan_ind = uniroot(f1,c(0,1000))$root
 Donnan_ind
@@ -185,13 +188,17 @@ ENP_df[2:(dybde),]=NA
 ENP_df$j.inf[1:(dybde)]=0
 ENP_df_Na=ENP_df
 ENP_df_Cl=ENP_df
-pot=ENP_df
+ENP_df_SO4=ENP_df
+ENP_df_Ca=ENP_df
+#pot=ENP_df
 ENP_df_Na[1:(dybde),2]=cm[1]
 ENP_df_Cl[1:(dybde),2]=cm[2]
+ENP_df_SO4[1:(dybde),2]=cm[3]
+ENP_df_Ca[1:(dybde),2]=cm[4]
 pot=-((log(data$cp_guess/feed$concentration)*R_gas*Temp)/(ion_data$z*Faraday))
 
 
-total_df=list(ENP_df_Na,ENP_df_Cl)
+total_df=list(ENP_df_Na,ENP_df_Cl,ENP_df_SO4,ENP_df_Ca)
 n=2
 while (n<=dybde) {
   for (ion in 1:length(ion_data$ion)) {
@@ -200,7 +207,7 @@ while (n<=dybde) {
     for (j in 1:N+2) {
       ENP_df[n,j]=var_kon*(ENP_df[n-1,j]-J_volumen*K_a[ion,]*(dn/dx)*(ENP_df[n-1,j]-ENP_df[n-1,j-1]))+var_diff*(
         ion_data$Diff[ion]*ion_data$kd[ion,]*(dn/(dx^2))*(ENP_df[n-1,j+1]-2*ENP_df[n-1,j]+ENP_df[n-1,j-1]))+
-        var_potential*(Faraday*ion_data$z[ion]*ion_data$Diff[ion])/(R_gas*Temp)*(dn/dx^2)*pot[ion]
+        var_potential*(Faraday*ion_data$z[ion]*ion_data$Diff[ion])/(R_gas*Temp)*(dn/dx^2)*(pot[ion]/Le)*dx
      
     }
    total_df[[ion]]=ENP_df
@@ -221,8 +228,14 @@ Donnan_ud = uniroot(f2,c(0,100))$root
 Donnan_ud
 
 cp=c_N*Donnan_ud^ion_data$z
-cp
-
+if (any(cp<0)) {
+  print("Error Negative Concentrations")
+  break
+}
+if (any(is.nan(cp))) {
+  print("Error No Number")
+  break
+}
 #### noget med at tjekke cp #####
 err=sum((cp-data$cp_guess)^2)
 if (err<1*10^-15) {
@@ -235,7 +248,7 @@ g=g+1
 rejection = 1-(cp/feed$concentration)
 rejection
 g
-
+beep(4)
 
 
 ##Plotting of CVM
@@ -250,14 +263,17 @@ matplot(plot_Cl, type = "l",ylab="Koncentration [M]",xlab="Membran Stykke")
 par(mfrow=c(1,1))
 
 
-ENP_c=data.frame(rbind(total_df[[1]][nrow(total_df[[1]]),-c(1,2,length(total_df[[1]]))],total_df[[2]][nrow(total_df[[2]]),-c(1,2,length(total_df[[2]]))]))
+ENP_c=data.frame(rbind(total_df[[1]][nrow(total_df[[1]]),-c(1,2,length(total_df[[1]]))],
+                       total_df[[2]][nrow(total_df[[2]]),-c(1,2,length(total_df[[2]]))],
+                       total_df[[3]][nrow(total_df[[3]]),-c(1,2,length(total_df[[3]]))],
+                       total_df[[4]][nrow(total_df[[4]]),-c(1,2,length(total_df[[4]]))]))
 all_c=data.frame(cbind(feed$concentration,cm,ENP_c,cp))
 all_c=rbind(all_c,1:length(all_c))
 
 all_c=data.frame(t(all_c))
-colnames(all_c)=c("Na","Cl","x")
-plot_all=all_c%>%gather(key="key",value="value",Na,Cl)
+colnames(all_c)=c("Na","Cl","SO4","Ca","x")
+plot_all=all_c%>%gather(key="key",value="value",Na,Cl,SO4,Ca)
 
 ggplotly(ggplot(plot_all,aes(x=x,y=value,color=key))+geom_point()+geom_line()+
   scale_color_brewer(palette= "Set1"))
-beep(4)
+
