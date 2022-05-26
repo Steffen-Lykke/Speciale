@@ -1,8 +1,3 @@
-#Der skal ske noget syg programmering her
-#CT model med diskontinuert blowdown som filtreres og returneres til tårnet
-
-
-
 #### Initialize Packages ####
 library(dplyr)
 library(readr)
@@ -35,7 +30,8 @@ c_makeup = c(
   1.6, #Na
   0.6, #Cl
   0.5, #SO4
-  0.4 #SiO2
+  0.4, #SiO2
+  0.01#Ca, noget med blødgøring
 ) #En vektor med de forskellige koncentrationer [mM]
 
 
@@ -47,16 +43,16 @@ c_makeup = c(
 #Mg   - 53.1
 ##
 ion_values = data.frame(
-  Ions = c("Na", "Cl", "SO4", "SiO2"),
-  value = c(6, 7.1, 2.5, 2.5),
+  Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
+  value = c(6, 7.1, 2.5, 2.5,1),
   #Grænseværdier [mM]
-  molar_con = c(50.1, 76.4, 160, NA)
+  molar_con = c(50.1, 76.4, 160, NA,NA)
 )#[S*cm^2*mol^-1]
 
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1000#conductivity grænseværdi [uS/cm]
+con_lim = 2000#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -96,16 +92,11 @@ nf = data.frame(
   Na=double(),
   Cl=double(),
   SO4=double(),
-  SiO2=double()
+  SiO2=double(),
+  Ca=double()
 )#Dataframe med masse (mol) flow i systemet [mol?]
 
-cf = data.frame(
-  tid=double(),
-  Na=double(),
-  Cl=double(),
-  SO4=double(),
-  SiO2=double()
-)#Dataframe med concentrationer i systemet [mM]
+cf = nf#Dataframe med concentrationer i systemet [mM]
 
 #Initial Values
 df[1:n_time_step,]=0
@@ -135,23 +126,23 @@ while(i < n_time_step){
     
     ## mass flow ##
     n_mu = Q_makeup*c_makeup
-    n_bd = Q_blowdown*cf[i-1,2:5]
-    n_vap = Q_vap*cf[i-1,2:5]*drift
+    n_bd = Q_blowdown*cf[i-1,2:6]
+    n_vap = Q_vap*cf[i-1,2:6]*drift
     n_flow=n_mu-n_bd-n_vap
     
     
     ## Current Concentration & Conductivity ##
-    nf[i,2:5] = nf[i-1,2:5]+n_flow
-    cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
-    con=sum(cf[i,2:5]*ion_values[,3],na.rm=T)
+    nf[i,2:6] = nf[i-1,2:6]+n_flow
+    cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
+    con=sum(cf[i,2:6]*ion_values[,3],na.rm=T)
     df$con[i] = con
     
     df$tid[i]=df$tid[i-1]+dt
     i=i+1
     g=1
   } ##### FILTRERING #####
-  nf[i,2:5] = nf[i-1,2:5]*(1-((V_CT-V)/V_CT))+V*recovery_factor*c_makeup
-  cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
+  nf[i,2:6] = nf[i-1,2:6]*(1-((V_CT-V)/V_CT))+V*recovery_factor*c_makeup
+  cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
   con=sum(cf[i,2:5]*ion_values[,3],na.rm=T)
   df$con[i] = con
   num_bd=num_bd+1
@@ -168,11 +159,11 @@ cf$tid=df$tid
 
 ########## plot #############
 cf.long = cf %>% 
-  gather(key,value,Na,Cl,SO4,SiO2)
+  gather(key,value,Na,Cl,SO4,SiO2,Ca)
 df.long = df %>% 
   gather(key,value,V_CT,con)
 
-level_order = c('Na','Cl','SO4','SiO2')
+level_order = c('Ca','Cl','Na','SO4','SiO2')
 ggplot(cf.long,aes(x=tid,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1",labels = level_order)+
   theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]", color = "Ion")

@@ -63,7 +63,7 @@ sigma=-0.5/1000 #Cm^2
 X=(2*sigma)/(rp*Faraday)/1000#mol/L
 
 ## Operation
-P=2.5 #bar
+P=3.5 #bar
 Temp=298 #kelvin
 
     ##Solutes
@@ -71,20 +71,24 @@ ion_data = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
   Mw=c(23,35,96,60,40,61),
   molar_con = c(50.1, 76.4, 160, NA,119,NA),# Molær konduktivitet[S*cm^2*mol^-1]
-  stokes=c(1.84,1.21,2.3,NA,3.1,NA)*10^-10,
+  stokes=c(1.84,1.21,2.3,1.84,3.1,NA)*10^-10,
   pauling=c(0.95,1.81,2.9,NA,0.99,NA)*10^-10,
-  hydrated=c(3.58,3.32,3.82,NA,3.12,NA)*10^-10,
+  hydrated=c(3.58,3.32,3.82,3.58,3.12,NA)*10^-10,
   z=c(1,-1,-2,-1,2,-1),
-  Diff=c(1.33*10^-9,2.03*10^-9,1.065*10^-9,NA,0.792*10^-9,NA)
+  Diff=c(1.33*10^-9,2.03*10^-9,1.065*10^-9,1.33*10^-9,0.792*10^-9,NA)
 )
 
 feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
-  concentration = c(6*10^-3,4*10^-3,1.5*10^-3,1.25*10^-3,0.5*10^-3,NA)
+  concentration = c(6.94*10^-3,
+                    3.9*10^-3,
+                    1.1*10^-3,
+                    1.4*10^-3,
+                    0.28*10^-3,NA)
 )
 #uden sio2 and bicarb
-ion_data=ion_data[c(1,2,3,5),]
-feed=feed[c(1,2,3,5),] 
+ion_data=ion_data[c(1,2,3,4,5),]
+feed=feed[c(1,2,3,4,5),] 
 feed$concentration=feed$concentration
 
 
@@ -116,8 +120,9 @@ ion_data$kd=K_d
 ion_data$ka=K_a
 
 
-data = data.frame(cp_guess=feed$concentration*c(0.5,0.8,0.1,0.5))
-rownames(data)=c("Na","Cl","SO4","Ca")
+data = data.frame(cp_guess=feed$concentration*c(0.6,0.8,0.1,0.8,0.5))
+cp_guess
+rownames(data)=c("Na","Cl","SO4","SiO2","Ca")
 
 
                             ##### Modeling start #####
@@ -143,7 +148,12 @@ data$DE = DE
 #f = function (x) x^ion_data$z[1]*phi_S_Na*phi_DE_Na*c_Na*z_Na + x^z_Cl*phi_S_Cl*phi_DE_Cl*c_Cl*z_Cl + x^z_SO4*phi_S_SO4*phi_DE_SO4*c_SO4*z_SO4 + x^z_Ca*phi_S_Ca*phi_DE_Ca*c_Ca*z_Ca + X
 
 #NaCl
-f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1] + x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+x^ion_data$z[3]*data$steric[3]*data$DE[3]*feed$concentration[3]*ion_data$z[3]+x^ion_data$z[4]*data$steric[4]*data$DE[4]*feed$concentration[4]*ion_data$z[4] +X
+f1 = function (x) x^ion_data$z[1]*data$steric[1]*data$DE[1]*feed$concentration[1]*ion_data$z[1]+ 
+                  x^ion_data$z[2]*data$steric[2]*data$DE[2]*feed$concentration[2]*ion_data$z[2]+
+                  x^ion_data$z[3]*data$steric[3]*data$DE[3]*feed$concentration[3]*ion_data$z[3]+
+                  x^ion_data$z[4]*data$steric[4]*data$DE[4]*feed$concentration[4]*ion_data$z[4]+
+                  x^ion_data$z[5]*data$steric[5]*data$DE[5]*feed$concentration[5]*ion_data$z[5]+
+                  X
 
 Donnan_ind = uniroot(f1,c(0,1000))$root
 Donnan_ind
@@ -163,11 +173,11 @@ J_volumen = ((rp)^2/(8*viscosity*Le)*(P-osmotisk))  #m/S
 
 ##### Control Volume Approach
 
-dybde=1000
+dybde=100
 var_kon=1
 var_diff=1
 var_potential=3
-N=10 #antal stykker af membran
+N=11 #antal stykker af membran
  dx = (Le)/N#længde af stykker
  dn = 0.00001 #den virker med 0.00001 
 
@@ -187,21 +197,21 @@ ENP_df=data.frame(t(ini_values))
 colnames(ENP_df)=vec
 ENP_df[2:(dybde),]=NA
 ENP_df$j.inf[1:(dybde)]=0
-ENP_df_Na=ENP_df
-ENP_df_Cl=ENP_df
-ENP_df_SO4=ENP_df
-ENP_df_Ca=ENP_df
-pot=ENP_df
+ENP_df_Na=ENP_df_Cl=ENP_df_SO4=ENP_df_Ca=ENP_df_SiO2=pot=ENP_df
+
 ENP_df_Na[1:(dybde),2]=cm[1]
 ENP_df_Cl[1:(dybde),2]=cm[2]
 ENP_df_SO4[1:(dybde),2]=cm[3]
-ENP_df_Ca[1:(dybde),2]=cm[4]
+ENP_df_SiO2[1:(dybde),2]=cm[4]
+ENP_df_Ca[1:(dybde),2]=cm[5]
+
+
 #pot=-((log(data$cp_guess/feed$concentration)*R_gas*Temp)/(ion_data$z*Faraday))
 pot[1:dybde,2]=0
 pot[1,-c(1,2,ncol(pot))]=X
 
 
-total_df=list(ENP_df_Na,ENP_df_Cl,ENP_df_SO4,ENP_df_Ca)
+total_df=list(ENP_df_Na,ENP_df_Cl,ENP_df_SO4,ENP_df_SiO2,ENP_df_Ca)
 n=2
 while (n<=dybde) {
   for (ion in 1:length(ion_data$ion)) {
@@ -215,7 +225,12 @@ while (n<=dybde) {
     }
    total_df[[ion]]=ENP_df
    for (j in 1:N+2) {
-     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+ion_data$z[2]*total_df[[2]][[c(j,n)]]+ion_data$z[3]*total_df[[3]][[c(j,n)]]+ion_data$z[4]*total_df[[4]][[c(j,n)]]+X
+     pot[n,j]=ion_data$z[1]*total_df[[1]][[c(j,n)]]+
+             ion_data$z[2]*total_df[[2]][[c(j,n)]]+
+             ion_data$z[3]*total_df[[3]][[c(j,n)]]+
+             ion_data$z[4]*total_df[[4]][[c(j,n)]]+
+             ion_data$z[5]*total_df[[5]][[c(j,n)]]+
+             X
    }
   }
   total_df[[1]][["n"]][n]=total_df[[1]][["n"]][n-1]+dn
@@ -239,7 +254,11 @@ for (i in 1:nrow(ion_data)) {
 #   break
 #}
 ####### Donnan ud af membran #####
-f2 = function (x) (x^ion_data$z[1])*c_N[1]*ion_data$z[1] + (x^ion_data$z[2])*c_N[2]*ion_data$z[2]+(x^ion_data$z[3])*c_N[3]*ion_data$z[3]+(x^ion_data$z[4])*c_N[4]*ion_data$z[4] #husk cm
+f2 = function (x) (x^ion_data$z[1])*c_N[1]*ion_data$z[1]+ 
+                  (x^ion_data$z[2])*c_N[2]*ion_data$z[2]+
+                  (x^ion_data$z[3])*c_N[3]*ion_data$z[3]+
+                  (x^ion_data$z[4])*c_N[4]*ion_data$z[4]+
+                  (x^ion_data$z[5])*c_N[5]*ion_data$z[5] #husk cm
 
 Donnan_ud = uniroot(f2,c(0,100))$root
 Donnan_ud
@@ -260,11 +279,13 @@ if (err<1*10^-31) {
 }
 data$cp_guess = cp
 g=g+1
+print(g)
+print(err)
 }
 
 rejection = 1-(cp/feed$concentration)
-rejection
-g
+print(rejection)
+
 
 
 
@@ -283,19 +304,27 @@ par(mfrow=c(1,1))
 ENP_c=data.frame(rbind(total_df[[1]][nrow(total_df[[1]]),-c(1,2,length(total_df[[1]]))],
                        total_df[[2]][nrow(total_df[[2]]),-c(1,2,length(total_df[[2]]))],
                        total_df[[3]][nrow(total_df[[3]]),-c(1,2,length(total_df[[3]]))],
-                       total_df[[4]][nrow(total_df[[4]]),-c(1,2,length(total_df[[4]]))]))
+                       total_df[[4]][nrow(total_df[[4]]),-c(1,2,length(total_df[[4]]))],
+                       total_df[[5]][nrow(total_df[[4]]),-c(1,2,length(total_df[[5]]))]))
 all_c=data.frame(cbind(feed$concentration,cm,ENP_c,cp))
 all_c=rbind(all_c,1:length(all_c))
 all_c=rbind(all_c,c(0,rep(X,length(all_c)-2),0))
 
 all_c=data.frame(t(all_c))
-colnames(all_c)=c("Na","Cl","SO4","Ca","pos","X")
-all_c=all_c%>%mutate(ladning=Na-Cl+2*Ca-2*SO4-X)
-plot_all=all_c%>%gather(key="key",value="value",Na,Cl,SO4,Ca)
+colnames(all_c)=c("Na","Cl","SO4","SiO2","Ca","pos","X")
+all_c=all_c%>%mutate(ladning=(Na-Cl+2*Ca-2*SO4-SiO2)+X)
+plot_all=all_c%>%gather(key="key",value="value",Na,Cl,SO4,SiO2,Ca)
 
 ggplotly(
   ggplot(plot_all,aes(x=pos,y=value*10^3,color=key))+geom_point()+geom_line()+
-  scale_color_brewer(palette= "Set1")+ylab("Concentration [mM]")+xlab("x")+geom_vline(xintercept=c(2,12),linetype = "longdash")+
+  scale_color_brewer(palette= "Set1")+ylab("Concentration [mM]")+xlab("x")+
+    geom_vline(xintercept=c(2,N+2),linetype = "longdash")+
     geom_line(aes(pos, ladning*10^3, color="total charge"), all_c,color="black")
   )
+
+ggplotly(
+  ggplot(plot_all,aes(x=pos,y=value*10^3,color=key))+geom_point()+geom_line()+
+    scale_color_brewer(palette= "Set1")+ylab("Concentration [mM]")+xlab("x")+
+    geom_vline(xintercept=c(2,N+2),linetype = "longdash")+ylim(0,0.26)
+)
 

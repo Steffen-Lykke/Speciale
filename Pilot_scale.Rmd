@@ -812,21 +812,42 @@ mol_udvikling= rbind(ID_8A_mM[1,c(4,6,8,10,12,14,16,18)]/1000*900, ID_8A_mM[21,c
 colnames(mol_udvikling) <- c("Cl", "SO4", "Na", "Ca", "Mg","K","NO3", "SiO2")
 
 mol_udvikling$Stream=c("8A Feed","8A Permeat","8B Feed","8B Permeat")
+volume=c(900,800,800,700)
 
 mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl, SO4, Na, Ca, SiO2)
-                                            
-                                            
 
-ion_plot=ggplot(mol_udvikling_plot, aes(x=Stream, y=value, color=key)) +geom_bar()
+conc_udvikling=mol_udvikling%>%select(-Stream)/volume
+conc_udvikling$Stream=mol_udvikling$Stream
 
 
-ion_plot_bar=ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Stream, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Ion",y="mol")+  
+1-(t(conc_udvikling%>%filter(Stream=="8B Permeat")%>%select(-Stream))/
+     t(conc_udvikling%>%filter(Stream=="8A Feed")%>%select(-Stream))
+)
+
+udvikling_tot=conc_udvikling%>%gather(key,value = "concentration",Cl, SO4, Na, Ca, SiO2)
+udvikling_tot$mol=mol_udvikling_plot$value
+
+ion_plot=ggplot(udvikling_tot, aes(x=Stream, y=mol, color=key)) +geom_bar()
+
+
+ion_plot_bar=ggplot(udvikling_tot, aes(x=key, y=mol, fill=Stream, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Ion",y="mol")+  
   #scale_y_continuous(limits=c(-50, 100), breaks=c(-40,-20, 0, 20, 40,60,80,100 ))+
   #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
   ggtitle("ID:8A/8B")
 
 ion_plot_bar
 
+ggplot(udvikling_tot, aes(x=key, y=concentration*10^3, fill=Stream, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Ion",y="mM")+  
+  #scale_y_continuous(limits=c(-50, 100), breaks=c(-40,-20, 0, 20, 40,60,80,100 ))+
+  #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
+  ggtitle("ID:8A/8B")
+
+rejections=cbind(udvikling_tot%>%filter(Stream=="8A Feed")%>%select(key),1-(udvikling_tot%>%filter(Stream=="8A Permeat")%>%select(concentration)/udvikling_tot%>%filter(Stream=="8B Feed")%>%select(concentration)
+      ))
+
+rbind(udvikling_tot%>%filter(Stream=="8A Feed")%>%select(Stream,key,mol,concentration),
+      udvikling_tot%>%filter(Stream=="8A Permeat"|Stream=="8B")%>%select(Stream,key,mol,concentration)
+)
 ```
 
 ```{r echo=FALSE}
