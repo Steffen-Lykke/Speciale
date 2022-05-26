@@ -1101,7 +1101,7 @@ df=data.frame(ICR_plot[1:5,]$ion,R_filtration1,R_filtration2)
 #print(xtable(df, type = "latex"))
 
 ion_plot2=ggplot(ICR_plot%>%filter(ion!="Ca"&ion!="sio2"), aes(fill=plads, y=mM, x=ion)) + 
-    geom_bar(position="dodge", stat="identity")
+    geom_bar(position="dodge", stat="identity")+scale_color_brewer(palette= "Set1")
 ggplotly(ion_plot2)
 
 ion_plot3=ggplot(ICR_plot%>%filter(ion=="Ca"|ion=="sio2"), aes(fill=plads, y=mM, x=ion)) + 
@@ -1167,6 +1167,8 @@ nice_plot_1
 nice_plot_2
 
 
+
+
 ##Rejection: 
 
 Facet_data_4A=ICR_ID4_rej[,c(1,14,17,18,19,20)]
@@ -1193,12 +1195,44 @@ rej_plot_1 = ggplot(data=Facet_data_ICR,aes(x=Recovery,y=Value,color=ion))+
   labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
 rej_plot_1
 
+#noget med ratio. 
+#data er i ICR_all
+
+Cl_data=ICR_all%>%filter(ion=="Cl")
+SO4_data=ICR_all%>%filter(ion=="SO4")
+
+CL_SO4_ratio=Cl_data$mM/(Cl_data$mM+SO4_data$mM)
+ratio_data=Cl_data  
+
+ratio_data$ratio=CL_SO4_ratio
+  
+
+anion_plot = ggplot(data=ratio_data%>%filter(Stream=="Feed",Name!="ID:5B"),aes(x=Recovery,y=ratio*100,color=Name))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+geom_hline(yintercept=0)+
+    #geom_errorbar(data=Facet_data_rej,aes(x=Recovery,ymin=Value-(Value*Std), ymax=Value+(Value*Std),color=ion), width=1, position=position_dodge(0.05))+
+  #scale_x_continuous(limits=c(0, 90), breaks=c(20, 40,60,80 ))+
+ # scale_y_continuous(limits=c(-60, 110), breaks=c(-60,-40,-20, 0, 20, 40,60,80,100 ))+
+    #facet_grid(cols=vars(Name),scale="free")+
+  labs(x="Water Recovery [%]",y="Cl / SO4 ratio [%]", color="Filtration")
+
+anion_plot
+
+
 
 ```
 
+```{R ID: facet plot, echo=FALSE, message=FALSE}
+perm_conc=ggplot(data=ICR_all%>%filter(Stream!="Feed", Name!= "ID:5B", Name!="ID:5A"),aes(x=Recovery,y=mM,color=ion))+
+  geom_point()+geom_line()+scale_color_brewer(palette= "Set1")+
+    geom_errorbar(data=ICR_all%>%filter(Stream!="Feed",Name!= "ID:5B", Name!="ID:5A"),aes(x=Recovery,ymin=mM-(mM*Std_p), ymax=mM+(mM*Std_p),color=ion), width=1, position=position_dodge(0.05))+
+    facet_grid(cols=vars(Name),row=vars(Stream),scale="free")+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
+ #scale_y_continuous(limits=c(0, 60), breaks=c(0,10,20,30, 40,50,60 ))+
+  labs(x="Water Recovery [%]",y="Permeate Concentration [mM]", color="Species")
 
+ggplotly(perm_conc)
 
-
+```
 
 
 

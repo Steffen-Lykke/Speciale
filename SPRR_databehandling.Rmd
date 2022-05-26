@@ -318,7 +318,8 @@ R_plot <- plot_ly(
         width = 1
     )
     )
-)%>%layout(title = 'Silica Rejection',scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
+)%>%layout(#title = 'Silica Rejection',
+  scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
 R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
                                                 '<br> pH: %{x}',
                                                 '<br> SiO2 concentration: %{y} mg/L'
@@ -331,7 +332,7 @@ R_plot <- add_trace(
   x = axis_x,
   y = axis_y,
   type = "surface",
-  colorbar = list(title = 'SiO2 Rejection'),
+  colorbar = list(title = 'SiO<sub>2</sub> Rejection'),
   colorscale = 'magma',
   opacity=0.7
 )
@@ -369,7 +370,7 @@ axx <- list(
 axy <- list(
   title = "Cl<sup>-</sup>/SO<sub>4</sub><sup>2-</sup> Ratio")
 axz <- list(
-  title = "SiO<sub>2</sub> Rejection [%}")
+  title = "SiO<sub>2</sub> Rejection [%]")
 
 R_plot <- plot_ly(
  Ion_data_frame,
@@ -386,7 +387,8 @@ R_plot <- plot_ly(
         width = 1
     )
     )
-)%>%layout(title = 'Silica Rejection',scene = list(xaxis=axx,yaxis=axy,zaxis=axz)) %>% style(hovertemplate = paste('Rejection: %{z}',
+)%>%layout(#title = 'Silica Rejection',
+  scene = list(xaxis=axx,yaxis=axy,zaxis=axz)) %>% style(hovertemplate = paste('Rejection: %{z}',
                                                 '<br> pH: %{x}',
                                                 '<br> Cl/SO4:%{y}'
                                                 )
@@ -398,7 +400,7 @@ R_plot <- add_trace(
   x = axis_x,
   y = axis_y,
   type = "surface",
-  colorbar = list(title = 'SiO2 Rejection'),
+  colorbar = list(title = 'SiO<sub>2</sub> Rejection'),
   colorscale = 'magma',
   opacity=0.7
 )
@@ -454,7 +456,8 @@ R_plot <- plot_ly(
         width = 1
     )
     )
-)%>%layout(title = 'Silica Rejection',scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
+)%>%layout(#title = 'Silica Rejection',
+  scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
 R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
                                                 '<br> Cl/SO4: %{x}',
                                                 '<br> SiO2 concentration: %{y} mg/L'
@@ -467,7 +470,7 @@ R_plot <- add_trace(
   x = axis_x,
   y = axis_y,
   type = "surface",
-  colorbar = list(title = 'SiO2 Rejection'),
+  colorbar = list(title = 'SiO<sub>2</sub> Rejection'),
   colorscale = 'magma',
   opacity=0.7
 )
@@ -617,6 +620,13 @@ Rejection_lm_surface$Rej_Cl <- predict.lm(Rejection_lm, newdata = Rejection_lm_s
 Rejection_lm_surface <- acast(Rejection_lm_surface, pH ~ Cl_SO4, value.var = "Rej_Cl") #y ~ x
 
 
+axx <- list(
+  title = "Cl<sup>-</sup>/SO<sub>4</sub><sup>2-</sup> Ratio")
+axy <- list(
+  title = "pH")
+axz <- list(
+  title = "Cl<sup>-</sup> Rejection [%]")
+
 R_plot <- plot_ly(
  Ion_data_frame,
   x = ~ Cl_SO4,
@@ -632,7 +642,8 @@ R_plot <- plot_ly(
         width = 1
     )
     )
-)%>%layout(title = 'Chloride Rejection')
+)%>%layout(#title = 'Chloride Rejection',
+  scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
 R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
                                                 '<br> Cl/SO4 ratio: %{x}',
                                                 '<br> pH: %{y}'
@@ -645,7 +656,7 @@ R_plot <- add_trace(
   x = axis_x,
   y = axis_y,
   type = "surface",
-  colorbar = list(title = 'Cl Rejection'),
+  colorbar = list(title = 'Cl<sup>-</sup> Rejection'),
   colorscale = 'magma',
   opacity=0.7
 )
@@ -673,6 +684,13 @@ Rejection_lm_surface <- expand.grid(Cl_SO4 = axis_x,SiO2_mmol = axis_y,KEEP.OUT.
 Rejection_lm_surface$Rej_Cl <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
 Rejection_lm_surface <- acast(Rejection_lm_surface, SiO2_mmol ~ Cl_SO4, value.var = "Rej_Cl") #y ~ x
 
+axx <- list(
+  title = "Cl<sup>-</sup>/SO<sub>4</sub><sup>2-</sup> Ratio")
+axy <- list(
+  title = "SiO<sub>2</sub> Concentration [mM]")
+axz <- list(
+  title = "Cl<sup>-</sup> Rejection [%]")
+
 
 R_plot <- plot_ly(
  Ion_data_frame,
@@ -689,7 +707,8 @@ R_plot <- plot_ly(
         width = 1
     )
     )
-)%>%layout(title = 'Chloride Rejection')
+)%>%layout(#title = 'Chloride Rejection',
+  scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
 R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
                                                 '<br> Cl/SO4 ratio: %{x}',
                                                 '<br> SiO2_mmol: %{y}'
@@ -702,7 +721,7 @@ R_plot <- add_trace(
   x = axis_x,
   y = axis_y,
   type = "surface",
-  colorbar = list(title = 'Cl Rejection'),
+  colorbar = list(title = 'Cl<sup>-</sup> Rejection'),
   colorscale = 'magma',
   opacity=0.7
 )
@@ -732,6 +751,12 @@ Rejection_lm_surface <- expand.grid(SiO2_mmol = axis_x,pH = axis_y,KEEP.OUT.ATTR
 Rejection_lm_surface$Rej_Cl <- predict.lm(Rejection_lm, newdata = Rejection_lm_surface)
 Rejection_lm_surface <- acast(Rejection_lm_surface, pH ~ SiO2_mmol, value.var = "Rej_Cl") #y ~ x
 
+axx <- list(
+  title = "SiO<sub>2</sub> Concentration [mM]")
+axy <- list(
+  title = "pH")
+axz <- list(
+  title = "Cl<sup>-</sup> Rejection [%]")
 
 R_plot <- plot_ly(
  Ion_data_frame,
@@ -748,7 +773,8 @@ R_plot <- plot_ly(
         width = 1
     )
     )
-)%>%layout(title = 'Chloride Rejection')
+)%>%layout(#title = 'Chloride Rejection',
+  scene = list(xaxis=axx,yaxis=axy,zaxis=axz))
 R_plot = R_plot %>% style(hovertemplate = paste('Rejection: %{z}',
                                                 '<br> SiO2 concentration: %{x}',
                                                 '<br> pH: %{y}'
@@ -761,7 +787,7 @@ R_plot <- add_trace(
   x = axis_x,
   y = axis_y,
   type = "surface",
-  colorbar = list(title = 'Cl Rejection'),
+  colorbar = list(title = 'Cl<sup>-</sup> Rejection'),
   colorscale = 'magma',
   opacity=0.7
 )

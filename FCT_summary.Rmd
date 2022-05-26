@@ -364,16 +364,17 @@ plc_2B
 
 ```{R pH plot, echo=FALSE}
 
-ggplot()+geom_line(data=FCT_1A_plc,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:6A"))+
-  geom_line(data=FCT_1B,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:6B"))+
+pH_plot_facet=ggplot()+geom_line(data=FCT_1A_plc,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:6A"))+
+  geom_line(data=FCT_1B,aes(x=100*(1-(8.5-sek/60/60*1.02)/8.5),y=pH0201,color="ID:6B"))+
   geom_line(data=FCT_2A,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:7A"))+
-  geom_line(data=FCT_2B,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:7B"))+
+  geom_line(data=FCT_2B,aes(x=100*(1-(8.45-sek/60/60*1.02)/8.45),y=pH0201,color="ID:7B"))+
   scale_color_brewer(palette= "Set1")+
   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+
   scale_y_continuous(limits=c(8, 10.1), breaks=c(8.0,8.5,9,9.5,10 ))+
     labs(x="Water Recovery [%]",y="pH", color="Filtration")
 
-
+pH_plot_facet
+ggplotly(pH_plot_facet)
 ```
 
 
@@ -1216,11 +1217,24 @@ ggarrange(plot_1A,plot_1B,plot_2A,plot_2B, ncol=2, nrow=2, common.legend = TRUE,
 ```{R conc magic, echo=FALSE, message=FALSE}
 
 feed_nul=Facet_data_FCT%>%filter(Stream=="Feed", Time==0)
+
 Perm_spand=Facet_data_FCT%>%filter(Stream=="Perm spand")
+volume_vector=c(4,4.5,
+                4,4.5,
+                4,3.22,
+                4,3.18)
+
+Perm_spand$volume=c(rep(volume_vector,5),2,4,6,2.5,
+                    2,4,6,1.22,2,4,6,2.5,2,4,6,1.18)
+Perm_spand$conc_L=Perm_spand$volume*Perm_spand$Concentration
+
+accum_permeate=aggregate(Perm_spand$conc_L, by=list(Category=Perm_spand$Name,Perm_spand$key), FUN=sum)
 
 
-accum_permeate=aggregate(Perm_spand$Concentration, by=list(Category=Perm_spand$Name,Perm_spand$key), FUN=sum)
 accum_permeate=as.data.frame(accum_permeate)
+accum_permeate$perm_vol=c(rep(c(8.5,7.22,8.5,7.18),6))
+accum_permeate$Concentration=accum_permeate$x/accum_permeate$perm_vol
+accum_permeate=accum_permeate[,c(1,2,5)]
 feed_nul_sej=feed_nul[,c(1,4,8)]
 colnames(accum_permeate) <-c('Name','key','Concentration') 
 feed_nul_sej[feed_nul_sej == "ID:6A" ] <- "ID:6A - Feed"
@@ -1230,7 +1244,7 @@ feed_nul_sej[feed_nul_sej == "ID:7B" ] <- "ID:7B - Feed"
 
 accum_permeate[accum_permeate == "ID:6A"] <- "ID:6A - Permeate"
 accum_permeate[accum_permeate == "ID:7A"] <- "ID:7A - Permeate"
-accum_permeate[accum_permeate == "ID:6B"] <- "ID:6A - Permeate"
+accum_permeate[accum_permeate == "ID:6B"] <- "ID:6B - Permeate"
 accum_permeate[accum_permeate == "ID:7B"] <- "ID:7B - Permeate"
 
 vigtig_conc_data=rbind(accum_permeate,feed_nul_sej)
@@ -1245,7 +1259,7 @@ vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:7A - Permeate"]<-
 vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:6B - Permeate"]<- "ID:6"
 vigtig_conc_data$filtration[vigtig_conc_data$filtration == "ID:7B - Permeate"]<- "ID:7"
 
-FCT_ion_plot=ggplot(vigtig_conc_data%>%filter(filtration=="ID:6"), aes(x=key, y=Concentration, color=key)) +geom_bar(stat="identity",width = 0.5, position=position_dodge())
+#FCT_ion_plot=ggplot(vigtig_conc_data%>%filter(filtration=="ID:6"), aes(x=key, y=Concentration, color=key)) +geom_bar(stat="identity",width = 0.5, position=position_dodge())
 
 
 FCT_conc_6=ggplot(vigtig_conc_data%>%filter(filtration=="ID:6"), aes(x=key, y=Concentration, fill=Name, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration [mM]")+  
@@ -1254,9 +1268,22 @@ FCT_conc_6=ggplot(vigtig_conc_data%>%filter(filtration=="ID:6"), aes(x=key, y=Co
 FCT_conc_6
 
 FCT_conc_7=ggplot(vigtig_conc_data%>%filter(filtration=="ID:7"), aes(x=key, y=Concentration, fill=Name, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentration [mM]")+  
-  ggtitle("ID:6A/6B")
+  ggtitle("ID:7A/7B")
 
 FCT_conc_7
+ggplotly(FCT_conc_6)
+ggplotly(FCT_conc_7)
+
+#udregning af rejection: 
+rejection_1_fil6=(1-(vigtig_conc_data[c(1,5,9,13,17,21),]$Concentration/vigtig_conc_data[c(33,25,41,37,45,29),]$Concentration))*100
+rejection_2_fil6=(1-(vigtig_conc_data[c(2,6,10,14,18,22),]$Concentration/vigtig_conc_data[c(33,25,41,37,45,29),]$Concentration))*100
+
+rejection_1_fil7=(1-(vigtig_conc_data[c(3,7,11,15,19,23),]$Concentration/vigtig_conc_data[c(34,26,42,38,46,30),]$Concentration))*100
+rejection_2_fil7=(1-(vigtig_conc_data[c(4,8,12,16,20,24),]$Concentration/vigtig_conc_data[c(34,26,42,38,46,30),]$Concentration))*100
+
+rejection_total=cbind(c("Ca","Cl","Mg","Na","SiO2","SO4"),rejection_1_fil6,rejection_2_fil6,rejection_1_fil7,rejection_2_fil7) 
+colnames(rejection_total)=c('ion','ID:6 1 filtration', 'ID:6 2 filtration','ID:7 1 filtration','ID:7 2 filtration')
+rejection_total
 
 ppølz<- ggplot(data=Facet_data_FCT%>%filter(Stream=="Permeate"),aes(x=Recovery,y=Concentration,color=key))+
   geom_point()+geom_line()+scale_colour_manual(values = palette(my_palette))+geom_hline(yintercept=0)+
@@ -1266,5 +1293,19 @@ ppølz<- ggplot(data=Facet_data_FCT%>%filter(Stream=="Permeate"),aes(x=Recovery,
 
 ppølz
 
+
+```
+
+
+```{R conc fusk, echo=FALSE, message=FALSE}
+
+#Vi prøver med ren fusk 
+#6A permeat burde = 6B feed, så vi "fitter" den 
+
+factor_snyd_6=((vigtig_conc_data[c(1,5,9,13,17,21),]$Concentration/vigtig_conc_data[c(35,27,43,39,47,31),]$Concentration))
+
+factor_snyd_7=((vigtig_conc_data[c(3,7,11,15,19,23),]$Concentration/vigtig_conc_data[c(36,28,44,40,48,32),]$Concentration))
+
+#det går dårligt med snyd. 
 
 ```
