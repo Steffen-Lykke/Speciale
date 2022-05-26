@@ -28,13 +28,14 @@ library(fcuk)
 ##### CT parameters #####
 V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
-Q_blowdown = 0 #m^3 /d hvor meget fjernes fra resevooiret
-
+Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevooiret
+V_BD=1#m^3 volume til discondinous bd
 c_makeup = c(
   1.6, #Na
   0.6, #Cl
   0.5, #SO4
-  0.4 #SiO2
+  0.4, #SiO2
+  0.1  #Ca
 ) #En vektor med de forskellige koncentrationer [mM]
 
 
@@ -46,17 +47,17 @@ c_makeup = c(
 #Mg   - 53.1
 ##
 ion_values = data.frame(
-  Ions = c("Na", "Cl", "SO4", "SiO2"),
-  value = c(6, 7.1, 2.5, 2.5),
-  #Grænseværdier [mM]
-  molar_con = c(50.1, 76.4, 160, NA)
+  Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
+  value = c(6, 7.1, 2.5, 2.5,2),#Grænseværdier [mM=mol/m^3]
+  molar_con = c(50.1, 76.4, 160, NA,119)
 )#[S*cm^2*mol^-1]
-c_ini=c(6,2.25,1.88,1.5)
+c_ini=c(6,2.25,1.88,1.5,0.5)
 
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
-con_ini = sum(c_ini*ion_values[,3],na.rm=T)
+#con_ini = sum(c_ini*ion_values[,3],na.rm=T) start med værdier tættere på ss
+con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1000#conductivity grænseværdi [uS/cm]
+con_lim = 1500#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -70,14 +71,14 @@ para = function(x){
 paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
 }
 ##### Model Parameters #####
-dt=10 #minutes
-dt=dt/1440 #minutter i dage
-run_time = 14 #days
-max_time = run_time*60*24 #i minutter
-n_time_step = run_time/dt+1
-tid = 0
-drift = 0
-
+dt_timer=1 #tidsstep i timer
+dt=dt_timer/24 #timer i dage
+run_time = 60 #Total operating time i dage
+max_time = run_time*24 #i timer
+n_time_step = run_time/dt #antal tidsskridt 
+start_tid = 0 # start tid?
+drift = 0 #en drift factor der har noget med om ioner kommer med evaporation
+recovery_factor_volume = 0.05 #Hvor meget makeup skal CT tage ind når der laves BD til batch  
 
 #df=mat.or.vec(n_time_step,2)
 #nf=mat.or.vec(n_time_step,5)
@@ -95,7 +96,8 @@ nf = data.frame(
   Na=double(),
   Cl=double(),
   SO4=double(),
-  SiO2=double()
+  SiO2=double(),
+  Ca=double()
 )#Dataframe med masse (mol) flow i systemet [mol?]
 
 cf = data.frame(
@@ -103,16 +105,25 @@ cf = data.frame(
   Na=double(),
   Cl=double(),
   SO4=double(),
-  SiO2=double()
+  SiO2=double(),
+  Ca=double()
 )#Dataframe med concentrationer i systemet [mM]
 
-#Initial Values
-df[1:n_time_step,]=0
-nf[1:n_time_step,]=0
-cf[1:n_time_step,]=0
+vand_BD=vector()
+vand_vap=vector()
 
-df[1,]=c(tid,V_CT,con_ini)
-cf[1,]=c(tid,c_ini)
+#Initial Values
+df[0:n_time_step+1,]=0
+nf[0:n_time_step+1,]=0
+cf[0:n_time_step+1,]=0
+
+
+
+vand_BD[0:n_time_step+1]=0
+vand_vap[0:n_time_step+1]=0
+
+df[1,]=c(start_tid,V_CT,con_ini)
+cf[1,]=c(start_tid,c_ini)
 nf[1,]=cf[1,]*df$V_CT[1]
 num_bd=0
 i=2
@@ -123,62 +134,95 @@ Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt
 ###### CT Model ######
 while(i < n_time_step){
     while(con < con_lim){
+      if (i>n_time_step) {
+        break
+      }
       ##Volume flow
-      Q_makeup = Q_vap + Q_blowdown # hvor meget vand skal ind i systemet
-      Q = Q_makeup-Q_blowdown-Q_vap
-      df$V_CT=df$V_CT[1]
+      Q_makeup = Q_vap# hvor meget vand skal ind i systemet
+      Q = Q_makeup-Q_vap
+      df$V_CT=df$V_CT[i-1]+Q
       ## mass flow ##
       n_mu = Q_makeup*c_makeup
-      n_bd = Q_blowdown*cf[i-1,2:5]
-      n_vap = Q_vap*cf[i-1,2:5]*drift
-      n_flow=n_mu-n_bd-n_vap
+      n_vap = Q_vap*cf[i-1,2:6]*drift
+      n_flow=n_mu-n_vap
       
       
       ## Current Concentration & Conductivity ##
-      nf[i,2:5] = nf[i-1,2:5]+n_flow
-      cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
-      con=sum(cf[i,2:5]*ion_values[,3],na.rm=T)
+      nf[i,2:6] = nf[i-1,2:6]+n_flow
+      cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
+      con=sum(cf[i,2:6]*ion_values[,3],na.rm=T)
       df$con[i] = con
       
       df$tid[i]=df$tid[i-1]+dt
       nf$tid[i]=nf$tid[i-1]+dt
       cf$tid[i]=cf$tid[i-1]+dt
+      
+      vand_BD[i]=vand_BD[i-1]
+      vand_vap[i]=vand_vap[i-1]+Q_vap
       i=i+1
     }
-  nf[i,2:5] = nf[i-1,2:5]*(1-0.1667)+1*c_makeup
-  cf[i,2:5] = nf[i,2:5]/df$V_CT[i]  
-  con=sum(cf[i,2:5]*ion_values[,3],na.rm=T)
+  nf[i,2:6] = cf[i-1,2:6]*(V_CT-V_BD)+V_BD*c_makeup
+  cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
+  con=sum(cf[i,2:6]*ion_values[,3],na.rm=T)
   df$con[i] = con
   num_bd=num_bd+1
   df$tid[i]=df$tid[i-1]+dt
   nf$tid[i]=nf$tid[i-1]+dt
   cf$tid[i]=cf$tid[i-1]+dt
+  
+  vand_BD[i]=vand_BD[i-1]+V_BD
+  vand_vap[i]=vand_vap[i-1]+Q_vap
   i=i+1
 }
 
 
+
 ########## plot #############
 cf.long = cf %>% 
-  gather(key,value,Na,Cl,SO4,SiO2)
+  gather(key,value,Na,Cl,SO4,SiO2,Ca)
 df.long = df %>% 
   gather(key,value,V_CT,con)
 plot_data = rbind(cf.long,df.long)%>%filter(key!="V_CT"& key!="con")
+
+total_vand=data.frame(time=df$tid,
+                      water_BD=vand_BD,
+                      water_evap=vand_vap)
+
 level_order = c('Na','Cl','SO4','SiO2')
 
-ion_plot==ggplot(cf.long,aes(x=tid,y=value,color=factor(key,level=level_order)))+geom_line()+
+ggplotly(
+  ggplot(cf.long,aes(x=tid,y=value,color=factor(key,level=level_order)))+geom_line()+
   scale_color_brewer(palette="Set1",labels = level_order)+
   theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]", color = "Ion")
+)
 
-conductivity_plot=ggplot(df,aes(x=tid,y=con))+geom_line()+
+ggplotly(
+  ggplot(df,aes(x=tid,y=con))+geom_line()+
   scale_color_brewer(palette="Set1")+
   theme_bw()+labs(y = "Conductivity [uS/cm]", x = "Time [days]")+ylim(c(0,NA))
+)
 
-para(num_bd)
 
-totplot=ggplot(plot_data,aes(x=tid,y=value,color=key))+geom_line()+
+
+ggplotly(
+  ggplot(plot_data,aes(x=tid,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1")+
   theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]")+ylim(c(0,NA))
+)
 
 
 
-totplot + facet_grid(cols=vars(key))
+total_vand%>%plot_ly(x=~time,
+                     y=~water_evap,
+                     name="Evaporation",
+                     fillcolor='#1f77b4',
+                     type='scatter',
+                     mode='none',
+                     stackgroup='one')%>%
+  add_trace(y=~water_BD,
+            name='Blowdown',
+            fillcolor='#forestgreen')%>%
+  layout(title="Water usage CT",
+         legend=list(x=0.1,y=0.9),
+         yaxis=list(title="Water usage [m^3]"),
+         xaxis=list(title="Time [days]"))
