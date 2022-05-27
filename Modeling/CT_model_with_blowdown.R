@@ -31,11 +31,11 @@ Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevooiret
 V_BD=1#m^3 volume til discondinous bd
 c_makeup = c(
-  1.6, #Na
+  4.1, #Na
   0.6, #Cl
   0.5, #SO4
-  0.4, #SiO2
-  0.1  #Ca
+  0.45, #SiO2
+  0.03  #Ca
 ) #En vektor med de forskellige koncentrationer [mM]
 
 
@@ -48,7 +48,7 @@ c_makeup = c(
 ##
 ion_values = data.frame(
   Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
-  value = c(6, 7.1, 2.5, 2.5,2),#Grænseværdier [mM=mol/m^3]
+  value = c(NA, 7.1, 2.5, 2.6,2),#Grænseværdier [mM=mol/m^3]
   molar_con = c(50.1, 76.4, 160, NA,119)
 )#[S*cm^2*mol^-1]
 c_ini=c(6,2.25,1.88,1.5,0.5)
@@ -73,7 +73,7 @@ paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
 ##### Model Parameters #####
 dt_timer=1 #tidsstep i timer
 dt=dt_timer/24 #timer i dage
-run_time = 60 #Total operating time i dage
+run_time = 90 #Total operating time i dage
 max_time = run_time*24 #i timer
 n_time_step = run_time/dt #antal tidsskridt 
 start_tid = 0 # start tid?
@@ -123,7 +123,7 @@ vand_BD[0:n_time_step+1]=0
 vand_vap[0:n_time_step+1]=0
 
 df[1,]=c(start_tid,V_CT,con_ini)
-cf[1,]=c(start_tid,c_ini)
+cf[1,]=c(start_tid,c_makeup)
 nf[1,]=cf[1,]*df$V_CT[1]
 num_bd=0
 i=2
@@ -132,9 +132,9 @@ i=2
 Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt
 #Q_blowdown=(Q_vap/(-1+COC))
 ###### CT Model ######
-while(i < n_time_step){
+while(i <= n_time_step+1){
     while(con < con_lim){
-      if (i>n_time_step) {
+      if (i>n_time_step+1) {
         break
       }
       ##Volume flow
@@ -161,7 +161,7 @@ while(i < n_time_step){
       vand_vap[i]=vand_vap[i-1]+Q_vap
       i=i+1
     }
-  nf[i,2:6] = cf[i-1,2:6]*(V_CT-V_BD)+V_BD*c_makeup
+  nf[i,2:6] = cf[i-1,2:6]*(V_CT-V_BD)+V_BD*c_makeup+Q_makeup*c_makeup
   cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
   con=sum(cf[i,2:6]*ion_values[,3],na.rm=T)
   df$con[i] = con
@@ -174,7 +174,8 @@ while(i < n_time_step){
   vand_vap[i]=vand_vap[i-1]+Q_vap
   i=i+1
 }
-
+######## COC beregninger #####
+COC_water=(vand_vap[length(vand_vap)]+vand_BD[length(vand_BD)])/(vand_BD[length(vand_BD)])
 
 
 ########## plot #############
@@ -207,10 +208,15 @@ ggplotly(
 ggplotly(
   ggplot(plot_data,aes(x=tid,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1")+
-  theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]")+ylim(c(0,NA))
-)
+  theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]")+ylim(c(0,NA))+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Ca")%>%select(value))),linetype='dashed',color="red")+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Cl")%>%select(value))),linetype='dashed',color="blue")+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SiO2")%>%select(value))),linetype='dashed',color="purple")+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SO4")%>%select(value))),linetype='dashed',color="orange")
+               )
 
 
+#annotate("text", x = "Feb", y = 40, label = "Previous Level", vjust = -0.5)
 
 total_vand%>%plot_ly(x=~time,
                      y=~water_evap,
