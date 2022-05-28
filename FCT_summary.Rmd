@@ -1308,4 +1308,17 @@ factor_snyd_7=((vigtig_conc_data[c(3,7,11,15,19,23),]$Concentration/vigtig_conc_
 
 #det går dårligt med snyd. 
 
+#vI LADER SOM OM BFEED = B_PERMEAT, OG REGNER REJECTION FRA 1 FILTRERING
+rejection_1_fil6=(1-(vigtig_conc_data[c(35,27,43,39,46,31),]$Concentration/vigtig_conc_data[c(33,25,41,37,45,29),]$Concentration))*100
+#rejection_2_fil6=(1-(vigtig_conc_data[c(2,6,10,14,18,22),]$Concentration/vigtig_conc_data[c(33,25,41,37,45,29),]$Concentration))*100
+
+rejection_1_fil7=(1-(vigtig_conc_data[c(36,28,44,40,48,32),]$Concentration/vigtig_conc_data[c(34,26,42,38,47,30),]$Concentration))*100
+#rejection_2_fil7=(1-(vigtig_conc_data[c(4,8,12,16,20,24),]$Concentration/vigtig_conc_data[c(34,26,42,38,46,30),]$Concentration))*100
+```
+
+```{R mol, echo=FALSE, message=FALSE}
+
+feed_nul_sej=feed_nul[,c(1,4,8,9)]
+feed_nul_sej$conc_mol=feed_nul_sej$Concentration
+
 ```
