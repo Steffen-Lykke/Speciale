@@ -39,13 +39,7 @@ c_makeup = c(
 ) #En vektor med de forskellige koncentrationer [mM]
 
 
-## https://www.researchgate.net/figure/Ion-mobility-in-infinitely-diluted-aqueous-solutions-at-temperature-of-25-S_tbl1_26547884
-#SO4  - 80
-#Ca   - 119
-#K    - 73.5
-#Al   - 63
-#Mg   - 53.1
-##
+
 ion_values = data.frame(
   Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
   value = c(NA, 7.1, 2.5, 2.6,2),#Grænseværdier [mM=mol/m^3]
@@ -111,6 +105,7 @@ cf = data.frame(
 
 vand_BD=vector()
 vand_vap=vector()
+c_BD=cf
 
 #Initial Values
 df[0:n_time_step+1,]=0
@@ -161,11 +156,13 @@ while(i <= n_time_step+1){
       vand_vap[i]=vand_vap[i-1]+Q_vap
       i=i+1
     }
+  num_bd=num_bd+1
+  c_BD[num_bd,2:6]=cf[i-1,2:6]
+  c_BD[num_bd,1]=df$tid[i-1]
   nf[i,2:6] = cf[i-1,2:6]*(V_CT-V_BD)+V_BD*c_makeup+Q_makeup*c_makeup
   cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
   con=sum(cf[i,2:6]*ion_values[,3],na.rm=T)
   df$con[i] = con
-  num_bd=num_bd+1
   df$tid[i]=df$tid[i-1]+dt
   nf$tid[i]=nf$tid[i-1]+dt
   cf$tid[i]=cf$tid[i-1]+dt
@@ -176,8 +173,8 @@ while(i <= n_time_step+1){
 }
 ######## COC beregninger #####
 COC_water=(vand_vap[length(vand_vap)]+vand_BD[length(vand_BD)])/(vand_BD[length(vand_BD)])
-
-
+COC_ion=c_BD[num_bd-1,2:6]/c_makeup
+COC_con=con_lim/con_ini
 ########## plot #############
 cf.long = cf %>% 
   gather(key,value,Na,Cl,SO4,SiO2,Ca)
