@@ -56,7 +56,7 @@ colors = c(
 ```
 
 
-```{r concentration, echo=FALSE}
+```{r import af data rejection, echo=FALSE}
 
 #multisalt: 
 multi_salt_rejection = read.table(file='data/multi_salt_rejection.csv', header = T,sep = "\t",stringsAsFactors = T)
@@ -110,9 +110,6 @@ colors3=c(
  )
   
   
-  
-  
-  
 #  '#d62728',  # brick red
 #  '#1f77b4',  # muted blue 
 #  '#2ca02c',  # cooked asparagus green
@@ -126,17 +123,30 @@ colors3=c(
 #)
 #vi klipper lige alle B filtreringer af. 
 
-authentic_synthetic_plot=Rejection_data_samlet%>%filter(Species=="Cl"|Species=="SiO2")%>%filter(A_B!="B")%>%
+Cl_authentic_synthetic_plot=Rejection_data_samlet%>%filter(Species=="Cl")%>%filter(A_B!="B")%>%
 ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
-  geom_point()+geom_line()+scale_color_manual(values =colors3)+
+  geom_point()+geom_line()+#scale_color_manual(values =colors3)+
  # scale_color_brewer(palette= "Spectral")+
   geom_hline(yintercept=0)+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(Type),rows = vars(Species),scale="free")+
  # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
    scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
-authentic_synthetic_plot
-ggplotly(authentic_synthetic_plot)
+Cl_authentic_synthetic_plot
+ggplotly(Cl_authentic_synthetic_plot)
+
+SIO2_authentic_synthetic_plot=Rejection_data_samlet%>%filter(Species=="SiO2")%>%filter(A_B!="B")%>%
+ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
+  geom_point()+geom_line()+#scale_color_manual(values =colors3)+
+ # scale_color_brewer(palette= "Spectral")+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(Type),rows = vars(Species),scale="free")+
+  scale_y_continuous(limits=c(0, 100), breaks=c(0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+SIO2_authentic_synthetic_plot
+ggplotly(SIO2_authentic_synthetic_plot)
+
 
 Rejection_data_samlet%>%filter(Species!="Cl",Species!="SiO2",Species!="Mg")%>%filter(A_B!="B")%>%
 ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
@@ -156,7 +166,7 @@ ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
   geom_hline(yintercept=0)+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(A_B),rows = vars(Species),scale="free")+
- # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+ # scale_y_continuous(limits=c(0, 100), breaks=c(0,20, 40,60,80,100 ))+
    scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 
 
@@ -172,11 +182,24 @@ ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
 
 
 
+B_authentic_synthetic_plot=Rejection_data_samlet%>%filter(A_B=="B")%>%filter(Species!="Mg")%>%
+ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
+  geom_point()+geom_line()+#scale_color_manual(values =colors3)+
+ # scale_color_brewer(palette= "Spectral")+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(Species),scale="free")+
+ # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+B_authentic_synthetic_plot
+ggplotly(B_authentic_synthetic_plot)
+
+
 ```
 
 
 
-```{r import af data rejection, echo=FALSE}
+```{r import af data concentration, echo=FALSE}
 
 #brug denne til export af tabels. 
 #write.table(M9.2,file='data/M9.2_df.csv',col.names = T,row.names = F,sep="\t")
@@ -220,12 +243,12 @@ Pilot_concentration$System="Pilot_scale"
 concentration_data_samlet=rbind(multisalt_concentration,ICR_concentration,FCT_concentration,Pilot_concentration)
 
 ```
-
+ Concentration of filtraiton A divided into cations and anions. 
 
 ```{r plot concentraiton, echo=FALSE}
 
 
-concentration_Feed_plot=concentration_data_samlet%>%filter(Stream=="Feed")%>%filter(Species=="Cl"|Species=="SiO2"|Species=="SO4")%>%filter(Filtration!="ID:5B")%>%
+concentration_Feed_plot=concentration_data_samlet%>%filter(Stream=="Feed")%>%filter(Species=="Cl"|Species=="SiO2"|Species=="SO4")%>%filter(Filtration!="ID:5B",Filtration!="ID:4B",Filtration!="ID:6B",Filtration!="ID:7B",Filtration!="ID:8B")%>%
 ggplot(aes(x=Recovery,y=Concentration,color=Filtration))+
   geom_point()+geom_line()+#scale_color_manual(values =colors3)+
   #scale_color_brewer(palette= "Spectral")+
@@ -236,6 +259,19 @@ ggplot(aes(x=Recovery,y=Concentration,color=Filtration))+
    scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [%]", color="Filtration")
 concentration_Feed_plot
 ggplotly(concentration_Feed_plot)
+
+Cation_concentration_Feed_plot=concentration_data_samlet%>%filter(Stream=="Feed")%>%filter(Species=="Ca"|Species=="Na")%>%
+  filter(Filtration!="ID:5B",Filtration!="ID:4B",Filtration!="ID:6B",Filtration!="ID:7B",Filtration!="ID:8B")%>%
+ggplot(aes(x=Recovery,y=Concentration,color=Filtration))+
+  geom_point()+geom_line()+#scale_color_manual(values =colors3)+
+  #scale_color_brewer(palette= "Spectral")+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Concentration-(Concentration*Std), ymax=Concentration+(Concentration*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(Type),rows = vars(Species),scale="free")+
+ # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [%]", color="Filtration")
+Cation_concentration_Feed_plot
+ggplotly(Cation_concentration_Feed_plot)
 
 concentration_initial_plot=concentration_data_samlet%>%filter(Time==0,Stream=="Feed")%>%filter(Species=="Cl"|Species=="SiO2"|Species=="SO4")%>%filter(Filtration!="5B")%>%
 ggplot(aes(x=Filtration, y=Concentration, fill=Species, )) +geom_bar(stat="identity",
