@@ -1167,6 +1167,7 @@ nice_plot_1
 nice_plot_2
 
 
+write.table(ICR_all,file='data/ICR_concentration.csv',col.names = T,row.names = F,sep="\t")
 
 
 ##Rejection: 
@@ -1197,6 +1198,9 @@ rej_plot_1
 
 #noget med ratio. 
 #data er i ICR_all
+
+write.table(Facet_data_ICR,file='data/ICR_rejection.csv',col.names = T,row.names = F,sep="\t")
+
 
 Cl_data=ICR_all%>%filter(ion=="Cl")
 SO4_data=ICR_all%>%filter(ion=="SO4")

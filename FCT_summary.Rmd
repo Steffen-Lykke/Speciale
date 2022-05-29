@@ -983,6 +983,8 @@ pølz1<- ggplot(data=Facet_data_FCT%>%filter(Stream=="Feed"),aes(x=Recovery,y=Co
 pølz
 pølz1
    
+write.table(Facet_data_FCT,file='data/FCT_concentration.csv',col.names = T,row.names = F,sep="\t")
+
 ```
 
 
@@ -1174,6 +1176,9 @@ pølz2<- ggplot(data=rej_facet_data,aes(x=Recovery,y=Rejection,color=ion))+
 
 pølz2
 ggplotly(pølz2)
+
+
+write.table(rej_facet_data,file='data/FCT_rejection.csv',col.names = T,row.names = F,sep="\t")
 
 ```
 

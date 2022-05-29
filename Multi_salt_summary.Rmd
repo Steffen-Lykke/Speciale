@@ -1399,6 +1399,8 @@ perm_plot
 
 ggplotly(perm_plot)
 
+write.table(Facet_data,file='data/Multisalt_concentration.csv',col.names = T,row.names = F,sep="\t")
+
 ```
 
 
@@ -1775,6 +1777,9 @@ nice_plot_rej = ggplot(data=Facet_data_rej,aes(x=Recovery,y=Value,color=ion))+
 nice_plot_rej
 
 ggplotly(nice_plot_rej)
+
+write.table(Facet_data_rej,file='data/multi_salt_rejection.csv',col.names = T,row.names = F,sep="\t")
+
 ```
 
 ```{r facit plot, echo=FALSE}

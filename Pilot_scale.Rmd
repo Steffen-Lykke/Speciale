@@ -459,6 +459,8 @@ geom_errorbar(aes(ymin=SiO2_mgL-(SiO2_mgL*SiO2_Std_p), ymax=SiO2_mgL+(SiO2_mgL*S
 
 ggarrange(plot_8A_Cl, plot_8A_SO4,plot_8A_Na,plot_8A_Ca ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
 ggarrange(plot_8A_SiO2, plot_8A_Mg, plot_8A_K,plot_8A_NO3 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+
 ``` 
 
 
@@ -627,6 +629,22 @@ ggarrange(plot_8B_Cl, plot_8B_SO4,plot_8B_Na,plot_8B_Ca ,ncol=2, nrow=2, common.
 ggarrange(plot_8B_SiO2, plot_8B_Mg, plot_8B_K,plot_8B_NO3 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
 
 
+
+#ID_8A_8B_export=ID_8A_8B_mM_ny[,c(1:3,20,21,22)]
+ID_8A_8B_export=ID_8A_8B_mM_ny
+
+ID_8A_8B_export = ID_8A_8B_export%>%gather(key,value, Cl_mgL,SO4_mgL,Na_mgL,Ca_mgL,SiO2_mgL)
+std_p=c(ID_8A_8B_mM_ny$CL_Std_p,
+                  ID_8A_8B_mM_ny$SO4_Std_p,
+        ID_8A_8B_mM_ny$Na_Std_p,
+        ID_8A_8B_mM_ny$Ca_Std_p,
+        ID_8A_8B_mM_ny$SiO2_Std_p)
+                   
+
+ID_8A_8B_export$std_p=std_p
+ID_8A_8B_export_2=ID_8A_8B_export[,c(1:3,17:20)]
+
+write.table(ID_8A_8B_export_2,file='data/Pilot_concentration.csv',col.names = T,row.names = F,sep="\t")
 ``` 
 ### Rejection
 
@@ -837,8 +855,8 @@ mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl, SO4, Na, Ca, SiO2)
 
 
 #1-(t(conc_udvikling%>%filter(Stream=="8B Permeat")%>%select(-Stream))/
-     t(conc_udvikling%>%filter(Stream=="8A Feed")%>%select(-Stream))
-)
+#     t(conc_udvikling%>%filter(Stream=="8A Feed")%>%select(-Stream))
+#)
 
 #udvikling_tot=conc_udvikling%>%gather(key,value = "concentration",Cl, SO4, Na, Ca, SiO2)
 #udvikling_tot$mol=mol_udvikling_plot$value
@@ -859,11 +877,11 @@ ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Stream, )) +geom_bar(stat="i
   ggtitle("ID:8A/8B")
 
 #rejections=cbind(udvikling_tot%>%filter(Stream=="8A Feed")%>%select(key),1-(udvikling_tot%>%filter(Stream=="8A Permeat")%>%select(concentration)/udvikling_tot%>%filter(Stream=="8B Feed")%>%select(concentration)
-      ))
+ #     ))
 
 #rbind(udvikling_tot%>%filter(Stream=="8A Feed")%>%select(Stream,key,mol,concentration),
 #      udvikling_tot%>%filter(Stream=="8A Permeat"|Stream=="8B")%>%select(Stream,key,mol,concentration)
-)
+#)
 
 
 R_filtration1=(1-(mol_udvikling_plot[c(2,6,10,14,18),]$value/mol_udvikling_plot[c(1,5,9,13,17),]$value))*100
@@ -873,7 +891,9 @@ rejection_sammenligning=cbind(R_filtration1,R_filtration2,c("Cl","SO4","Na","Ca"
 as.data.frame(rejection_sammenligning)
 ```
 
-```{r echo=FALSE}
+
+
+```{r cykel, echo=FALSE}
 ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
 colors2=c( 
   '#d62728',  # brick red
@@ -889,11 +909,53 @@ colors2=c(
 )
 ggplot(ID_8A_8B_rej_plot_2,aes(x=Recovery,y=value,color=key))+geom_line(size = 1)+geom_point()+xlab("Water Recovery [%]")+ylab("Rejection [%]")+labs(colour = "Species")+scale_color_manual(labels = ioner, values =colors2)+xlim(0,100)+ylim(-50,100)+theme(legend.text.align=0)+facet_grid(cols=vars(Name),switch=NULL)+theme(panel.spacing = unit(2, "lines"))
 
+#std_p=c(ID_8A_8B_rej$rej_Cl_std_p,
+#                   ID_8A_8B_rej$rej_SO4_std_p,
+#                   ID_8A_8B_rej$rej_Na_std_p,
+#                    ID_8A_8B_rej$rej_Ca_std_p,
+#                                        ID_8A_8B_rej$rej_SiO2_std_p)
+
+#ID_8A_8B_rej_plot_2$rej_stdp=std_p
+
+
+#ID_8A_8B_rej$rej_Cl_std_p=(ID_8A_8B_rej$Cl_Feed_Std_p+ID_8A_8B_rej$Cl_perm_std_p)
+#ID_8A_8B_rej$rej_SO4_std_p=(ID_8A_8B_rej$SO4_Feed_Std_p+ID_8A_8B_rej$SO4_perm_std_p)
+#ID_8A_8B_rej$rej_Ca_std_p=(ID_8A_8B_rej$Ca_Feed_Std_p+ID_8A_8B_rej$Ca_perm_std_p)
+#ID_8A_8B_rej$rej_Na_std_p=(ID_8A_8B_rej$Na_Feed_Std_p+ID_8A_8B_rej$Na_perm_std_p)
+#ID_8A_8B_rej$rej_NO3_std_p=(ID_8A_8B_rej$NO3_Feed_Std_p+ID_8A_8B_rej$NO3_perm_std_p)
+#ID_8A_8B_rej$rej_Mg_std_p=(ID_8A_8B_rej$Mg_Feed_Std_p+ID_8A_8B_rej$Mg_perm_std_p)
+#ID_8A_8B_rej$rej_K_std_p=(ID_8A_8B_rej$K_Feed_Std_p+ID_8A_8B_rej$K_perm_std_p)
+#ID_8A_8B_rej$rej_SiO2_std_p=(ID_8A_8B_rej$SiO2_Feed_Std_p+ID_8A_8B_rej$SiO2_perm_std_p)
+
 ID_8A_8B_feed_plot=ID_8A_8B_rej%>%gather(key="key",value="value",Ca_Feed,Cl_Feed,Na_Feed,SiO2_Feed,SO4_Feed)
 
+
+
+
 ggplot(ID_8A_8B_feed_plot,aes(x=Recovery,y=value,color=key))+geom_line(size = 1)+geom_point()+xlab("Water Recovery [%]")+ylab("Concentration [mM]")+labs(colour = "Species")+scale_color_manual(labels = ioner, values =colors2)+xlim(0,100)+ylim(0,8)+theme(legend.text.align=0)+facet_grid(cols=vars(Name),switch=NULL)+theme(panel.spacing = unit(2, "lines"))
+
+
+
 ```
-```{r eval=FALSE, include=FALSE}
-#ggsave(filename='test.png',plot=pilot,device="png",width=10,height=6,dpi=300)
+
+```{r facet plot rejection, echo=FALSE}
+
+pilot_rej_data=ID_8A_8B_rej_plot_2[,c(1,2,21,57,58,59)]
+colnames(pilot_rej_data)=c("Name","Time","Recovery","ion","Value","std")
+
+
+rej_plot_pilot=ggplot(data=pilot_rej_data,aes(x=Recovery,y=Value,color=ion))+
+  geom_point()+geom_line()+scale_color_manual(labels = ioner, values =colors2)+geom_hline(yintercept=0)+
+    geom_errorbar(data=pilot_rej_data,aes(x=Recovery,ymin=Value-(Value*std), ymax=Value+(Value*std),color=ion), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(Name),scale="free")+
+  scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
+
+rej_plot_pilot
+write.table(pilot_rej_data,file='data/Pilot_rejection.csv',col.names = T,row.names = F,sep="\t")
+
+``` 
+```{r gem, eval=FALSE, include=FALSE}
+ggsave(filename='rej_plot_pilot.png',plot=rej_plot_pilot,device="png",width=10,height=6,dpi=300)
 ```
 
