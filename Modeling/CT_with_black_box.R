@@ -26,6 +26,7 @@ V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevoiret itf. af blowdown
 V_BD=1
+recocvery=0.777#total water recovery af filtrerings unit
 c_makeup = c(
   4.1, #Na
   0.6, #Cl
@@ -34,10 +35,25 @@ c_makeup = c(
   0.03  #Ca
 ) #En vektor med de forskellige koncentrationer [mM]
 
+Rej=data.frame(
+  Na  =  0.38419491,
+  Cl=-0.30411843,
+  SO4=0.78812522,
+  SiO2=  0.27315914,
+  Ca  =  0.26783120
+)#total rejection af NF system
+
+# Rej=data.frame(
+#   Na  =  0.24,
+#   Cl=-0.068,
+#   SO4=0.61,
+#   SiO2=  0.23,
+#   Ca  =  0.026
+# )#pilot scale 1. filtration
 
 ion_values = data.frame(
   Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
-  value = c(NA, 7.1, 2.5, 2.6,2),#Grænseværdier [mM=mol/m^3]
+  value = c(NA, 7.1, 2.6, 2.5,2),#Grænseværdier [mM=mol/m^3]
   molar_con = c(50.1, 76.4, 160, NA,119)
 )#[S*cm^2*mol^-1]
 
@@ -108,18 +124,12 @@ num_nf=0
 i=2
 toggle = F
 V_NF1=0.9#antal m^3 filtreret ad gangen
-V_NF2=V_NF1*0.77777 #hvor meget vand der kommer tilbage afhægit af recovery
+V_NF2=V_NF1*recovery #hvor meget vand der kommer tilbage afhægit af recovery
 
 Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt m^3/dt(dage)
 
 num_bd=0
-Rej=data.frame(
-  Na  =  0.38419491,
-  Cl=-0.30411843,
-  SO4=0.78812522,
-  SiO2=  0.27315914,
-  Ca  =  0.26783120
-)
+
 ###### CT Model ######
 while(i < n_time_step){
   while(con < con_lim){ ##### CT OPERATION #######
