@@ -89,7 +89,7 @@ Pilot_rejection$System="Pilot_scale"
 
 Rejection_data_samlet=rbind(multi_salt_rejection,ICR_rejection,FCT_rejection,Pilot_rejection)
 
-
+Rejection_data_samlet%>%filter(Filtration=="ID:8A",Time==1)
 
 ```
 ```{r plot, echo=FALSE}
@@ -241,6 +241,8 @@ Pilot_concentration$Type="Authentic"
 Pilot_concentration$System="Pilot_scale"
 
 concentration_data_samlet=rbind(multisalt_concentration,ICR_concentration,FCT_concentration,Pilot_concentration)
+
+concentration_data_samlet%>%filter(Filtration=="ID:8A",Time==1 , Stream=="Feed")
 
 ```
  Concentration of filtraiton A divided into cations and anions. 

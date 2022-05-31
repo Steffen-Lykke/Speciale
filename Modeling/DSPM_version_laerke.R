@@ -80,11 +80,11 @@ ion_data = data.frame(
 
 feed = data.frame(
   ion = c("Na", "Cl", "SO4", "SiO2","Ca","HCO3"),
-  concentration = c(6.94*10^-3,
-                    3.9*10^-3,
-                    1.1*10^-3,
+  concentration = c(7.2*10^-3,
+                    4.3*10^-3,
                     1.4*10^-3,
-                    0.28*10^-3,NA)
+                    1.6*10^-3,
+                    0.77*10^-3,NA)
 )
 #uden sio2 and bicarb
 ion_data=ion_data[c(1,2,3,4,5),]
@@ -121,7 +121,7 @@ ion_data$ka=K_a
 
 
 data = data.frame(cp_guess=feed$concentration*c(0.6,0.8,0.1,0.8,0.5))
-cp_guess
+#cp_guess
 rownames(data)=c("Na","Cl","SO4","SiO2","Ca")
 
 
@@ -177,7 +177,7 @@ dybde=100
 var_kon=1
 var_diff=1
 var_potential=3
-N=11 #antal stykker af membran
+N=10 #antal stykker af membran
  dx = (Le)/N#længde af stykker
  dn = 0.00001 #den virker med 0.00001 
 
@@ -274,7 +274,7 @@ if (any(is.nan(cp))) {
 }
 #### noget med at tjekke cp #####
 err=sum((cp-data$cp_guess)^2)
-if (err<1*10^-31) {
+if (err<1*10^-29) {
   good_cp = T
 }
 data$cp_guess = cp
