@@ -285,3 +285,128 @@ concentration_initial_plot
 
 
 ```
+```{r}
+Ion_data_frame = data.frame()
+## SPRR data håndtering
+SPRR = read.table(file='data/SPRR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+SPRR_pH= c(NA,9.37,9.26,NA,9.26,9.35,NA,9.67,9.68,NA,9.56,9.66,NA,9.83,9.89,NA,9.81,9.87)
+SPRR_con= c(NA,2350,1670,NA,2330,1680,NA,2440,1750,NA,2510,1760,NA,2450,1840,NA,2540,1830)
+#SPRR_type=rep(c("SPRR"),each=18)
+SPRR_names = c("SPRR_1","SPRR_2","SPRR_3","SPRR_4","SPRR_5","SPRR_6","SPRR_7","SPRR_8","SPRR_9","SPRR_10","SPRR_11","SPRR_12","SPRR_13","SPRR_14","SPRR_15","SPRR_16","SPRR_17","SPRR_18")
+
+
+SPRR_wrangle = cbind(SPRR%>%filter(Stream == "Feed"),SPRR%>%filter(Stream == "Rejection")%>%select("Na","Ca","Cl","SO4","SiO2","HCO3"))
+SPRR_wrangle$pH = SPRR_pH
+SPRR_wrangle$con = SPRR_con
+#SPRR_wrangle$type = SPRR_type
+
+
+colnames(SPRR_wrangle) = c("name","Stream","Cl_ratio","SiO2_teo","pH","Ca","Na","Cl","SO4","SiO2_mgL","HCO3","Rej_Na","Rej_Ca","Rej_Cl","Rej_SO4","Rej_SiO2","Rej_HCO3","Conductivity")
+SPRR_wrangle$name = SPRR_names
+SPRR_clean = SPRR_wrangle%>%select(-c("Stream","SiO2_teo","HCO3","Rej_HCO3","Cl_ratio"))
+SPRR_clean$state = "Steady State"
+SPRR_clean$type = "SPRR"
+SPRR_clean$pH[1]=9.33
+SPRR_clean$time=NA
+SPRR_clean$start_vol = NA
+
+###multisalt håndtering
+M_9.2 = read.table(file='data/M9.2_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_9.2_clean = M_9.2%>%select(-c("time","conductivity"))
+M_9.2_clean$Conductivity = c(1560,1730,1880,2080,2390,2700)
+M_9.2_clean$state = "Batch"
+M_9.2_clean$type = "M_9.2"
+M_9.2_clean$name = c("M_9.2_3.5h","M_9.2_5h","M_9.2_6h","M_9.2_7h","M_9.2_8h","M_9.2_8.7h")
+M_9.2_clean$time = c(3.5,5,6,7,8,8.7)
+M_9.2_clean$start_vol = 10
+
+M_10 = read.table(file='data/M10_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_10_clean = M_10%>%select(-c("time"))
+M_10_clean$Conductivity = c(1830,2050,2350,2550,2830,3250)
+M_10_clean$state = "Batch"
+M_10_clean$type = "M_10"
+M_10_clean$pH = c(10.13,10.15,10.17,10.19,10.21,10.24)
+M_10_clean$name = c("M_10_3h","M_10_4h","M_10_5h","M_10_5.5h","M_10_6h","M_10_6.5h")
+M_10_clean$time = c(3,4,5,5.5,6,6.5)
+M_10_clean$start_vol = 8.5
+
+M_10.5 = read.table(file='data/M10.5_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+M_10.5_clean = M_10.5%>%select(-c("time"))
+M_10.5_clean$Conductivity = c(2080,2390,2660,3020,3570,4470)
+M_10.5_clean$state = "Batch"
+M_10.5_clean$type = "M_10.5"
+M_10.5_clean$pH = c(10.5,10.52,10.54,10.56,10.59,10.63)
+M_10.5_clean$name = c("M_10.5_2.5h","M_10.5_4h","M_10.5_5h","M_10.5_6h","M_10.7h","M_10.5_8h")
+M_10.5_clean$time = c(2.5,4,5.5,6,7,8)
+M_10.5_clean$start_vol = 10
+
+### ICR data
+ICR_1 = read.table(file='data/ICR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
+colnames(ICR_1) = c("name","SiO2_mgL","Na","Cl","SO4","Ca","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state")
+ICR_clean = ICR_1
+ICR_clean$Conductivity = c(2477,2517,2570,2625,2685,2740,2810,2881,2951,3040,3126,3221,3376,3568,4019)
+SPRR_clean$Conductivity[1]=4210
+ICR_clean$type = "ICR"
+ICR_clean$time = c(20/60,40/60,60/60,80/60,100/60,2,140/60,160/60,3,200/60,220/60,240/60,270/60,300/60,360/60)
+ICR_clean$start_vol = 10
+
+###Sættes sammen
+col_order <- c("name","Na","Cl","SO4","Ca","SiO2_mgL","pH","Rej_Cl","Rej_SO4","Rej_Na","Rej_Ca","Rej_SiO2","state","type","time","start_vol")
+M_9.2_clean = M_9.2_clean[,col_order]
+M_10_clean = M_10_clean[,col_order]
+M_10.5_clean = M_10.5_clean[,col_order]
+SPRR_clean = SPRR_clean[,col_order]
+ICR_clean = ICR_clean[,col_order]
+
+Ion_data_frame = rbind(M_9.2_clean,M_10_clean,M_10.5_clean,SPRR_clean,ICR_clean)
+Ion_data_frame[1:18,8:12] = Ion_data_frame[1:18,8:12]*100
+Mw_Cl=35.45
+Mw_Na=22.99
+Mw_Ca=40.078
+Mw_SO4=96.06
+Mw_SiO2=60.08
+Ion_data_frame = Ion_data_frame%>%mutate("Na_mmol"=Na/Mw_Na)
+Ion_data_frame = Ion_data_frame%>%mutate("Ca_mmol"=Ca/Mw_Ca)
+Ion_data_frame = Ion_data_frame%>%mutate("Cl_mmol"=Cl/Mw_Cl)
+Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=SO4/Mw_SO4)
+Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
+
+
+
+
+### noget med recovery
+Ion_data_frame = Ion_data_frame%>%mutate("perm_vol"=time*1.02)
+Ion_data_frame = Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
+
+
+
+
+
+
+
+
+#Udtryk for ladning af silica som funk af pH, jeg kan ikkehuske hvor det kommer fra
+a=1.00016
+b=2.314233
+c=9.831689
+Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet =  a/(1+exp(-b*(pH-c))))
+#Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet1=-0.0052*pH^5+0.2074*pH^4-3.2404*pH^3+24.84*pH^2-93.425*pH+137.74) #Gammelt udtryk for samme
+
+
+
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_SO4 = Cl_mmol/(Cl_mmol+SO4_mmol))
+Ion_data_frame = Ion_data_frame%>%mutate(total_sio2_ladet=SiO2_mmol*SiO2_ladet)
+Ion_data_frame = Ion_data_frame%>%mutate(anion_total = total_sio2_ladet+SO4_mmol+Cl_mmol)
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
+
+FCT_data=read.table(file='data/FCT_stor_tabel.csv',header= T,sep="\t")
+pilot_data=read.table(file='data/pilot_stor_tabel.csv',header= T,sep="\t")
+ICR_data=read.table(file='data/ICR_stor_tabel.csv',header= T,sep="\t")
+
+Ion_data_frame = rbind(Ion_data_frame,FCT_data)
+Ion_data_frame = rbind(Ion_data_frame,pilot_data)
+
+
+
+```
+

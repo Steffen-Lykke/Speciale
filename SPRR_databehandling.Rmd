@@ -147,10 +147,16 @@ Ion_data_frame = Ion_data_frame%>%mutate("SO4_mmol"=SO4/Mw_SO4)
 Ion_data_frame = Ion_data_frame%>%mutate("SiO2_mmol"=SiO2_mgL/Mw_SiO2)
 
 
+
+
 ### noget med recovery
 Ion_data_frame = Ion_data_frame%>%mutate("perm_vol"=time*1.02)
 Ion_data_frame = Ion_data_frame%>%mutate("Recovery"=100*(1-(start_vol-perm_vol)/start_vol))
-Ion_data_frame=Ion_data_frame[19:36,]
+
+
+
+
+
 
 
 #Udtryk for ladning af silica som funk af pH, jeg kan ikkehuske hvor det kommer fra
@@ -167,6 +173,8 @@ Ion_data_frame = Ion_data_frame%>%mutate(Cl_SO4 = Cl_mmol/(Cl_mmol+SO4_mmol))
 Ion_data_frame = Ion_data_frame%>%mutate(total_sio2_ladet=SiO2_mmol*SiO2_ladet)
 Ion_data_frame = Ion_data_frame%>%mutate(anion_total = total_sio2_ladet+SO4_mmol+Cl_mmol)
 Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
+
+Ion_data_frame=Ion_data_frame[19:36,]
 Ion_data_frame=Ion_data_frame[!is.na(Ion_data_frame$Na),]
 
 Ion_data_frame_both=Ion_data_frame%>%filter(name!="SPRR_1")%>%filter(name!="SPRR_8")
