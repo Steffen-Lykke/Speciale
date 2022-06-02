@@ -779,9 +779,29 @@ SS_tot_plot=SS%>%gather(key="key",value="value",f_Na_mmol,f_Cl_mmol,f_SiO2_mmol,
 SS_tot_plot$ion=rep(c(rep("Na",21),rep("Cl",21),rep("SiO2",21),rep("Ca",21)),2)
 SS_tot_plot$var=c(rep("Feed Concentration [mM]",84),rep("Rejection [%]",84))
 
+
 ggplotly(ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+
            facet_grid(cols=vars(exp),row =vars(var),scale="free",switch=NULL))
 
+ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+  '#2ca02c',  # cooked asparagus green
+  '#9467bd',  # muted purple  
+  '#ff7f0e',  # safety orange
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+
+ggplot(SS_tot_plot,aes(x=recovery*100,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+
+  xlab("Water Recovery [%]")+ylab(" ")+
+           scale_color_manual(labels = ioner, values =colors2)+labs(colour = "Species")+
+  theme(legend.text.align=0)+facet_grid(cols=vars(exp),row=vars(var),scale="free")
+  
 
 #bud på at lave den pæn, no worky
 #ggplotly(ggplot(SS_tot_plot,aes(x=recovery,y=value,color=ion))+geom_point()+geom_line()+ylim(0,NA)+

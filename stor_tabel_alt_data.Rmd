@@ -286,6 +286,86 @@ concentration_initial_plot
 
 ```
 
+```{r ikke bar plot, echo=FALSE}
+
+#vi laver sejt plot til ICR: 
+
+ICR_data=concentration_data_samlet%>%filter(Filtration=="ID:4A"|Filtration=="ID:4B")%>%filter(Stream!="Perm spand")
+ICR_data$plads=c(rep("4A Feed",17),rep("4A Permeat",15),rep("4A Feed",17),rep("4A Permeat",15),rep("4A Feed",17),rep("4A Permeat",15),rep("4A Feed",17),rep("4A Permeat",15),rep("4A Feed",17),rep("4A Permeat",15),"4B Feed",
+                 rep(c("4B Feed","4B Permeate"),4),"4B Feed",
+                 rep(c("4B Feed","4B Permeate"),4),"4B Feed",
+                 rep(c("4B Feed","4B Permeate"),4),"4B Feed",
+                 rep(c("4B Feed","4B Permeate"),4),"4B Feed",
+                 rep(c("4B Feed","4B Permeate"),4))
+
+
+ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}),expression(Mg^{textstyle("2+")}))
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+  '#2ca02c',  # cooked asparagus green
+  '#9467bd',  # muted purple  
+  '#ff7f0e',  # safety orange
+ '#7f7f7f',  # middle gray
+   '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+
+
+  ICR_data%>%
+ggplot(aes(x=Recovery,y=Concentration,color=Species))+
+  geom_point()+geom_line()+scale_color_manual(labels = ioner, values =colors2)+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Concentration-(Concentration*Std), ymax=Concentration+(Concentration*Std),color=Species), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(plads),rows=vars(Plot),scale="free")+
+ # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [%]", color="Species")
+  
+  ICR_data%>%
+ggplot(aes(x=Recovery,y=Concentration,color=Species))+
+  geom_point()+geom_line()+scale_color_manual(labels = ioner, values =colors2)+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Concentration-(Concentration*Std), ymax=Concentration+(Concentration*Std),color=Species), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(plads),scale="free")+
+ # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [%]", color="Species")
+
+
+  
+  #vi laver sejt plot til FCT: 
+
+FCT_6A_data=concentration_data_samlet%>%filter(Filtration=="ID:6A"|Filtration=="ID:6B")%>%filter(Stream!="CT vand", Stream!="Perm spand")
+FCT_6A_data$plads=c(rep(c("6A Feed","6A Feed","6A Permeate","6A Feed","6A Permeate",
+                    "6B Feed","6B Feed","6B Permeate","6B Feed","6B Permeate"),5),rep("6A Feed",5),rep("6B Feed",5),rep("6A Permeate",5),rep("6B Permeate",5))
+                        
+FCT_7A_data=concentration_data_samlet%>%filter(Filtration=="ID:7A"|Filtration=="ID:7B")%>%filter(Stream!="CT vand", Stream!="Perm spand")
+FCT_7A_data$plads=c(rep(c("7A Feed","7A Feed","7A Permeate","7A Feed","7A Permeate",
+                    "7B Feed","7B Feed","7B Permeate","7B Feed","7B Permeate"),5),rep("7A Feed",5),rep("7B Feed",5),rep("7A Permeate",5),rep("7B Permeate",5))
+                        
+         FCT_6A_data%>%
+ggplot(aes(x=Recovery,y=Concentration,color=Species))+
+  geom_point()+geom_line()+scale_color_manual(labels = ioner, values =colors2)+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Concentration-(Concentration*Std), ymax=Concentration+(Concentration*Std),color=Species), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(plads),rows=vars(Plot),scale="free")+
+ # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [%]", color="Species")          
+
+         
+         FCT_7A_data%>%
+ggplot(aes(x=Recovery,y=Concentration,color=Species))+
+  geom_point()+geom_line()+scale_color_manual(labels = ioner, values =colors2)+
+  geom_hline(yintercept=0)+
+    geom_errorbar(aes(x=Recovery,ymin=Concentration-(Concentration*Std), ymax=Concentration+(Concentration*Std),color=Species), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
+    facet_grid(cols=vars(plads),rows=vars(Plot),scale="free")+
+ # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
+   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Concentration [%]", color="Species")          
+  
+```
+
 
 
 ```{r MEGA dataframe}
@@ -436,7 +516,7 @@ Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
 
 ```
 
-```{r aww shit here we go again}
+```{r aww shit here we go again, eval=FALSE, include=FALSE}
 ## How well does the old line match?
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493))
 
@@ -520,7 +600,7 @@ ex_RMSE
 
 
 Nu med multiple regression
-```{r aww shit here we go again}
+```{r aww shit here we go again_2, eval=FALSE, include=FALSE}
 
 ## How well does the old line match?
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493))
@@ -585,7 +665,7 @@ ex_model_fit=na.omit(ex_model_fit)
 ex_RMSE=rmse(ex_model_fit$actual,ex_model_fit$predicted)
 ex_RMSE
 ```
-```{r Correlation matrix?}
+```{r Correlation matrix?, eval=FALSE, include=FALSE}
 library(corrplot)
 Ion_data_frame_var_SPRR=na.omit(Ion_data_frame%>%filter(type=="SPRR")%>%select(-c(state,type,name,Ca,pH2,Na,Cl,SO4,SiO2_mgL,time,start_vol,perm_vol,Recovery)))
 
