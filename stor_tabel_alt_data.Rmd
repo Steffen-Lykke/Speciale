@@ -405,8 +405,9 @@ ICR_data=read.table(file='data/ICR_stor_tabel.csv',header= T,sep="\t")
 
 Ion_data_frame = rbind(Ion_data_frame,FCT_data)
 Ion_data_frame = rbind(Ion_data_frame,pilot_data)
+Ion_data_frame = rbind(Ion_data_frame,ICR_data)
 
-
+pH_FCT=c(9.77,9.92,9.65,9.78,8.28,8.5,8.87,8.89)
 
 ```
 
