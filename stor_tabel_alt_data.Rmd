@@ -285,7 +285,10 @@ concentration_initial_plot
 
 
 ```
-```{r}
+
+
+
+```{r MEGA dataframe}
 Ion_data_frame = data.frame()
 ## SPRR data håndtering
 SPRR = read.table(file='data/SPRR_df.csv', header = T,sep = "\t",stringsAsFactors = T)
@@ -408,6 +411,101 @@ Ion_data_frame = rbind(Ion_data_frame,pilot_data)
 Ion_data_frame = rbind(Ion_data_frame,ICR_data)
 
 pH_FCT=c(9.77,9.92,9.65,9.78,8.28,8.5,8.87,8.89)
+pH_pilot=c(9.86,9.81,9.85,9.92,10.03,10.15,8.84,8.87,8.92,9.0,9.12)
+pH_ICR=c(7.9,7.88,7.91,7.92,9.81,9.82,9.85,9.89)
 
+Ion_data_frame$pH[52:59]=pH_FCT
+Ion_data_frame$pH[60:70]=pH_pilot
+Ion_data_frame$pH[71:78]=pH_ICR
+
+
+Ion_data_frame$name[37:51]="ID:4A"
+Ion_data_frame$name[1:6]="ID:1"
+Ion_data_frame$name[7:12]="ID:2"
+Ion_data_frame$name[13:18]="ID:3"
+Ion_data_frame$name[19:36]="SS"
+Ion_data_frame$name[52:59]=c("ID:6A","ID:6A","ID:7A","ID:7A","ID:6B","ID:6B","ID:7B","ID:7B")
+
+
+
+Ion_data_frame = Ion_data_frame%>%mutate(SiO2_ladet =  a/(1+exp(-b*(pH-c))))
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_SO4 = Cl_mmol/(Cl_mmol+SO4_mmol))
+Ion_data_frame = Ion_data_frame%>%mutate(total_sio2_ladet=SiO2_mmol*SiO2_ladet)
+Ion_data_frame = Ion_data_frame%>%mutate(anion_total = total_sio2_ladet+SO4_mmol+Cl_mmol)
+Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
+
+```
+
+```{r aww shit here we go again}
+## How well does the old line match?
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493))
+
+linear_SPRR=readRDS("linear_SPRR.rds")
+multiple_linear_SPRR=readRDS("multiple_linear_SPRR.rds")
+
+plot(x=predict(linear_SPRR,newdata=Ion_data_frame%>%select(pH)), y=Ion_data_frame$Rej_SiO2,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+        
+plot(x=predict(linear_SPRR,newdata=Ion_data_frame_A%>%select(pH)), y=Ion_data_frame_A$Rej_SiO2,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+model_fit=data.frame(actual=Ion_data_frame_A$Rej_SiO2,predicted=predict(linear_SPRR,newdata=Ion_data_frame_A%>%select(pH)))
+model_fit=na.omit(model_fit)
+old_RMSE=rmse(model_fit$actual,model_fit$predicted)
+
+## How are new models?
+fit_SiO2_pH = lm(Rej_SiO2~pH, data = Ion_data_frame)
+ggplotRegression(fit_SiO2_pH)+ylab("SiO2 Rejection [%]")
+summary(fit_SiO2_pH)
+plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+
+## What about B filtreringer?
+Ion_data_frame_A=Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:8B"))
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493)+geom_abline(intercept=fit_SiO2_low_pH$coefficients[1],slope=fit_SiO2_low_pH$coefficients[2],linetype="dashed"))
+
+
+#Hmm looks like the low pH data does not fit so well, can we do some exp
+ex_model = lm(log(Rej_SiO2)~ pH,data=Ion_data_frame)
+summary(ex_model)
+plot(x=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH))), y=Ion_data_frame$Rej_SiO2,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+
+
+### Just do linear regression on high pH
+fit_SiO2_pH = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:8B")))
+ggplotRegression(fit_SiO2_pH)+ylab("SiO2 Rejection [%]")
+summary(fit_SiO2_pH)
+plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+new_model_fit=data.frame(actual=Ion_data_frame_A$Rej_SiO2,predicted=predict(fit_SiO2_pH,newdata=Ion_data_frame_A%>%select(pH)))
+new_model_fit=na.omit(new_model_fit)
+new_RMSE=rmse(new_model_fit$actual,new_model_fit$predicted)
+
+print(data.frame(`old RMSE`=old_RMSE,`new RMSE`=new_RMSE,`difference[%]`=((old_RMSE-new_RMSE)/new_RMSE)*100))
+
+ex_model_fit=data.frame(actual=Ion_data_frame$Rej_SiO2,predicted=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH))))
+ex_model_fit=na.omit(ex_model_fit)
+ex_RMSE=rmse(ex_model_fit$actual,ex_model_fit$predicted)
+ex_RMSE
 ```
 
