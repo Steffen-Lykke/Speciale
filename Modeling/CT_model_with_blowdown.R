@@ -67,7 +67,7 @@ paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
 ##### Model Parameters #####
 dt_timer=1 #tidsstep i timer
 dt=dt_timer/24 #timer i dage
-run_time = 90 #Total operating time i dage
+run_time = 1000 #Total operating time i dage
 max_time = run_time*24 #i timer
 n_time_step = run_time/dt #antal tidsskridt 
 start_tid = 0 # start tid?
@@ -114,8 +114,8 @@ cf[0:n_time_step+1,]=0
 
 
 
-vand_BD[0:n_time_step+1]=0
-vand_vap[0:n_time_step+1]=0
+vand_BD[0:n_time_step+1]=NA
+vand_vap[0:n_time_step+1]=NA
 
 df[1,]=c(start_tid,V_CT,con_ini)
 cf[1,]=c(start_tid,c_makeup)

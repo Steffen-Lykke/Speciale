@@ -26,7 +26,8 @@ V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevoiret itf. af blowdown
 V_BD=1
-recocvery=0.777#total water recovery af filtrerings unit
+#recocvery=0.777#total water recovery af filtrerings unit
+recovery=0.888
 c_makeup = c(
   4.1, #Na
   0.6, #Cl
@@ -34,22 +35,23 @@ c_makeup = c(
   0.45, #SiO2
   0.03  #Ca
 ) #En vektor med de forskellige koncentrationer [mM]
-
-Rej=data.frame(
-  Na  =  0.38419491,
-  Cl=-0.30411843,
-  SO4=0.78812522,
-  SiO2=  0.27315914,
-  Ca  =  0.26783120
-)#total rejection af NF system
+fBD = T #Skal der foregå "forced" blowdown ved grænse værdi? T/F
 
 # Rej=data.frame(
-#   Na  =  0.24,
-#   Cl=-0.068,
-#   SO4=0.61,
-#   SiO2=  0.23,
-#   Ca  =  0.026
-# )#pilot scale 1. filtration
+#   Na  =  0.38419491,
+#   Cl=0.064,
+#   SO4=0.78812522,
+#   SiO2=  0.27315914,
+#   Ca  =  0.26783120
+# )#total rejection af NF system
+
+Rej=data.frame(
+  Na  =  0.24,
+  Cl=-0.068,
+  SO4=0.61,
+  SiO2=  0.23,
+  Ca  =  0.026
+)#pilot scale 1. filtration
 
 ion_values = data.frame(
   Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
@@ -77,7 +79,7 @@ para = function(x){
 ##### Model Parameters #####
 dt_timer=1 #tidsstep i timer
 dt=dt_timer/24 #timer i dage
-run_time = 90 #Total operating time i dage
+run_time = 1000 #Total operating time i dage
 max_time = run_time*24 #i timer
 n_time_step = run_time/dt #antal tidsskridt 
 start_tid = 0 # start tid?
@@ -109,21 +111,20 @@ vand_BD=vector()
 vand_vap=vector()
 
 #Initial Values
-df[0:n_time_step+1,]=0
-nf[0:n_time_step+1,]=0
-cf[0:n_time_step+1,]=0
-vandforbrug[0:n_time_step+1]=0
-vand_NF[0:n_time_step+1]=0
-vand_BD[0:n_time_step+1]=0
-vand_vap[0:n_time_step+1]=0
+df[0:n_time_step+1,]=NA
+nf[0:n_time_step+1,]=NA
+cf[0:n_time_step+1,]=NA
+vandforbrug[0:n_time_step+1]=NA
+vand_NF[0:n_time_step+1]=NA
+vand_BD[0:n_time_step+1]=NA
+vand_vap[0:n_time_step+1]=NA
 
 df[1,]=c(start_tid,V_CT,con_ini)
 cf[1,]=c(start_tid,c_makeup)
 nf[1,]=cf[1,]*df$V_CT[1]
 num_nf=0
 i=2
-toggle = F
-V_NF1=0.9#antal m^3 filtreret ad gangen
+V_NF1=1#antal m^3 filtreret ad gangen
 V_NF2=V_NF1*recovery #hvor meget vand der kommer tilbage afhægit af recovery
 
 Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt m^3/dt(dage)
@@ -136,9 +137,9 @@ while(i < n_time_step){
     if (i>n_time_step) {
       break
     }
-    if (cf$Cl[i-1]>=5) {
+    if (cf$Cl[i-1]>=7&fBD==T) {
       nf[i,2:6] = cf[i-1,2:6]*V_CT-V_BD*cf[i-1,2:6]+V_BD*c_makeup+Q_makeup*c_makeup
-      cf[i,2:6] = nf[i,2:6]/df$V_CT[i]  
+      cf[i,2:6] = nf[i,2:6]/df$V_CT[i]
       con=sum(cf[i,2:5]*ion_values[,3],na.rm=T)
       df$con[i] = con
       num_bd=num_bd+1
@@ -201,7 +202,7 @@ while(i < n_time_step){
 
 #####
 water_bd_NF=num_nf*(V_NF1-V_NF2)
-df$tid[nrow(df)]
+
 
 total_vand=data.frame(time=df$tid,
                       water=vandforbrug,
@@ -209,13 +210,13 @@ total_vand=data.frame(time=df$tid,
                       water_BD=vand_BD,
                       water_evap=vand_vap)
 
-COC_water=(vand_vap[length(vand_vap)]+vand_BD[length(vand_BD)]+vand_NF[length(vand_NF)])/(vand_BD[length(vand_BD)]+vand_NF[length(vand_NF)])
+COC_water=(max(vand_vap)+max(vand_BD)+max(vand_NF))/(max(vand_BD)+max(vand_NF))
 
 
 ########## plot #############
-cf.long = cf %>% 
+cf.long = cf[-nrow(cf),] %>% 
   gather(key,value,Na,Cl,SO4,SiO2,Ca)
-df.long = df %>% 
+df.long = df[-nrow(df),] %>% 
   gather(key,value,V_CT,con)
 vand.long = total_vand %>% 
   gather(key,value,water_evap,water_NF,water_BD)
@@ -249,11 +250,10 @@ total_vand%>%plot_ly(x=~time,
             name='Nanofiltration',
             fillcolor='#E41317')%>%
   add_trace(y=~water_BD,
-            name='Forced Blowdown',
+            name='Blowdown',
             fillcolor='#forestgreen')%>%
-  layout(title="Water usage CT",
-         legend=list(x=0.1,y=0.9),
-         yaxis=list(title="Water usage [m^3]"),
+  layout(legend=list(x=0.1,y=0.9),
+         yaxis=list(title="Water usage [m^3]",range=c(0,NA)),
          xaxis=list(title="Time [days]"))
 
-#ggplot(vand.long, aes(x=time, y=value))+ geom_area(aes(colour=key, fill=key))+geom_line(aes(time, water_evap, color="total charge"), total_vand,color="black")
+#ggarrange(fil_1_BD,fil_2,common.legend = TRUE,labels = c("1 Filtration","2 Filtrations"))

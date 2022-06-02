@@ -235,6 +235,10 @@ fit_SiO2_sio2 = lm(Rej_SiO2~SiO2_mmol, data = Ion_data_frame)
 ggplotRegression(fit_SiO2_sio2)+ylab("SiO2 Rejection [%]")
 summary(fit_SiO2_sio2)
 
+fit_SiO2_sio2 = lm(Rej_SiO2~SiO2_mmol+SO4_mmol, data = Ion_data_frame)
+ggplotRegression(fit_SiO2_sio2)+ylab("SiO2 Rejection [%]")
+summary(fit_SiO2_sio2)
+
 #### TWO VARIABLES ####
 fit_SiO2_pH_sio2 = lm(Rej_SiO2~pH+SiO2_mmol, data = Ion_data_frame)
 ggplotRegression(fit_SiO2_pH_sio2)+ylab("SiO2 Rejection [%]")
@@ -320,7 +324,7 @@ R_plot <- plot_ly(
   mode = "markers",
   marker = list(
     color = ~ Rej_SiO2,
-    colorscale = 'magma',
+    colorscale = 'Purples',
     line = list(
         color = 'rgb(0, 0, 0)',
         width = 1
@@ -341,7 +345,7 @@ R_plot <- add_trace(
   y = axis_y,
   type = "surface",
   colorbar = list(title = 'SiO<sub>2</sub> Rejection'),
-  colorscale = 'magma',
+  colorscale = 'Purples',
   opacity=0.7
 )
 
