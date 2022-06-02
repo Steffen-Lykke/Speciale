@@ -476,7 +476,7 @@ Ion_data_frame_A=Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:8B"))
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493)+geom_abline(intercept=fit_SiO2_low_pH$coefficients[1],slope=fit_SiO2_low_pH$coefficients[2],linetype="dashed"))
 
 
-#Hmm looks like the low pH data does not fit so well, can we do some exp
+#Hmm looks like the low pH data does not fit so well, can we do some other models
 ex_model = lm(log(Rej_SiO2)~ pH,data=Ion_data_frame)
 summary(ex_model)
 plot(x=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH))), y=Ion_data_frame$Rej_SiO2,
@@ -485,13 +485,22 @@ plot(x=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH))), y=Ion_data_fr
      main='pH',
      abline(a=0, b=1))
 
+Ion_data_frame$pH2=Ion_data_frame$pH^2
+q_model=lm(Rej_SiO2~ pH+pH2,data=Ion_data_frame)
+summary(q_model)
+ydata=predict(q_model,newdata=Ion_data_frame%>%select(pH,pH2))
 
+Ion_data_frame%>%
+  ggplot(aes(x=pH,y=Rej_SiO2))+geom_point()+stat_smooth(method = "lm",formula = y~poly(x, 2))
+
+Ion_data_frame%>%
+  ggplot(aes(x=pH,y=Rej_SiO2))+geom_point()+stat_smooth(method = "lm",formula = y~exp(x))
 
 ### Just do linear regression on high pH
 fit_SiO2_pH = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:8B")))
 ggplotRegression(fit_SiO2_pH)+ylab("SiO2 Rejection [%]")
 summary(fit_SiO2_pH)
-plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
+plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame_A$Rej_SiO2),
      xlab='Predicted Values',
      ylab='Actual Values',
      main='pH',
@@ -508,4 +517,73 @@ ex_model_fit=na.omit(ex_model_fit)
 ex_RMSE=rmse(ex_model_fit$actual,ex_model_fit$predicted)
 ex_RMSE
 ```
+
+
+Nu med multiple regression
+```{r aww shit here we go again}
+
+## How well does the old line match?
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493))
+
+
+multiple_linear_SPRR=readRDS("multiple_linear_SPRR.rds")
+
+plot(x=predict(multiple_linear_SPRR,newdata=Ion_data_frame%>%select(pH,SiO2_mmol)), y=Ion_data_frame$Rej_SiO2,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+#High pH area       
+plot(x=predict(multiple_linear_SPRR,newdata=Ion_data_frame_A%>%select(pH,SiO2_mmol)), y=Ion_data_frame_A$Rej_SiO2,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+model_fit=data.frame(actual=Ion_data_frame_A$Rej_SiO2,predicted=predict(multiple_linear_SPRR,newdata=Ion_data_frame_A%>%select(pH,SiO2_mmol)))
+model_fit=na.omit(model_fit)
+old_RMSE=rmse(model_fit$actual,model_fit$predicted)
+
+## How are new models?
+fit_SiO2_pH_sio2 = lm(Rej_SiO2~pH+SiO2_mmol, data = Ion_data_frame)
+summary(fit_SiO2_pH_sio2)
+plot(x=predict(fit_SiO2_pH_sio2), y=na.omit(Ion_data_frame$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+#Hmm looks like the low pH data does not fit so well, can we do some other model
+ex_model = lm(log(Rej_SiO2)~ pH+SiO2_mmol,data=Ion_data_frame)
+summary(ex_model)
+plot(x=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH,SiO2_mmol))), y=Ion_data_frame$Rej_SiO2,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+
+
+### Just do linear regression on high pH
+fit_SiO2_pH_sio2 = lm(Rej_SiO2~pH+SiO2_mmol, data = Ion_data_frame_A)
+summary(fit_SiO2_pH_sio2)
+plot(x=predict(fit_SiO2_pH_sio2), y=na.omit(Ion_data_frame_A$Rej_SiO2),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='pH',
+     abline(a=0, b=1))
+
+new_model_fit=data.frame(actual=Ion_data_frame_A$Rej_SiO2,predicted=predict(fit_SiO2_pH_sio2,newdata=Ion_data_frame_A%>%select(pH,SiO2_mmol)))
+new_model_fit=na.omit(new_model_fit)
+new_RMSE=rmse(new_model_fit$actual,new_model_fit$predicted)
+
+print(data.frame(`old RMSE`=old_RMSE,`new RMSE`=new_RMSE,`difference[%]`=((old_RMSE-new_RMSE)/new_RMSE)*100))
+
+ex_model_fit=data.frame(actual=Ion_data_frame$Rej_SiO2,predicted=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH,SiO2_mmol))))
+ex_model_fit=na.omit(ex_model_fit)
+ex_RMSE=rmse(ex_model_fit$actual,ex_model_fit$predicted)
+ex_RMSE
+```
+
 
