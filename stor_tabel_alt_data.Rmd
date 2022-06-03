@@ -514,11 +514,14 @@ Ion_data_frame = Ion_data_frame%>%mutate(total_sio2_ladet=SiO2_mmol*SiO2_ladet)
 Ion_data_frame = Ion_data_frame%>%mutate(anion_total = total_sio2_ladet+SO4_mmol+Cl_mmol)
 Ion_data_frame = Ion_data_frame%>%mutate(Cl_anion = Cl_mmol/anion_total)
 
+
 ```
 
-```{r aww shit here we go again, eval=FALSE, include=FALSE}
+```{r silica udtryk pH alt data, eval=FALSE, include=FALSE}
 ## How well does the old line match?
-ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493))
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point())
+
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493)+ylab("SiO2 Rejection [%]"))
 
 linear_SPRR=readRDS("linear_SPRR.rds")
 multiple_linear_SPRR=readRDS("multiple_linear_SPRR.rds")
@@ -550,9 +553,15 @@ plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame$Rej_SiO2),
      main='pH',
      abline(a=0, b=1))
 
+ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+
+           geom_abline(intercept=-281.8,slope=32.493)+
+           geom_abline(intercept=fit_SiO2_pH$coefficients[1],slope=fit_SiO2_pH$coefficients[2],linetype="dashed")+
+           ylab("SiO2 Rejection [%]"))
 
 ## What about B filtreringer?
-Ion_data_frame_A=Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:8B"))
+Ion_data_frame_A=Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:7B","ID:8B"))
+fit_SiO2_low_pH = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(name%in%c("ID:4B","ID:6B","ID:7B","ID:8B")))
+
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493)+geom_abline(intercept=fit_SiO2_low_pH$coefficients[1],slope=fit_SiO2_low_pH$coefficients[2],linetype="dashed"))
 
 
@@ -577,14 +586,21 @@ Ion_data_frame%>%
   ggplot(aes(x=pH,y=Rej_SiO2))+geom_point()+stat_smooth(method = "lm",formula = y~exp(x))
 
 ### Just do linear regression on high pH
-fit_SiO2_pH = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:8B")))
+fit_SiO2_high_pH = lm(Rej_SiO2~pH, data =Ion_data_frame_A)
 ggplotRegression(fit_SiO2_pH)+ylab("SiO2 Rejection [%]")
-summary(fit_SiO2_pH)
+summary(fit_SiO2_high_pH)
 plot(x=predict(fit_SiO2_pH), y=na.omit(Ion_data_frame_A$Rej_SiO2),
      xlab='Predicted Values',
      ylab='Actual Values',
      main='pH',
      abline(a=0, b=1))
+
+ggplotly(ggplot(Ion_data_frame_A, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+
+           geom_abline(intercept=-281.8,slope=32.493)+
+           geom_abline(intercept=fit_SiO2_high_pH$coefficients[1],slope=fit_SiO2_high_pH$coefficients[2],linetype="dashed")+
+           ylab("SiO2 Rejection [%]"))
+
+
 
 new_model_fit=data.frame(actual=Ion_data_frame_A$Rej_SiO2,predicted=predict(fit_SiO2_pH,newdata=Ion_data_frame_A%>%select(pH)))
 new_model_fit=na.omit(new_model_fit)
@@ -600,7 +616,7 @@ ex_RMSE
 
 
 Nu med multiple regression
-```{r aww shit here we go again_2, eval=FALSE, include=FALSE}
+```{r silica pH OG koncentration alt date, eval=FALSE, include=FALSE}
 
 ## How well does the old line match?
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493))
@@ -667,7 +683,7 @@ ex_RMSE
 ```
 ```{r Correlation matrix?, eval=FALSE, include=FALSE}
 library(corrplot)
-Ion_data_frame_var_SPRR=na.omit(Ion_data_frame%>%filter(type=="SPRR")%>%select(-c(state,type,name,Ca,pH2,Na,Cl,SO4,SiO2_mgL,time,start_vol,perm_vol,Recovery)))
+Ion_data_frame_var_SPRR=na.omit(Ion_data_frame%>%filter(type=="SPRR")%>%select(-c(state,type,name,Ca,pH2,Na,Cl,SO4,SiO2_ladet,Cl_anion,total_sio2_ladet,SiO2_mgL,time,start_vol,perm_vol,Recovery,anion_total)))
 
 SPRR_cor=cor(Ion_data_frame_var_SPRR,method="pearson")
 
@@ -699,10 +715,11 @@ p.mat <- cor.mtest(Ion_data_frame_var_SPRR)
 
 corrplot(SPRR_cor, method="color", col=col(200),  
          type="lower", order="hclust", 
+         number.cex=0.75,#størrelse på coeff tal
          addCoef.col = "black", # Add coefficient of correlation
          tl.col="black", tl.srt=45, #Text label color and rotation
          # Combine with significance
-         p.mat = p.mat, sig.level = 0.01, insig = "blank", 
+         p.mat = p.mat, sig.level = 0.05, insig = "blank", 
          # hide correlation coefficient on the principal diagonal
          diag=FALSE 
          )
