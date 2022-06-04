@@ -847,7 +847,7 @@ mol_udvikling= rbind(ID_8A_mM[1,c(1,3,4,6,8,10,12,14,16,18)], ID_8A_mM[21,c(1,3,
 
 colnames(mol_udvikling) <- c("Filtraiton", "Stream","Cl", "SO4", "Na", "Ca", "Mg","K","NO3", "SiO2")
 
-mol_udvikling$Stream=c("8A Feed","8A Permeat","8B Feed","8B Permeat")
+mol_udvikling$Stream=c("8A Feed","8A Permeate","8B Feed","8B Permeate")
 #volume=c(900,800,800,700)
 
 mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl, SO4, Na, Ca, SiO2)

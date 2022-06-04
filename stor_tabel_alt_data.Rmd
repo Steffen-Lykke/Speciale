@@ -94,12 +94,18 @@ Rejection_data_samlet%>%filter(Filtration=="ID:8A",Time==1)
 ```
 ```{r plot, echo=FALSE}
 
-ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
+filtreringer=c('ID:1 - pH 9.3',
+               "ID:2 - pH 10.1",
+               "ID:3 - pH 10.5",
+               "ID:4A - pH 9.8",
+               "ID:5A - pH 9.8",
+               "ID:6A - pH 9.8",
+               "ID:7A - pH 9.7",
+               "ID:8A - pH 9.8")
+
 library(RColorBrewer)
 #brewer.pal(n=5,"Set1")
-colors3=c( 
-  
-   '#d62728',  # brick red
+colors3=c(    '#d62728',  # brick red
   '#9467bd',  # muted purple 
  '#ff7f0e',  # safety orange
  '#8c564b',  # chestnut brown
@@ -110,40 +116,31 @@ colors3=c(
  )
   
   
-#  '#d62728',  # brick red
-#  '#1f77b4',  # muted blue 
-#  '#2ca02c',  # cooked asparagus green
-#  '#9467bd',  # muted purple  
-#  '#ff7f0e',  # safety orange
-#  '#8c564b',  # chestnut brown
-#  '#e377c2',  # raspberry yogurt pink
-#  '#7f7f7f',  # middle gray
-#  '#bcbd22',  # curry yellow-green
-#  '#17becf'   # blue-teal
+colors4=c('#F8766D', '#CD9600' ,'#7CAE00', '#00BE67','#00BFC4' ,'#00A9FF', '#C77CFF' ,'#FF61CC')
 #)
 #vi klipper lige alle B filtreringer af. 
 
 Cl_authentic_synthetic_plot=Rejection_data_samlet%>%filter(Species=="Cl")%>%filter(A_B!="B")%>%
 ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
-  geom_point()+geom_line()+#scale_color_manual(values =colors3)+
+  geom_point()+geom_line()+scale_color_manual(labels = filtreringer, values =colors4)+
  # scale_color_brewer(palette= "Spectral")+
   geom_hline(yintercept=0)+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(Type),rows = vars(Species),scale="free")+
  # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 Cl_authentic_synthetic_plot
 ggplotly(Cl_authentic_synthetic_plot)
 
 SIO2_authentic_synthetic_plot=Rejection_data_samlet%>%filter(Species=="SiO2")%>%filter(A_B!="B")%>%
 ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
-  geom_point()+geom_line()+#scale_color_manual(values =colors3)+
+  geom_point()+geom_line()+scale_color_manual(labels = filtreringer, values =colors4)+
  # scale_color_brewer(palette= "Spectral")+
   geom_hline(yintercept=0)+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(Type),rows = vars(Species),scale="free")+
   scale_y_continuous(limits=c(0, 100), breaks=c(0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 SIO2_authentic_synthetic_plot
 ggplotly(SIO2_authentic_synthetic_plot)
 
@@ -156,7 +153,7 @@ ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(Type),rows = vars(Species),scale="free")+
   scale_y_continuous(limits=c(0, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 
 
 Rejection_data_samlet%>%filter(Species=="Cl"|Species=="SiO2")%>%filter(Type=="Authentic")%>%
@@ -167,7 +164,7 @@ ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(A_B),rows = vars(Species),scale="free")+
  # scale_y_continuous(limits=c(0, 100), breaks=c(0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 
 
 Rejection_data_samlet%>%filter(Species=="Cl"|Species=="SiO2")%>%filter(A_B=="A")%>%filter(Type=="Authentic")%>%
@@ -178,7 +175,7 @@ ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(System),rows = vars(Species),scale="free")+
  # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 
 
 
@@ -190,7 +187,7 @@ ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(Species),scale="free")+
  # scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Filtration")
 B_authentic_synthetic_plot
 ggplotly(B_authentic_synthetic_plot)
 

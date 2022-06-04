@@ -1141,6 +1141,23 @@ hejmeddig_1
 
 ```{R facet rejection ALLE, echo=FALSE, message=FALSE}
 
+ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Mg^{textstyle("2+")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+   '#7f7f7f',  # middle gray
+  '#2ca02c',  # cooked asparagus green
+  '#9467bd',  # muted purple  
+  '#ff7f0e',  # safety orange
+ 
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
+
+
 #FCT_Ion_data_frame
 #ID_8_11_rej
 
@@ -1168,7 +1185,7 @@ rej_facet_data=rbind(ioner_data,Silica_data_rej)
 
 
 pølz2<- ggplot(data=rej_facet_data,aes(x=Recovery,y=Rejection,color=ion))+
-  geom_point()+geom_line()+scale_colour_manual(values = palette(my_palette))+geom_hline(yintercept=0)+
+  geom_point()+geom_line()+labs(colour = "Species")+scale_color_manual(labels = ioner, values =colors2)+theme(legend.text.align=0)+geom_hline(yintercept=0)+
     geom_errorbar(data=rej_facet_data,aes(x=Recovery,ymin=Rejection-(Rejection*std_p), ymax=Rejection+(Rejection*std_p),color=ion), width=1, position=position_dodge(0.05))+
     facet_grid(cols=vars(Name),scale="free")+
   scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
