@@ -195,7 +195,6 @@ plc_8B
 
 ```{R pH, echo=FALSE, message=FALSE}
 
-
 ggplot()+geom_line(data=Pilot_8A,aes(x=100*(1-(900-sek/60/60*280)/900),y=PHT0101,color="ID:8A"))+
   geom_line(data=Pilot_8B,aes(x=100*(1-(800-sek/60/60*280)/800),y=PHT0101,color="ID:8B"))+
   #geom_line(data=dat_M_10.5,aes(x=100*(1-(10-sek/60/60*1.02)/10),y=pH0201,color="ID:3 - pH 10.5"))+
@@ -457,8 +456,11 @@ geom_errorbar(aes(ymin=SiO2_mgL-(SiO2_mgL*SiO2_Std_p), ymax=SiO2_mgL+(SiO2_mgL*S
  ggtitle("ID:8A, SiO2")
 
 
-ggarrange(plot_8A_Cl, plot_8A_SO4,plot_8A_Na,plot_8A_Ca ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
-ggarrange(plot_8A_SiO2, plot_8A_Mg, plot_8A_K,plot_8A_NO3 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+ggarrange(plot_8A_Cl, plot_8A_SO4,plot_8A_SiO2 ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange(plot_8A_Ca, plot_8A_Na ,ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+
 
 
 ``` 
@@ -871,10 +873,16 @@ mol_udvikling_plot = mol_udvikling%>%gather(key,value, Cl, SO4, Na, Ca, SiO2)
 
 #ion_plot_bar
 
-ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Stream, )) +geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentraiton mM")+  
+ggplot(mol_udvikling_plot, aes(x=key, y=value, fill=Stream))+
+  geom_bar(stat="identity",width = 0.5, position=position_dodge())+ labs(x="Species",y="Concentraiton mM")+ scale_fill_manual(values=c('#1f77b4', '#83c6FF', 
+                            '#2ca02c', '#6CD861'    ))+
   scale_y_continuous(limits=c(0, 20), breaks=c(0, 5,10,15,20 ))+
   #scale_x_continuous(limits=c(0, 95), breaks=c(20, 40,60,80 ))+
   ggtitle("ID:8A/8B")
+
+
+#barplot(height=data$value, names=data$name, col=rgb(0.2,0.4,0.6,0.6), width=c(0.1,0.2,3,1.5,0.3) )
+
 
 #rejections=cbind(udvikling_tot%>%filter(Stream=="8A Feed")%>%select(key),1-(udvikling_tot%>%filter(Stream=="8A Permeat")%>%select(concentration)/udvikling_tot%>%filter(Stream=="8B Feed")%>%select(concentration)
  #     ))
@@ -940,7 +948,7 @@ ggplot(ID_8A_8B_feed_plot,aes(x=Recovery,y=value,color=key))+geom_line(size = 1)
 
 ```{r facet plot rejection, echo=FALSE}
 
-pilot_rej_data=ID_8A_8B_rej_plot_2[,c(1,2,21,57,58,59)]
+pilot_rej_data=ID_8A_8B_rej_plot_2[,c(1,2,21,49,50,51)]
 colnames(pilot_rej_data)=c("Name","Time","Recovery","ion","Value","std")
 
 
@@ -949,7 +957,7 @@ rej_plot_pilot=ggplot(data=pilot_rej_data,aes(x=Recovery,y=Value,color=ion))+
     geom_errorbar(data=pilot_rej_data,aes(x=Recovery,ymin=Value-(Value*std), ymax=Value+(Value*std),color=ion), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
     facet_grid(cols=vars(Name),scale="free")+
   scale_y_continuous(limits=c(-60, 105), breaks=c(-60,-40,-20,0,20, 40,60,80,100 ))+
-   scale_x_continuous(limits=c(0, 90), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
+   scale_x_continuous(limits=c(0, 95), breaks=c(0,20, 40,60,80 ))+labs(x="Water Recovery [%]",y="Rejection [%]", color="Species")
 
 rej_plot_pilot
 write.table(pilot_rej_data,file='data/Pilot_rejection.csv',col.names = T,row.names = F,sep="\t")
