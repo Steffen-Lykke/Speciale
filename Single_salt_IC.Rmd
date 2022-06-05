@@ -26,6 +26,7 @@ library(ggiraphExtra)
 library(coronavirus)
 library(lubridate)
 library(plotly)
+#library(naniar)
 library(readxl)
 require(readr)
 library(zoo)
@@ -35,6 +36,8 @@ library(plyr)
 library(matrixStats)
 library(haven)
 library(sjmisc)
+require(gridExtra)
+require(ggpubr)
 
 colors = c(
     '#1f77b4',  # muted blue
@@ -283,6 +286,70 @@ tst2$Rej_Na=c(NA,SiO2_rej_Na,NA)
 
 
 ```
+```{r samlet conc profil, echo=FALSE, warning=FALSE}
+
+
+
+Ca_CaCl_conc=ggplot(CaCl2_IC_data, aes(x=100*(1-(6-(time*1.02))/6), y=Calcium/40,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+scale_y_continuous(limits=c(0, 10))+
+  scale_x_continuous(limits=c(0, 70))+
+ ggtitle("Ca in CaCl2")
+
+
+Cl_CaCl_conc=ggplot(CaCl2_IC_data, aes(x=100*(1-(6-(time*1.02))/6), y=Chloride/35.45,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  scale_y_continuous(limits=c(0, 10))+
+  scale_x_continuous(limits=c(0, 70))+
+ ggtitle("Cl in CaCl2")
+
+
+Na_naCl_conc=ggplot(NaCl_IC_data, aes(x=100*(1-(6-(time*1.02))/6), y=Sodium/22.99,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+  scale_y_continuous(limits=c(0, 4))+
+  scale_x_continuous(limits=c(0, 70))+
+ ggtitle("Na in NaCl")
+
+
+Cl_naCl_conc=ggplot(NaCl_IC_data, aes(x=100*(1-(6-(time*1.02))/6), y=Chloride/35.45,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+   scale_y_continuous(limits=c(0, 4))+
+  scale_x_continuous(limits=c(0, 70))+
+ ggtitle("Cl in NaCl")
+
+
+
+SiO2_conc=ggplot(SiO2_IC_data, aes(x=100*(1-(6-(time*1.02))/6), y=Silica/60,08,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+   scale_y_continuous(limits=c(0, 3))+
+ scale_x_continuous(limits=c(0, 70))+
+ ggtitle("SiO2 in Na2OSiO2")
+
+
+Na_conc=ggplot(SiO2_IC_data, aes(x=100*(1-(6-(time*1.02))/6), y=Sodium/22.99,color= Stream))+geom_point()+geom_line()+geom_hline(yintercept=0)+
+  scale_color_brewer(palette= "Set1")+
+    labs(x="Water Recovery %",y="Concentration [mM]", color="")+ 
+   scale_y_continuous(limits=c(0, 3))+
+  scale_x_continuous(limits=c(0, 70))+
+ ggtitle("Na in Na2OSiO2")
+
+ggarrange(Cl_CaCl_conc,Ca_CaCl_conc, ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+ggarrange( Cl_naCl_conc,Na_naCl_conc ,         SiO2_conc,Na_conc ,
+          ncol=2, nrow=2, common.legend = TRUE, legend="bottom")#,align = "v")
+
+
+
+```
+
+
+
+
+
 #### MgSO4
 
 ```{r MgSO4, echo=FALSE, warning=FALSE}

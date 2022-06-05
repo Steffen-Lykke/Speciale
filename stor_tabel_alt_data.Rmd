@@ -147,7 +147,7 @@ ggplotly(SIO2_authentic_synthetic_plot)
 
 Rejection_data_samlet%>%filter(Species!="Cl",Species!="SiO2",Species!="Mg")%>%filter(A_B!="B")%>%
 ggplot(aes(x=Recovery,y=Rejection,color=Filtration))+
-  geom_point()+geom_line()+scale_color_manual(values =colors3)+
+  geom_point()+geom_line()+scale_color_manual(labels = filtreringer, values =colors4)+
  # scale_color_brewer(palette= "Spectral")+
   geom_hline(yintercept=0)+
     geom_errorbar(aes(x=Recovery,ymin=Rejection-(Rejection*Std), ymax=Rejection+(Rejection*Std),color=Filtration), width=1, position=position_dodge(0.05))+theme(legend.text.align=0)+
