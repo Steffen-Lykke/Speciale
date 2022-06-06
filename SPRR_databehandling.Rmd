@@ -537,11 +537,7 @@ fit_Clrej_multi = lm(Rej_Cl~SO4_mmol+total_sio2_ladet+Cl_mmol, data = Ion_data_f
 summary(fit_Clrej_multi)
 plot(fit_Clrej_multi)
 
-plot(x=predict(fit_Clrej_multi), y=na.omit(Ion_data_frame$Rej_Cl),
-     xlab='Predicted Values',
-     ylab='Actual Values',
-     main='Predicted vs. Actual Values',
-     abline(a=0, b=1))
+
 
 
 
@@ -553,14 +549,24 @@ plot(x=predict(fit_Clrej_both_multi), y=na.omit(Ion_data_frame_both$Rej_Cl),
      main='Predicted vs. Actual Values',
      abline(a=0, b=1))
 
+#par(mfrow=c(1,2))
+
+SO4_plot=plot(x=predict(fit_Clrej_so4), y=na.omit(Ion_data_frame$Rej_Cl),
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='SO4 Concentration',
+     abline(a=0, b=1))
 
 fit_Clrej_both_multi_best = lm(Rej_Cl~SO4_mmol+Cl_mmol+SiO2_mmol, data = Ion_data_frame_both)
 summary(fit_Clrej_both_multi_best)
-plot(x=predict(fit_Clrej_both_multi_best), y=na.omit(Ion_data_frame_both$Rej_Cl),
+conc_plot=plot(x=predict(fit_Clrej_both_multi_best), y=na.omit(Ion_data_frame_both$Rej_Cl),
      xlab='Predicted Values',
      ylab='Actual Values',
-     main='Predicted vs. Actual Values',
+     main='Cl, SO4 and SiO2 Concentration',
      abline(a=0, b=1))
+
+
+ggarrange(SO4_plot, conc_plot, ncol = 2, nrow = 1)
 ```
 Conclusion: [Cl] not useful to predict Rejection of Cl
 neither is [anion] or [SO4]
