@@ -26,15 +26,27 @@ V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevoiret itf. af blowdown
 V_BD=1
-#recocvery=0.777#total water recovery af filtrerings unit
-recovery=0.888
+recocvery=0.777#total water recovery af filtrerings unit
+#recovery=0.93 #1filtreirng#
+#recovery=0.78 #"2filtreringer"
+#c_makeup = c(
+#  4.1, #Na
+#  0.6, #Cl
+#  0.5, #SO4
+#  0.45, #SiO2
+#  0.03  #Ca
+#) #En vektor med de forskellige koncentrationer [mM]
+
+
+#beskidt vand
 c_makeup = c(
   4.1, #Na
-  0.6, #Cl
-  0.5, #SO4
-  0.45, #SiO2
-  0.03  #Ca
-) #En vektor med de forskellige koncentrationer [mM]
+  50/35.45, #Cl
+  110/96, #SO4
+  18/60, #SiO2
+  110/40  #Ca
+)
+
 fBD = T #Skal der foregå "forced" blowdown ved grænse værdi? T/F
 
 Rej=data.frame(
@@ -43,7 +55,7 @@ Rej=data.frame(
   SO4=0.78812522,
   SiO2=  0.27315914,
   Ca  =  0.26783120
-)#total rejection af NF system
+)#total rejection af NF system 2 filtreringer. 
 
 # Rej=data.frame(
 #   Na  =  0.24,
@@ -62,7 +74,7 @@ ion_values = data.frame(
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1600#conductivity grænseværdi [uS/cm]
+con_lim = 1000#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -130,6 +142,12 @@ V_NF2=V_NF1*recovery #hvor meget vand der kommer tilbage afhægit af recovery
 Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt m^3/dt(dage)
 
 num_bd=0
+
+vand_BD[1]=0
+vand_vap[1]=0
+vand_NF[1]=0
+vandforbrug[1]=0
+
 
 ###### CT Model ######
 while(i < n_time_step){
@@ -229,15 +247,45 @@ ggplotly(
   scale_color_brewer(palette="Set1")+
   theme_bw()+labs(y = "Conductivity [uS/cm]", x = "Time [days]")+ylim(c(0,NA))
 )
-ggplotly(
-  ggplot(cf.long,aes(x=tid,y=value,color=key))+geom_line()+
-    scale_color_brewer(palette="Set1",labels = level_order)+
-    theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]", color = "Ion")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Ca")%>%select(value))),linetype='dashed',color="red")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Cl")%>%select(value))),linetype='dashed',color="blue")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SiO2")%>%select(value))),linetype='dashed',color="purple")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SO4")%>%select(value))),linetype='dashed',color="orange")
+
+
+ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+  '#2ca02c',  # cooked asparagus green
+  '#9467bd',  # muted purple  
+  '#ff7f0e',  # safety orange
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
 )
+
+ggplotly(
+ggplot(cf.long,aes(x=tid,y=value,color=key))+geom_line()+
+  #scale_color_brewer(palette="Set1")+
+  theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]",colour = "Species")+ylim(c(0,NA))+
+  geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Ca")%>%select(value))),linetype='dashed',color='#d62728')+
+  geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Cl")%>%select(value))),linetype='dashed',color='#1f77b4')+
+  geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SiO2")%>%select(value))),linetype='dashed',color='#9467bd')+
+  geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SO4")%>%select(value))),linetype='dashed',color='#ff7f0e')+
+  scale_color_manual(labels = ioner, values =colors2)+theme(legend.text.align=0)+
+  scale_y_continuous(limits=c(0, 21), breaks=c(0,2.5,5,7.5,10,12.5,15,17.5,20 ))+
+ # scale_x_continuous(limits=c(0, 365), breaks=c(0,20,40,60,80))+
+  ggtitle("1 Filtration")#+theme(legend.position = "top")
+     )
+
+#ggplotly(
+#  ggplot(cf.long,aes(x=tid,y=value,color=key))+geom_line()+
+#    scale_color_brewer(palette="Set1",labels = level_order)+
+#    theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]", color = "Ion")+
+#    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Ca")%>%select(value))),linetype='dashed',color="red")+
+#    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Cl")%>%select(value))),linetype='dashed',color="blue")+
+#    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SiO2")%>%select(value))),linetype='dashed',color="purple")+
+#    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SO4")%>%select(value))),linetype='dashed',color="orange")
+#)
 
 total_vand%>%plot_ly(x=~time,
         y=~water_evap,
@@ -257,3 +305,26 @@ total_vand%>%plot_ly(x=~time,
          xaxis=list(title="Time [days]"))
 
 #ggarrange(fil_1_BD,fil_2,common.legend = TRUE,labels = c("1 Filtration","2 Filtrations"))
+
+
+level_order_2 = c('Evaporation','NF Blowdown','Blowdown')
+
+
+###### plot af water usage for alle: 
+
+water_usage_df=as.data.frame(c("1Blowdown","3Evaporation","2NF Blowdown"))
+water_usage_df$CT=(c(37,180,0))
+water_usage_df$NF_1=(c(9,180,7.21))
+water_usage_df$NF_2=(c(0,180,14.96))
+colnames(water_usage_df)=c("Stream","No Filtration", "1 Filtration","2 Filtrations")
+water_usage_df_plot = water_usage_df%>%gather(key,value, "No Filtration", "1 Filtration","2 Filtrations")
+
+
+sejt_plot_ok=ggplot(water_usage_df_plot, aes(fill=Stream, y=value, x=key)) + 
+  geom_bar(position="stack", stat="identity")+
+  labs(y = "Water usage [m^3]", x = "")+
+  scale_fill_discrete( labels = c("Blowdown", "NF Blowdown", "Evaporation"))+
+  theme(legend.position="top")
+sejt_plot_ok+scale_fill_manual(values=c('#d62728', '#2ca02c','#1f77b4'   ))
+#scale_color_manual(values=c('#999999','#E69F00','#56B4E9'))
+

@@ -30,13 +30,22 @@ V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevooiret
 V_BD=1#m^3 volume til discondinous bd
+#c_makeup = c(
+#  4.1, #Na
+#  0.6, #Cl
+#  0.5, #SO4
+#  0.45, #SiO2
+#  0.03  #Ca
+#) #En vektor med de forskellige koncentrationer [mM]
+
+#beskidt
 c_makeup = c(
   4.1, #Na
-  0.6, #Cl
-  0.5, #SO4
-  0.45, #SiO2
+  50/35.45, #Cl
+  110/96, #SO4
+  18/60, #SiO2
   0.03  #Ca
-) #En vektor med de forskellige koncentrationer [mM]
+)
 
 
 
@@ -51,7 +60,7 @@ c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 #con_ini = sum(c_ini*ion_values[,3],na.rm=T) start med værdier tættere på ss
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1675#conductivity grænseværdi [uS/cm]
+con_lim = 1075#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -123,7 +132,8 @@ nf[1,]=cf[1,]*df$V_CT[1]
 num_bd=0
 i=2
 
-
+vand_BD[1]=0
+vand_vap[1]=0
 Q_vap = Q_vap*dt #Hvor meget fordamper per tidsskridt
 #Q_blowdown=(Q_vap/(-1+COC))
 ###### CT Model ######
@@ -200,17 +210,32 @@ ggplotly(
   theme_bw()+labs(y = "Conductivity [uS/cm]", x = "Time [days]")+ylim(c(0,NA))
 )
 
-
+ioner=c(expression(Ca^{textstyle("2+")}),expression(Cl^{textstyle("-")}),expression(Na^{textstyle("+")}),expression(SiO[2]),expression(SO[4]^{textstyle("2-")}))
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+  '#2ca02c',  # cooked asparagus green
+  '#9467bd',  # muted purple  
+  '#ff7f0e',  # safety orange
+  '#8c564b',  # chestnut brown
+  '#e377c2',  # raspberry yogurt pink
+  '#7f7f7f',  # middle gray
+  '#bcbd22',  # curry yellow-green
+  '#17becf'   # blue-teal
+)
 
 ggplotly(
   ggplot(plot_data,aes(x=tid,y=value,color=key))+geom_line()+
   scale_color_brewer(palette="Set1")+
-  theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]")+ylim(c(0,NA))+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Ca")%>%select(value))),linetype='dashed',color="red")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Cl")%>%select(value))),linetype='dashed',color="blue")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SiO2")%>%select(value))),linetype='dashed',color="purple")+
-    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SO4")%>%select(value))),linetype='dashed',color="orange")
-               )
+  theme_bw()+labs(y = "Concentration [mM]", x = "Time [days]",colour = "Species")+ylim(c(0,NA))+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Ca")%>%select(value))),linetype='dashed',color='#d62728')+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="Cl")%>%select(value))),linetype='dashed',color='#1f77b4')+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SiO2")%>%select(value))),linetype='dashed',color='#9467bd')+
+    geom_hline(aes(yintercept=as.numeric(ion_values%>%filter(Ions=="SO4")%>%select(value))),linetype='dashed',color='#ff7f0e')+
+    scale_color_manual(labels = ioner, values =colors2)+theme(legend.text.align=0)+
+    scale_y_continuous(limits=c(0, 21), breaks=c(0,2.5,5,7.5,10,12.5,15,17.5,20 ))+
+    scale_x_continuous(limits=c(0, 90), breaks=c(0,20,40,60,80))
+   )
 
 
 #annotate("text", x = "Feb", y = 40, label = "Previous Level", vjust = -0.5)
