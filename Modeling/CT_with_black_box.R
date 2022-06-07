@@ -37,21 +37,21 @@ c_makeup = c(
 ) #En vektor med de forskellige koncentrationer [mM]
 fBD = T #Skal der foregå "forced" blowdown ved grænse værdi? T/F
 
-# Rej=data.frame(
-#   Na  =  0.38419491,
-#   Cl=0.064,
-#   SO4=0.78812522,
-#   SiO2=  0.27315914,
-#   Ca  =  0.26783120
-# )#total rejection af NF system
-
 Rej=data.frame(
-  Na  =  0.24,
-  Cl=-0.068,
-  SO4=0.61,
-  SiO2=  0.23,
-  Ca  =  0.026
-)#pilot scale 1. filtration
+  Na  =  0.38419491,
+  Cl=0.064,
+  SO4=0.78812522,
+  SiO2=  0.27315914,
+  Ca  =  0.26783120
+)#total rejection af NF system
+
+# Rej=data.frame(
+#   Na  =  0.24,
+#   Cl=-0.068,
+#   SO4=0.61,
+#   SiO2=  0.23,
+#   Ca  =  0.026
+# )#pilot scale 1. filtration
 
 ion_values = data.frame(
   Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
@@ -62,7 +62,7 @@ ion_values = data.frame(
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1500#conductivity grænseværdi [uS/cm]
+con_lim = 1600#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -79,7 +79,7 @@ para = function(x){
 ##### Model Parameters #####
 dt_timer=1 #tidsstep i timer
 dt=dt_timer/24 #timer i dage
-run_time = 1000 #Total operating time i dage
+run_time = 90 #Total operating time i dage
 max_time = run_time*24 #i timer
 n_time_step = run_time/dt #antal tidsskridt 
 start_tid = 0 # start tid?
