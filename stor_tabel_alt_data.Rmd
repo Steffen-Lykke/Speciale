@@ -543,6 +543,7 @@ ggplot(aes(x=SO4_mmol,y=Rej_SiO2,color=name))+
 ```
 
 ```{r silica udtryk pH alt data, eval=FALSE, include=FALSE}
+Ion_data_frame$name[Ion_data_frame$name == "SS"] <- "Single Pass"
 ## How well does the old line match?
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point())
 
@@ -587,8 +588,16 @@ ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+
 Ion_data_frame_A=Ion_data_frame%>%filter(!name%in%c("ID:4B","ID:6B","ID:7B","ID:8B"))
 fit_SiO2_low_pH = lm(Rej_SiO2~pH, data = Ion_data_frame%>%filter(name%in%c("ID:4B","ID:6B","ID:7B","ID:8B")))
 
+test_low_pH=Ion_data_frame%>%filter(name%in%c("ID:4B","ID:6B","ID:7B","ID:8B"))
+model_fit_low=data.frame(actual=test_low_pH$Rej_SiO2,predicted=predict(fit_SiO2_low_pH,newdata=test_low_pH%>%select(pH)))
+model_fit_low=na.omit(model_fit_low)
+low_RMSE=rmse(model_fit_low$actual,model_fit_low$predicted)
+
+
+#det er det rigtige plot. 
 ggplotly(ggplot(Ion_data_frame, aes(x=pH, y=Rej_SiO2,color=name))+geom_point()+geom_abline(intercept=-281.8,slope=32.493)+geom_abline(intercept=fit_SiO2_low_pH$coefficients[1],slope=fit_SiO2_low_pH$coefficients[2],linetype="dashed"))
 
+#rmse(ex_model_fit$actual,ex_model_fit$predicted)
 
 #Hmm looks like the low pH data does not fit so well, can we do some other models
 ex_model = lm(log(Rej_SiO2)~ pH,data=Ion_data_frame)
@@ -598,6 +607,8 @@ plot(x=exp(predict(ex_model,newdata=Ion_data_frame%>%select(pH))), y=Ion_data_fr
      ylab='Actual Values',
      main='pH',
      abline(a=0, b=1))
+
+
 
 Ion_data_frame$pH2=Ion_data_frame$pH^2
 q_model=lm(Rej_SiO2~ pH+pH2,data=Ion_data_frame)
