@@ -30,22 +30,22 @@ V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevooiret
 V_BD=1#m^3 volume til discondinous bd
-#c_makeup = c(
-#  4.1, #Na
-#  0.6, #Cl
-#  0.5, #SO4
-#  0.45, #SiO2
-#  0.03  #Ca
-#) #En vektor med de forskellige koncentrationer [mM]
-
-#beskidt
 c_makeup = c(
   4.1, #Na
-  50/35.45, #Cl
-  110/96, #SO4
-  18/60, #SiO2
+  0.6, #Cl
+  0.5, #SO4
+  0.45, #SiO2
   0.03  #Ca
-)
+) #En vektor med de forskellige koncentrationer [mM]
+
+#beskidt
+#c_makeup = c(
+#  4.1, #Na
+#  50/35.45, #Cl
+#  110/96, #SO4
+# 18/60, #SiO2
+#  0.03  #Ca
+#)
 
 
 
@@ -60,7 +60,7 @@ c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 #con_ini = sum(c_ini*ion_values[,3],na.rm=T) start med værdier tættere på ss
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1075#conductivity grænseværdi [uS/cm]
+con_lim = 1675#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -76,7 +76,7 @@ paste('Model run with COC: ',y,'Conductivity limit: ',con_lim,'uS/cm')
 ##### Model Parameters #####
 dt_timer=1 #tidsstep i timer
 dt=dt_timer/24 #timer i dage
-run_time = 90 #Total operating time i dage
+run_time = 1000 #Total operating time i dage
 max_time = run_time*24 #i timer
 n_time_step = run_time/dt #antal tidsskridt 
 start_tid = 0 # start tid?

@@ -26,45 +26,43 @@ V_CT = 8 # m^3 | Hvad er reservoir volumet
 Q_vap = 2 #m^3 / day | Hvor meget fordamper
 Q_blowdown = 1 #m^3 /d hvor meget fjernes fra resevoiret itf. af blowdown
 V_BD=1
-recocvery=0.777#total water recovery af filtrerings unit
-#recovery=0.93 #1filtreirng#
+
+recovery=0.93 #1filtreirng#
 #recovery=0.78 #"2filtreringer"
-#c_makeup = c(
-#  4.1, #Na
-#  0.6, #Cl
-#  0.5, #SO4
-#  0.45, #SiO2
-#  0.03  #Ca
-#) #En vektor med de forskellige koncentrationer [mM]
-
-
-#beskidt vand
 c_makeup = c(
   4.1, #Na
-  50/35.45, #Cl
-  110/96, #SO4
-  18/60, #SiO2
-  110/40  #Ca
-)
+  0.6, #Cl
+  0.5, #SO4
+  0.45, #SiO2
+  0.03  #Ca
+) #En vektor med de forskellige koncentrationer [mM]
+
+#beskidt vand
+#c_makeup = c(
+#  4.1, #Na
+#  50/35.45, #Cl
+#  110/96, #SO4
+#  18/60, #SiO2
+#  110/40  #Ca
+#)
 
 fBD = T #Skal der foregå "forced" blowdown ved grænse værdi? T/F
 
-Rej=data.frame(
-  Na  =  0.38419491,
-  Cl=0.064,
-  SO4=0.78812522,
-  SiO2=  0.27315914,
-  Ca  =  0.26783120
-)#total rejection af NF system 2 filtreringer. 
+#Rej=data.frame(
+#  Na  =  0.38419491,
+#  Cl=0.064,
+#  SO4=0.78812522,
+#  SiO2=  0.27315914,
+#  Ca  =  0.26783120
+#)#total rejection af NF system 2 filtreringer. 
 
-# Rej=data.frame(
-#   Na  =  0.24,
-#   Cl=-0.068,
-#   SO4=0.61,
-#   SiO2=  0.23,
-#   Ca  =  0.026
-# )#pilot scale 1. filtration
-
+ Rej=data.frame(
+   Na  =  0.24,
+   Cl=-0.068,
+   SO4=0.61,
+   SiO2=  0.23,
+   Ca  =  0.026
+ )#pilot scale 1. filtration
 ion_values = data.frame(
   Ions = c("Na", "Cl", "SO4", "SiO2","Ca"),
   value = c(NA, 7.1, 2.6, 2.5,2),#Grænseværdier [mM=mol/m^3]
@@ -74,7 +72,7 @@ ion_values = data.frame(
 c_guideline = ion_values[,2] #Vektor med grænseværdier for ioner
 con_ini = sum(c_makeup*ion_values[,3],na.rm=T)
 con=con_ini
-con_lim = 1000#conductivity grænseværdi [uS/cm]
+con_lim = 1500#conductivity grænseværdi [uS/cm]
 
 COC_max = c_guideline/c_makeup
 COC = min(COC_max)
@@ -91,7 +89,7 @@ para = function(x){
 ##### Model Parameters #####
 dt_timer=1 #tidsstep i timer
 dt=dt_timer/24 #timer i dage
-run_time = 90 #Total operating time i dage
+run_time = 1000 #Total operating time i dage
 max_time = run_time*24 #i timer
 n_time_step = run_time/dt #antal tidsskridt 
 start_tid = 0 # start tid?
