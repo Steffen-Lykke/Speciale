@@ -2,11 +2,17 @@
 title: "Phasediagrams"
 author: "Steffen"
 date: "28/3/2022"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(include = FALSE)
+knitr::opts_chunk$set(echo = TRUE,warning=F,message=F)
 library(plyr)
 library(dplyr)
 library(tidyr)
@@ -50,45 +56,64 @@ colors = c(
 ```
 
 
-```{r data}
+```{r data, echo=TRUE}
 silica =  read_excel("data/minteq/pH_pC_silica.xlsx", 
     range = "A1:E121")
 silica = silica %>% mutate(Ct=H4SiO4+`H3SiO4-`+`H2SiO4-2`)
 silica = silica %>% mutate(`pH2SiO4-2` = `H2SiO4-2`/Ct)%>%mutate(pH4SiO4 = H4SiO4/Ct)%>%mutate(`pH3SiO4-` = `H3SiO4-`/Ct)%>%mutate(ladet=`pH3SiO4-`+`pH2SiO4-2`)
 
 ### Noget Silica ladning model
-x=silica$pH
-y1=silica$ladet
-plot(y1~x)
+#x=silica$pH
+#y1=silica$ladet
+#plot(y1~x)
 a=1.00016
 b=2.314233
 c=9.831689
-silica = silica%>%mutate(frac_ladet_model =  a/(1+exp(-b*(pH-c))))
-names(silica)[7:9]=c("H_2SiO_4^2-","H_3SiO_4^-","H_4SiO4")  
-y2=silica$frac_ladet_model
+#silica = silica%>%mutate(frac_ladet_model =  a/(1+exp(-b*(pH-c))))
+#names(silica)[7:9]=c("H_2SiO_4^2-","H_3SiO_4^-","H_4SiO4")  
+names(silica)[7:9]=c("tominus","enminus","silicic")
+#y2=silica$frac_ladet_model
 
-ladning_plot=data.frame(x,y1,y2)
-ggplot(ladning_plot,aes(x = x,y=y1))+geom_point()+geom_line(aes(x=x,y=y2))
+#ladning_plot=data.frame(x,y1,y2)
+#ggplot(ladning_plot,aes(x = x,y=y1))+geom_point()+geom_line(aes(x=x,y=y2))
 
 
-plot(y~x)
 
-carbonat = read_excel("data/minteq/pH_pC_carbonat.xlsx")
-carbonat = carbonat%>%mutate(Ct=`CO3-2`+`HCO3-`+`H2CO3* (aq)`)
+#carbonat = read_excel("data/minteq/pH_pC_carbonat.xlsx")
+#carbonat = carbonat%>%mutate(Ct=`CO3-2`+`HCO3-`+`H2CO3* (aq)`)
 
 
 ```
 
 
-```{r plots, echo=FALSE}
-carbonat.long = carbonat %>% gather(key = "key",value="value",`CO3-2`,`HCO3-`,`H2CO3* (aq)` )
-ggplotly(ggplot(carbonat.long, aes(x=pH, y=value,color= key))+geom_line()+ylab("Fraction Present")+scale_x_continuous(breaks = (seq(2,13, by = 1)))+labs(color="Species"))
+```{r plots, echo=TRUE}
+#carbonat.long = carbonat %>% gather(key = "key",value="value",`CO3-2`,`HCO3-`,`H2CO3* (aq)` )
+#ggplotly(ggplot(carbonat.long, aes(x=pH, y=value,color= key))+geom_line()+ylab("Fraction Present")+scale_x_continuous(breaks = (seq(2,13, by = 1)))+labs(color="Species"))
 
 
-silica.long = silica%>%gather(key="key",value = "value",`H_2SiO_4^2-`,`H_3SiO_4^-`,`H_4SiO4`)
-ggplotly(ggplot(silica.long, aes(x=pH, y=value,color= key))+geom_line()+ylab("Fraction Present")+scale_x_continuous(breaks = (seq(2,14, by = 1)))+labs(color="Species"))
+#names(silica)[7:9]=c("H_2SiO_4^2-","H_3SiO_4^-","H_4SiO4") 
+colors2=c( 
+  '#d62728',  # brick red
+  '#1f77b4',  # muted blue 
+  '#2ca02c' # cooked asparagus green
+)
+
+ioner=c(expression('H'[2]*'SiO'[4]^"2-"),
+        expression('H'[3]*'SiO'[4]^{textstyle("-")}),
+        expression('H'[4]*'SiO'[4])
+)
+        
 
 
-ggplotly(ggplot(silica, aes(x=pH, y=ladet))+geom_line())
+
+
+silica.long = silica%>%gather(key="key",value = "value",tominus,enminus,silicic)
+
+
+ggplot(silica.long, aes(x=pH, y=value,color= key))+geom_line()+ylab("Fraction Present")+scale_x_continuous(breaks = (seq(2,14, by = 1)))+labs(color="Species")+scale_color_manual(labels = ioner, values =colors2)
+
+
+
+#ggplotly(ggplot(silica, aes(x=pH, y=ladet))+geom_line())
 ```
 
